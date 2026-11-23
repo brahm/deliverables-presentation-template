@@ -14,7 +14,7 @@
 | `.claude/settings.json` | Liga os cinco hooks | Pelo Claude Code |
 | `scripts/estado.py` | O estado do projeto em poucas linhas | No início da sessão |
 | `scripts/validar.py` | As checagens em script | A cada gravação (hook), antes da revisão e no pull request |
-| `scripts/preparar.py` | Cria os registros e as pastas de entregável | No início do projeto e a cada entregável novo |
+| `scripts/preparar.py` | Cria os registros e as pastas de entregável e ativa pacotes | No início do projeto e a cada entregável novo |
 | `scripts/levantar.py` | Levanta o que já existe em um projeto em andamento | Na adoção |
 | `metodo/` | O método, as práticas de texto, o visual, os formatos e a rubrica | Aberto quando a tarefa toca no assunto |
 | `listas/` | Os padrões das checagens de texto, por idioma | Lidas pelo `validar.py` |

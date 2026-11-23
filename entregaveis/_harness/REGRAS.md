@@ -37,6 +37,9 @@ que você abre quando a tarefa pede.
    | Qualquer relatório ao dono | `relatar-ao-dono` |
    | O harness tem uma versão nova | `atualizar-harness` |
 
+   Um pacote ativo traz a sua própria skill, `pacote-NOME`, que se
+   aplica nos momentos que a descrição dela diz, junto com as da tabela.
+
 3. Quem decide.
    - O dono decide o objetivo, o escopo, a audiência, a grande ideia e a
      storyline. Também decide tudo o que sai do projeto ou não pode ser

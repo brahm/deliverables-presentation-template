@@ -105,8 +105,14 @@ class Instalador:
         if not origem.is_dir():
             self.mantido.append("Esta cópia do kit não tem .claude/skills. As skills não foram instaladas.")
             return
-        for skill in sorted(p for p in origem.iterdir() if p.is_dir()):
-            alvo = self.destino / ".claude" / "skills" / skill.name
+        skills = [(p.name, p) for p in sorted(origem.iterdir()) if p.is_dir()]
+        # A skill de um pacote só existe no projeto que ativou o pacote. Ela acompanha a atualização.
+        for pacote in sorted((HARNESS / "pacotes").glob("*/skill")):
+            nome = f"pacote-{pacote.parent.name}"
+            if (self.destino / ".claude" / "skills" / nome).exists():
+                skills.append((nome, pacote))
+        for nome_da_skill, skill in skills:
+            alvo = self.destino / ".claude" / "skills" / nome_da_skill
             if alvo.exists():
                 texto_kit = self.ajustar((skill / "SKILL.md").read_text(encoding="utf-8"))
                 atual = (alvo / "SKILL.md").read_text(encoding="utf-8") if (alvo / "SKILL.md").is_file() else ""
@@ -115,19 +121,19 @@ class Instalador:
                 if MARCA_DE_SKILL not in atual:
                     # A skill é do projeto e só coincide no nome. Nunca é trocada.
                     self.mantido.append(
-                        f".claude/skills/{skill.name} já existia no projeto e não veio do kit. Ela foi mantida e a do kit "
+                        f".claude/skills/{nome_da_skill} já existia no projeto e não veio do kit. Ela foi mantida e a do kit "
                         f"não foi instalada. A versão do kit está em {skill / 'SKILL.md'}: decida com o dono qual fica "
                         "ou renomeie a do projeto."
                     )
                     continue
                 if not self.atualizar:
-                    self.mantido.append(f".claude/skills/{skill.name} é de outra versão do kit. Mantida. Use --atualizar para trocar.")
+                    self.mantido.append(f".claude/skills/{nome_da_skill} é de outra versão do kit. Mantida. Use --atualizar para trocar.")
                     continue
                 if not self.simular:
                     shutil.rmtree(alvo)
-                self.nota(f".claude/skills/{skill.name} atualizada")
+                self.nota(f".claude/skills/{nome_da_skill} atualizada")
             else:
-                self.nota(f".claude/skills/{skill.name} criada")
+                self.nota(f".claude/skills/{nome_da_skill} criada")
             if not self.simular:
                 shutil.copytree(skill, alvo, ignore=IGNORAR)
                 self.ajustar_arvore(alvo)

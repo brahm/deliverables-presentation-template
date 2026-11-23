@@ -3,6 +3,20 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.2.0
+
+- Primeiro pacote por tipo de projeto: `martech-adtech`, para assessment
+  de arquitetura de martech e adtech. Traz as perguntas de início, os
+  entregáveis típicos, dez frameworks, três esqueletos de storyline, a
+  evidência que cada afirmação pede, as armadilhas, a lista de pedido de
+  dados, os roteiros de entrevista e o glossário.
+- `preparar.py --pacote NOME` ativa um pacote: copia a skill, soma os
+  termos ao glossário do projeto e preenche o campo `pacotes` do brief.
+- O instalador atualiza a skill de um pacote já ativado no projeto.
+
+O que o projeto precisa fazer: se o trabalho é um assessment de martech
+e adtech, rode `preparar.py --pacote martech-adtech`.
+
 ## 0.1.0
 
 Primeira versão.

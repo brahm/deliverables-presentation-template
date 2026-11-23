@@ -70,7 +70,7 @@ ignora. O registro do que foi pedido e do que chegou fica em
 | `entregaveis/_harness/hooks/` | Os cinco hooks do Claude Code. |
 | `entregaveis/_harness/listas/` | Os padrões das checagens de texto em português, espanhol e inglês. |
 | `entregaveis/_harness/modelos/` | Os modelos dos registros do projeto e dos entregáveis. |
-| `entregaveis/_harness/pacotes/` | A adaptação por tipo de projeto. |
+| `entregaveis/_harness/pacotes/` | A adaptação por tipo de projeto: perguntas, frameworks, esqueletos de storyline, pedido de dados, entrevistas e glossário. |
 | `tools/testar_kit.py` | Os testes do próprio kit. |
 
 Os registros do projeto (`entregaveis/_projeto/`) e a pasta de cada
@@ -112,10 +112,10 @@ Requisito: Python 3.9 ou mais novo, sem pacotes extras.
 
 ## O que esta versão ainda não tem
 
-- Os pacotes por tipo de projeto (transformação de marketing, martech e
-  adtech, mídia, retail media, processos agênticos, proposta e
-  treinamento). Enquanto não chegam, o agente monta o pacote do projeto
-  com o que o dono conta.
+- Os pacotes de transformação de marketing, mídia, retail media,
+  processos agênticos, proposta e treinamento. Já existe o de martech e
+  adtech. Para os outros tipos, o agente monta o pacote do projeto com o
+  que o dono conta.
 - O gerador de PowerPoint, Word, PDF e Excel sobre o modelo do projeto.
   Hoje o agente gera o arquivo final com as ferramentas que tiver, a
   partir da fonte em Markdown.

@@ -35,7 +35,8 @@ sem esperar que ele dite cada passo.
 4. Preencha `_projeto/brief.md`, `audiencia.md` e
    `regras-de-material.md`. Ponha em `confidencial.tsv` os nomes que não
    podem aparecer em entregáveis.
-5. Ative os pacotes do tipo de trabalho, como diz
+5. Ative os pacotes do tipo de trabalho com
+   `preparar.py --pacote NOME`. Os que existem estão listados em
    `entregaveis/_harness/pacotes/LEIA-ME.md`. Sem pacote que sirva, monte
    um para o projeto com o que você conhece do domínio.
 6. Abra o intake com `receber-materiais`: uma linha por material pedido,
