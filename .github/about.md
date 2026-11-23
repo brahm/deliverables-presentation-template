@@ -15,3 +15,9 @@ domínio escrito em cada projeto.
 ```text
 claude-code ai-agents agent-skills agent-harness project-template consulting presentations storytelling proposals marketing martech adtech retail-media interactive-html pt-br
 ```
+
+## Template
+
+Em Settings, na seção General, marque **Template repository**. Sem essa
+marca, o botão "Use this template", o link de criação do README e o
+comando `gh repo create --template` não funcionam.
