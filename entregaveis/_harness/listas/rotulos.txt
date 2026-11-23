@@ -1,0 +1,84 @@
+# Títulos que são rótulos de assunto. Um título de página diz a mensagem.
+# Um por linha, em qualquer idioma. Acentos e maiúsculas não importam.
+visão geral
+panorama
+contexto
+introdução
+sumário
+objetivo
+objetivos
+metodologia
+abordagem
+resultados
+análise
+diagnóstico
+achados
+principais achados
+conclusão
+conclusões
+recomendações
+próximos passos
+cronograma
+roadmap
+plano
+equipe
+time
+anexo
+anexos
+apêndice
+investimento
+benefícios
+riscos
+premissas
+escopo
+governança
+arquitetura
+overview
+background
+introduction
+summary
+executive summary
+objectives
+methodology
+approach
+results
+analysis
+findings
+key findings
+conclusion
+conclusions
+recommendations
+next steps
+timeline
+team
+appendix
+investment
+benefits
+risks
+assumptions
+scope
+governance
+architecture
+resumen
+resumen ejecutivo
+introducción
+antecedentes
+objetivos
+metodología
+enfoque
+resultados
+análisis
+hallazgos
+conclusiones
+recomendaciones
+próximos pasos
+cronograma
+equipo
+anexo
+inversión
+beneficios
+riesgos
+supuestos
+alcance
+gobernanza
+arquitectura

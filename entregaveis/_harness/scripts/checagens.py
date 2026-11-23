@@ -1,0 +1,498 @@
+#!/usr/bin/env python3
+"""As checagens que o validar.py roda sobre os entregáveis.
+
+Cada função devolve uma lista de achados. Um achado de nível "erro"
+reprova; um de nível "aviso" só informa. O que exige julgamento (a página
+é entendida em três segundos? os argumentos se sobrepõem?) não está aqui:
+fica na rubrica de revisão, em metodo/rubrica.md.
+"""
+from __future__ import annotations
+
+import datetime
+import re
+import subprocess
+from functools import lru_cache
+from pathlib import Path
+
+import comum
+from comum import Achado, MARCA
+
+# Limites de palavras por veículo. O dono pode trocar qualquer um em
+# _projeto/limites.tsv (colunas: veiculo, limite, valor).
+LIMITES = {
+    "projetado": {"titulo": 14, "corpo_aviso": 40, "corpo_erro": 80, "marcadores": 5},
+    "workshop": {"titulo": 14, "corpo_aviso": 60, "corpo_erro": 110, "marcadores": 6},
+    "leitura": {"titulo": 22, "corpo_aviso": 150, "corpo_erro": 250, "marcadores": 8},
+    "documento": {"paragrafo_aviso": 130, "frase_aviso": 40},
+}
+
+MARCAS_ESQUECIDAS = re.compile(
+    r"\b(TBD|TBC|TODO|FIXME|lorem ipsum|a confirmar|por confirmar)\b|XX+\s?%|\?\?\?|\[inserir|\[insert|" + MARCA,
+    flags=re.IGNORECASE,
+)
+
+SIGLAS_COMUNS = {"OK", "PDF", "PPT", "PPTX", "DOCX", "XLSX", "CSV", "TSV", "URL", "II", "III", "IV", "VI", "VII"}
+
+
+def _limites(veiculo: str) -> dict:
+    limites = dict(LIMITES.get(veiculo, LIMITES["leitura"]))
+    for linha in comum.ler_tsv(comum.PROJETO / "limites.tsv"):
+        if linha.get("veiculo") == veiculo and linha.get("valor", "").isdigit():
+            limites[linha.get("limite", "")] = int(linha["valor"])
+    return limites
+
+
+def _meta(pasta: Path) -> dict:
+    return comum.cabecalho(comum.ler(pasta / "briefing.md"))[0]
+
+
+def _rigoroso(pasta: Path, rigoroso: bool) -> bool:
+    """Marcas esquecidas e faltas viram erro a partir da etapa de revisão."""
+    return rigoroso or comum.etapa(_meta(pasta)) >= comum.ETAPAS.index("revisao")
+
+
+@lru_cache(maxsize=None)
+def _padroes(nome: str) -> tuple:
+    """Lê uma lista de padrões: nível, expressão regular e orientação."""
+    padroes = []
+    for linha in comum.ler(comum.LISTAS / nome).splitlines():
+        if not linha.strip() or linha.startswith("#"):
+            continue
+        partes = linha.split("\t")
+        if len(partes) >= 3:
+            padroes.append((partes[0].strip(), re.compile(partes[1], flags=re.IGNORECASE), partes[2].strip()))
+    return tuple(padroes)
+
+
+# --- Projeto e briefing ---------------------------------------------------
+
+
+def projeto() -> list[Achado]:
+    """O brief do projeto está preenchido depois de iniciado."""
+    arquivo = comum.PROJETO / "brief.md"
+    meta, corpo = comum.cabecalho(comum.ler(arquivo))
+    nome = comum.relativo(arquivo)
+    if not meta:
+        return [Achado("aviso", "projeto", nome, 0, "O projeto não foi iniciado: aplique a skill iniciar-projeto ou adotar-projeto.")]
+    if comum.normalizar(meta.get("iniciado", "nao")) != "sim":
+        return [Achado("aviso", "projeto", nome, 0, "O brief do projeto ainda não foi fechado (iniciado: nao).")]
+    achados = []
+    for campo in ("projeto", "tipo", "idiomas_dos_entregaveis", "classificacao"):
+        if not meta.get(campo) or MARCA in meta.get(campo, ""):
+            achados.append(Achado("erro", "projeto", nome, 0, f"O campo '{campo}' do brief está vazio."))
+    if MARCA in corpo:
+        achados.append(Achado("erro", "projeto", nome, 0, f"O brief ainda tem trechos marcados com {MARCA}."))
+    return achados
+
+
+def briefing(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    """O briefing tem audiência, de e para, grande ideia, pedido e resistências."""
+    arquivo = pasta / "briefing.md"
+    nome = comum.relativo(arquivo)
+    meta, corpo = comum.cabecalho(comum.ler(arquivo))
+    etapa = comum.etapa(meta)
+    nivel = "erro" if etapa >= 1 or rigoroso else "aviso"
+    achados = [
+        Achado(nivel, "briefing", nome, 0, f"A seção '{falta}' está vazia ou ainda tem {MARCA}.")
+        for falta in comum.briefing_completo(pasta)
+    ]
+    for campo in ("tipo", "veiculo", "formato", "idiomas"):
+        if not meta.get(campo) or MARCA in meta.get(campo, ""):
+            achados.append(Achado(nivel, "briefing", nome, 0, f"O campo '{campo}' do cabeçalho está vazio."))
+    mapa = comum.secoes(corpo)
+    ideia = (comum.achar_secao(mapa, "grande ideia") or "").strip()
+    if ideia and MARCA not in ideia:
+        frases = [f for f in re.split(r"(?<=[.!?])\s+", ideia) if f.strip()]
+        if comum.contar_palavras(ideia) < 7:
+            achados.append(Achado(nivel, "briefing", nome, 0, "A grande ideia parece um assunto. Escreva uma frase completa com o ponto de vista e o que está em jogo."))
+        elif len(frases) > 2:
+            achados.append(Achado("aviso", "briefing", nome, 0, "A grande ideia tem mais de duas frases. Ela deve caber em uma."))
+    pedido = comum.achar_secao(mapa, "chamada para acao") or ""
+    if pedido.strip() and MARCA not in pedido:
+        linhas = comum.tabela(pedido)
+        completas = [l for l in linhas if l.get("dono") and l.get("prazo") and l.get("acao")]
+        if not completas:
+            achados.append(Achado(nivel, "briefing", nome, 0, "A chamada para ação precisa de ao menos uma linha com ação, dono e prazo."))
+    return achados
+
+
+# --- Storyline ------------------------------------------------------------
+
+
+def _rotulo(titulo: str) -> bool:
+    """Diz se o título é um rótulo de assunto, e não uma frase com mensagem."""
+    rotulos = {comum.normalizar(l) for l in comum.ler(comum.LISTAS / "rotulos.txt").splitlines() if l.strip() and not l.startswith("#")}
+    normal = comum.normalizar(titulo)
+    if normal in rotulos:
+        return True
+    palavras = normal.split()
+    return len(palavras) <= 3 and any(normal.startswith(r + " ") or normal == r for r in rotulos)
+
+
+def storyline(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    """Títulos de ação, resumo executivo, pedido e aprovação do dono."""
+    achados: list[Achado] = []
+    meta = _meta(pasta)
+    etapa = comum.etapa(meta)
+    limites = _limites(comum.normalizar(meta.get("veiculo", "leitura")))
+    arq_story = pasta / "storyline.md"
+    nome_story = comum.relativo(arq_story)
+    _, corpo_story = comum.cabecalho(comum.ler(arq_story))
+    mapa = comum.secoes(corpo_story)
+    sequencia = comum.tabela(comum.achar_secao(mapa, "sequencia") or "")
+    sequencia = [l for l in sequencia if MARCA not in l.get("titulo de acao", MARCA)]
+
+    if etapa >= 1 or sequencia:
+        nivel = "erro" if etapa >= 2 or rigoroso else "aviso"
+        resumo = comum.achar_secao(mapa, "resumo executivo") or ""
+        if not resumo.strip() or MARCA in resumo:
+            achados.append(Achado(nivel, "storyline", nome_story, 0, "Falta o resumo executivo: a história inteira em poucas frases, com a conclusão primeiro."))
+        if not sequencia:
+            achados.append(Achado(nivel, "storyline", nome_story, 0, "A sequência de títulos está vazia."))
+    vistos: dict[str, str] = {}
+    for linha in sequencia:
+        titulo = linha.get("titulo de acao", "")
+        tipo = comum.normalizar(linha.get("tipo", ""))
+        achados.extend(_titulo(titulo, tipo, limites, nome_story, 0))
+        chave = comum.normalizar(titulo)
+        if chave in vistos:
+            achados.append(Achado("erro", "storyline", nome_story, 0, f"Título repetido na sequência: '{titulo}'."))
+        vistos[chave] = titulo
+    if sequencia and not any(comum.normalizar(l.get("tipo", "")) == "pedido" for l in sequencia):
+        achados.append(Achado("erro" if etapa >= 2 or rigoroso else "aviso", "storyline", nome_story, 0, "Nenhuma página do tipo 'pedido': a história precisa terminar no que a audiência deve fazer."))
+    if (etapa >= 3 or comum.tem_paginas_reais(pasta)) and not comum.storyline_aprovada(pasta):
+        achados.append(Achado("erro", "storyline", nome_story, 0, "Há conteúdo escrito e a storyline não foi aprovada pelo dono (aprovada: sim)."))
+
+    for arquivo in pasta.glob("conteudo*.md"):
+        nome = comum.relativo(arquivo)
+        paginas = [p for p in comum.paginas(comum.ler(arquivo)) if MARCA not in p.titulo]
+        titulos: dict[str, int] = {}
+        for p in paginas:
+            tipo = comum.normalizar(p.meta.get("tipo", ""))
+            achados.extend(_titulo(p.titulo, tipo, limites, nome, p.linha))
+            chave = comum.normalizar(p.titulo)
+            if chave in titulos and tipo not in comum.TIPOS_SEM_TITULO_DE_ACAO:
+                achados.append(Achado("erro", "storyline", nome, p.linha, f"Título repetido (também na página {titulos[chave]})."))
+            titulos[chave] = p.numero
+        if paginas and arquivo.name == "conteudo.md" and sequencia:
+            fora = [p for p in paginas if comum.normalizar(p.titulo) not in vistos and comum.normalizar(p.meta.get("tipo", "")) not in {"capa", "agenda", "secao", "apendice", "encerramento"}]
+            if fora:
+                numeros = ", ".join(str(p.numero) for p in fora[:8])
+                achados.append(Achado("aviso", "storyline", nome, 0, f"Páginas com título diferente da storyline aprovada: {numeros}. Alinhe os dois ou peça nova aprovação."))
+        if len(paginas) > 10 and not any(comum.normalizar(p.meta.get("tipo", "")) == "resumo" for p in paginas):
+            achados.append(Achado("erro" if _rigoroso(pasta, rigoroso) else "aviso", "storyline", nome, 0, "Material com mais de 10 páginas e sem página do tipo 'resumo' no início."))
+        if paginas and not any(comum.normalizar(p.meta.get("tipo", "")) == "pedido" for p in paginas):
+            achados.append(Achado("erro" if _rigoroso(pasta, rigoroso) else "aviso", "storyline", nome, 0, "Nenhuma página do tipo 'pedido' com a chamada para ação."))
+    return achados
+
+
+def _titulo(titulo: str, tipo: str, limites: dict, nome: str, linha: int) -> list[Achado]:
+    if tipo in comum.TIPOS_SEM_TITULO_DE_ACAO or not titulo.strip():
+        return []
+    achados = []
+    if _rotulo(titulo):
+        achados.append(Achado("erro", "storyline", nome, linha, f"'{titulo}' é um rótulo. Escreva a mensagem da página como frase, com verbo."))
+    if titulo.rstrip().endswith(":"):
+        achados.append(Achado("erro", "storyline", nome, linha, f"O título '{titulo}' termina em dois-pontos: ele anuncia a mensagem em vez de dizê-la."))
+    n = comum.contar_palavras(titulo)
+    maximo = limites.get("titulo", 22)
+    if n > maximo:
+        achados.append(Achado("erro", "storyline", nome, linha, f"Título com {n} palavras (limite do veículo: {maximo})."))
+    return achados
+
+
+# --- Densidade ------------------------------------------------------------
+
+
+def densidade(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    """Quantidade de texto por página ou parágrafo, conforme o veículo."""
+    achados: list[Achado] = []
+    veiculo = comum.normalizar(_meta(pasta).get("veiculo", "leitura"))
+    limites = _limites(veiculo)
+    for arquivo in pasta.glob("conteudo*.md"):
+        nome = comum.relativo(arquivo)
+        for p in comum.paginas(comum.ler(arquivo)):
+            tipo = comum.normalizar(p.meta.get("tipo", ""))
+            if tipo == "apendice" or MARCA in p.titulo:
+                continue
+            n = comum.contar_palavras(p.corpo)
+            if n > limites.get("corpo_erro", 10**6):
+                achados.append(Achado("erro", "densidade", nome, p.linha, f"Página {p.numero} com {n} palavras no corpo (limite: {limites['corpo_erro']}). Divida a página ou leve o detalhe ao apêndice."))
+            elif n > limites.get("corpo_aviso", 10**6):
+                achados.append(Achado("aviso", "densidade", nome, p.linha, f"Página {p.numero} com {n} palavras no corpo (recomendado: até {limites['corpo_aviso']})."))
+            marcadores = len(re.findall(r"^\s*[-*+]\s+", p.corpo, flags=re.MULTILINE))
+            if marcadores > limites.get("marcadores", 10**6):
+                achados.append(Achado("aviso", "densidade", nome, p.linha, f"Página {p.numero} com {marcadores} marcadores. Veja se os itens formam um diagrama ou pedem páginas separadas."))
+            if len(re.findall(r"^###\s+", p.corpo, flags=re.MULTILINE)) > 1 and veiculo in ("projetado", "workshop"):
+                achados.append(Achado("aviso", "densidade", nome, p.linha, f"Página {p.numero} tem mais de um subtítulo. Uma ideia por página."))
+    if veiculo == "documento":
+        for arquivo in pasta.glob("documento*.md"):
+            nome = comum.relativo(arquivo)
+            paragrafo, inicio = "", 0
+            for n, linha in list(comum.linhas_de_prosa(comum.ler(arquivo))) + [(0, "")]:
+                if linha.strip() and not linha.lstrip().startswith(("#", "|", "-", "*", ">")):
+                    inicio = inicio or n
+                    paragrafo += " " + linha
+                    continue
+                if paragrafo:
+                    palavras = comum.contar_palavras(paragrafo)
+                    if palavras > limites.get("paragrafo_aviso", 130):
+                        achados.append(Achado("aviso", "densidade", nome, inicio, f"Parágrafo com {palavras} palavras. Divida em dois."))
+                    for frase in re.split(r"(?<=[.!?])\s+", paragrafo):
+                        tamanho = comum.contar_palavras(frase)
+                        if tamanho > limites.get("frase_aviso", 40):
+                            achados.append(Achado("aviso", "densidade", nome, inicio, f"Frase com {tamanho} palavras: '{frase.strip()[:60]}...'"))
+                paragrafo, inicio = "", 0
+    return achados
+
+
+# --- Evidência ------------------------------------------------------------
+
+
+def _tem_numero(texto: str) -> bool:
+    """Diz se o texto afirma algum número que pede fonte."""
+    texto = re.sub(r"<!--.*?-->", " ", texto, flags=re.DOTALL)
+    texto = re.sub(r"\b[EDBLM]-\d+\b", " ", texto)                 # ids dos registros
+    texto = re.sub(r"\b\d{4}-\d{2}-\d{2}\b", " ", texto)            # datas completas
+    texto = re.sub(r"\b\d{1,2}/\d{1,2}(/\d{2,4})?\b", " ", texto)  # datas curtas
+    texto = re.sub(r"\b(19|20)\d{2}\b", " ", texto)                 # anos
+    texto = re.sub(r"^\s*\d+[.)]\s", " ", texto, flags=re.MULTILINE)  # listas numeradas
+    texto = re.sub(r"\b(p[áa]gina|slide|page|diapositiva|fase|onda|etapa|passo|step|wave|phase|ola|paso|Q|H|T)\s?\d+\b", " ", texto, flags=re.IGNORECASE)
+    return bool(re.search(r"\d", texto))
+
+
+def evidencia(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    """Todo número tem fonte no registro de evidências. Nada de marcas esquecidas."""
+    achados: list[Achado] = []
+    registro = {l.get("id", "") for l in comum.ler_tsv(comum.PROJETO / "evidencias.tsv")}
+    nivel_marca = "erro" if _rigoroso(pasta, rigoroso) else "aviso"
+    for arquivo in comum.arquivos_de_conteudo(pasta):
+        nome = comum.relativo(arquivo)
+        texto = comum.ler(arquivo)
+        for n, linha in comum.linhas_de_prosa(texto):
+            m = MARCAS_ESQUECIDAS.search(linha)
+            if m:
+                achados.append(Achado(nivel_marca, "evidencia", nome, n, f"Marca esquecida no texto: '{m.group(0)}'."))
+        for n, linha in enumerate(texto.splitlines(), start=1):
+            for ident in re.findall(r"\bE-\d+\b", linha):
+                if ident not in registro:
+                    achados.append(Achado("erro", "evidencia", nome, n, f"{ident} não existe em _projeto/evidencias.tsv."))
+        if arquivo.name.startswith("conteudo"):
+            for p in comum.paginas(texto):
+                if MARCA in p.titulo:
+                    continue
+                tipo = comum.normalizar(p.meta.get("tipo", ""))
+                fonte = p.meta.get("fonte", "").strip()
+                cita = fonte or re.search(r"\bE-\d+\b", p.corpo)
+                if tipo == "dados" and not cita:
+                    achados.append(Achado("erro", "evidencia", nome, p.linha, f"Página {p.numero} é de dados e não declara fonte."))
+                elif not cita and _tem_numero(p.titulo + "\n" + p.corpo):
+                    achados.append(Achado("erro", "evidencia", nome, p.linha, f"Página {p.numero} tem número sem fonte. Cite um E-nnn do registro no campo 'fonte', ou escreva 'fonte: nao-se-aplica' com o motivo."))
+        elif arquivo.name.startswith("documento"):
+            _, corpo = comum.cabecalho(texto)
+            for titulo, bloco in comum.secoes(corpo).items():
+                if _tem_numero(bloco) and not re.search(r"\bE-\d+\b|^\s*(Fonte|Fuente|Source)s?:", bloco, flags=re.MULTILINE | re.IGNORECASE):
+                    achados.append(Achado("erro", "evidencia", nome, 0, f"A seção '{titulo}' tem números e nenhuma fonte (E-nnn ou linha 'Fonte:')."))
+    return achados
+
+
+# --- Texto ----------------------------------------------------------------
+
+
+def texto(arquivo: Path, idiomas: list[str], recursos: dict[int, str] | None = None) -> list[Achado]:
+    """Vícios de texto gerado por IA, pelas listas de cada idioma.
+
+    'recursos' diz, por linha, que recurso retórico a página declarou no
+    campo 'recurso'. Um contraste declarado não é tratado como vício.
+    """
+    achados: list[Achado] = []
+    nome = comum.relativo(arquivo)
+    listas = ["texto-geral.tsv"] + [f"texto-{i}.tsv" for i in idiomas]
+    recursos = recursos or {}
+    for n, linha in comum.linhas_de_prosa(comum.ler(arquivo)):
+        declarado = comum.normalizar(recursos.get(n, ""))
+        for lista in listas:
+            for nivel, padrao, orientacao in _padroes(lista):
+                m = padrao.search(linha)
+                if not m:
+                    continue
+                if "contraste" in declarado and "contraste" in comum.normalizar(orientacao):
+                    continue
+                achados.append(Achado(nivel, "texto", nome, n, f"'{m.group(0).strip()}': {orientacao}"))
+    return achados
+
+
+def _recursos_por_linha(arquivo: Path) -> dict[int, str]:
+    """Recurso retórico declarado em cada página, para cada linha dela."""
+    mapa: dict[int, str] = {}
+    paginas = comum.paginas(comum.ler(arquivo))
+    total = len(comum.ler(arquivo).splitlines())
+    for i, p in enumerate(paginas):
+        fim = paginas[i + 1].linha if i + 1 < len(paginas) else total + 1
+        if p.meta.get("recurso"):
+            for n in range(p.linha, fim):
+                mapa[n] = p.meta["recurso"]
+    return mapa
+
+
+def texto_do_entregavel(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    achados: list[Achado] = []
+    meta = _meta(pasta)
+    for arquivo in comum.arquivos_de_conteudo(pasta) + [pasta / "storyline.md"]:
+        if arquivo.is_file():
+            achados.extend(texto(arquivo, comum.idiomas_do_arquivo(arquivo, meta), _recursos_por_linha(arquivo)))
+    return achados
+
+
+# --- Termos ---------------------------------------------------------------
+
+
+def termos(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    """Um termo por conceito, e sigla explicada."""
+    achados: list[Achado] = []
+    glossario = comum.ler_tsv(comum.PROJETO / "glossario.tsv")
+    conhecidos = {l.get("termo", "").upper() for l in glossario}
+    evitar = []
+    for linha in glossario:
+        for variante in linha.get("evitar", "").split(";"):
+            if variante.strip():
+                evitar.append((re.compile(r"(?<!\w)" + re.escape(variante.strip()) + r"(?!\w)", flags=re.IGNORECASE), linha.get("termo", "")))
+    for arquivo in comum.arquivos_de_conteudo(pasta):
+        nome = comum.relativo(arquivo)
+        siglas_vistas: set[str] = set()
+        inteiro = comum.ler(arquivo)
+        for n, linha in comum.linhas_de_prosa(inteiro):
+            for padrao, termo in evitar:
+                m = padrao.search(linha)
+                if m:
+                    achados.append(Achado("erro", "termos", nome, n, f"'{m.group(0)}': o glossário manda usar '{termo}'."))
+            for sigla in re.findall(r"(?<![\w-])[A-Z][A-Z0-9&]{1,5}(?![\w-])", linha):
+                if sigla in SIGLAS_COMUNS or sigla in conhecidos or sigla in siglas_vistas:
+                    continue
+                siglas_vistas.add(sigla)
+                if not re.search(r"\(" + re.escape(sigla) + r"\)|" + re.escape(sigla) + r"\s*\(", inteiro):
+                    achados.append(Achado("aviso", "termos", nome, n, f"A sigla {sigla} não está no glossário nem é explicada no texto."))
+    return achados
+
+
+# --- Estrutura ------------------------------------------------------------
+
+
+def estrutura(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    """Numeração, seções e referências cruzadas."""
+    achados: list[Achado] = []
+    for arquivo in pasta.glob("conteudo*.md"):
+        nome = comum.relativo(arquivo)
+        texto_arq = comum.ler(arquivo)
+        paginas = comum.paginas(texto_arq)
+        for esperado, p in enumerate(paginas, start=1):
+            if p.numero != esperado:
+                achados.append(Achado("erro", "estrutura", nome, p.linha, f"Numeração quebrada: página {p.numero} onde se esperava {esperado}."))
+                break
+        reais = [p for p in paginas if MARCA not in p.titulo]
+        if len(reais) > 8:
+            sem_secao = [p.numero for p in reais if not p.meta.get("secao") and comum.normalizar(p.meta.get("tipo", "")) not in {"capa", "agenda", "encerramento"}]
+            if sem_secao:
+                achados.append(Achado("aviso", "estrutura", nome, 0, f"Páginas sem o campo 'secao': {', '.join(map(str, sem_secao[:10]))}. Sem seção não há navegação."))
+        sem_tipo = [p.numero for p in reais if not p.meta.get("tipo")]
+        if sem_tipo:
+            achados.append(Achado("erro", "estrutura", nome, 0, f"Páginas sem o campo 'tipo': {', '.join(map(str, sem_tipo[:10]))}."))
+        for n, linha in enumerate(texto_arq.splitlines(), start=1):
+            for m in re.finditer(r"\b(?:p[áa]gina|slide|page|diapositiva)\s+(\d+)\b", linha, flags=re.IGNORECASE):
+                if int(m.group(1)) > len(paginas) or int(m.group(1)) < 1:
+                    achados.append(Achado("erro", "estrutura", nome, n, f"Referência a '{m.group(0)}', que não existe (o material tem {len(paginas)} páginas)."))
+            for m in re.finditer(r"\b(ap[êeé]ndice|anexo|appendix)\s+([A-Z]|\d+)\b", linha):
+                alvo = comum.normalizar(m.group(0))
+                if not any(alvo in comum.normalizar(p.titulo) for p in paginas):
+                    achados.append(Achado("erro", "estrutura", nome, n, f"Referência a '{m.group(0)}', e nenhuma página tem esse nome no título."))
+    for arquivo in pasta.glob("documento*.md"):
+        nome = comum.relativo(arquivo)
+        _, corpo = comum.cabecalho(comum.ler(arquivo))
+        niveis = [len(m.group(1)) for m in re.finditer(r"^(#{1,6})\s", corpo, flags=re.MULTILINE)]
+        if niveis and niveis.count(1) != 1 and MARCA not in corpo:
+            achados.append(Achado("aviso", "estrutura", nome, 0, f"O documento tem {niveis.count(1)} títulos de nível 1. Deve ter um."))
+        for anterior, atual in zip(niveis, niveis[1:]):
+            if atual > anterior + 1:
+                achados.append(Achado("aviso", "estrutura", nome, 0, f"Os títulos pulam do nível {anterior} para o {atual}."))
+                break
+    return achados
+
+
+# --- Confidencialidade ----------------------------------------------------
+
+
+def confidencialidade(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    """Nomes proibidos, credenciais e a marcação exigida pelo projeto."""
+    achados: list[Achado] = []
+    proibidos = [
+        (re.compile(r"(?<!\w)" + re.escape(l["termo"]) + r"(?!\w)", flags=re.IGNORECASE), l.get("motivo", ""))
+        for l in comum.ler_tsv(comum.PROJETO / "confidencial.tsv") if l.get("termo")
+    ]
+    segredos = _padroes("segredos.tsv")
+    for arquivo in sorted(pasta.rglob("*")):
+        if not arquivo.is_file() or arquivo.suffix.lower() not in {".md", ".txt", ".csv", ".tsv", ".json", ".html"}:
+            continue
+        nome = comum.relativo(arquivo)
+        for n, linha in enumerate(comum.ler(arquivo).splitlines(), start=1):
+            for padrao, motivo in proibidos:
+                m = padrao.search(linha)
+                if m:
+                    achados.append(Achado("erro", "confidencialidade", nome, n, f"'{m.group(0)}' está na lista de termos proibidos do projeto ({motivo})."))
+            for _, padrao, orientacao in segredos:
+                if padrao.search(linha):
+                    achados.append(Achado("erro", "confidencialidade", nome, n, orientacao))
+    brief, _ = comum.cabecalho(comum.ler(comum.PROJETO / "brief.md"))
+    marcacao = brief.get("marcacao_obrigatoria", "").strip()
+    if marcacao and MARCA not in marcacao and _rigoroso(pasta, rigoroso):
+        for arquivo in comum.arquivos_de_conteudo(pasta):
+            inicio = "\n".join(comum.ler(arquivo).splitlines()[:40])
+            if marcacao.lower() not in inicio.lower():
+                achados.append(Achado("erro", "confidencialidade", comum.relativo(arquivo), 0, f"Falta a marcação '{marcacao}' na capa ou no início do documento."))
+    return achados
+
+
+def materiais_fora_do_git() -> list[Achado]:
+    """Nenhum material recebido do cliente está versionado."""
+    materiais = comum.INTAKE / "materiais"
+    if not materiais.is_dir():
+        return []
+    try:
+        saida = subprocess.run(
+            ["git", "-C", str(comum.RAIZ), "ls-files", "--", str(materiais)],
+            capture_output=True, text=True, timeout=20,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+    rastreados = [l for l in saida.stdout.splitlines() if l.strip() and not l.endswith(".gitkeep")]
+    if saida.returncode == 0 and rastreados:
+        return [Achado("erro", "confidencialidade", comum.relativo(materiais), 0, f"{len(rastreados)} arquivo(s) de material recebido estão no git. Tire-os do controle de versão.")]
+    return []
+
+
+# --- Intake ---------------------------------------------------------------
+
+
+def intake() -> list[Achado]:
+    """Materiais pedidos e ainda não recebidos."""
+    achados: list[Achado] = []
+    hoje = datetime.date.today().isoformat()
+    nome = comum.relativo(comum.INTAKE / "registro.tsv")
+    for linha in comum.ler_tsv(comum.INTAKE / "registro.tsv"):
+        estado = comum.normalizar(linha.get("estado", ""))
+        if estado in ("pedido", "em falta"):
+            prazo = linha.get("prazo", "")
+            atraso = " O prazo passou." if re.fullmatch(r"\d{4}-\d{2}-\d{2}", prazo) and prazo < hoje else ""
+            achados.append(Achado("aviso", "intake", nome, 0, f"{linha.get('id', '?')} ({linha.get('material', '')}) está '{linha.get('estado', '')}'.{atraso}"))
+    return achados
+
+
+POR_ENTREGAVEL = {
+    "briefing": briefing,
+    "storyline": storyline,
+    "densidade": densidade,
+    "evidencia": evidencia,
+    "texto": texto_do_entregavel,
+    "termos": termos,
+    "estrutura": estrutura,
+    "confidencialidade": confidencialidade,
+}

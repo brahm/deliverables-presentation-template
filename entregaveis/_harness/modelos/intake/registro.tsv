@@ -1,0 +1,4 @@
+# Materiais pedidos e recebidos. Os arquivos ficam em _intake/materiais/, fora do git.
+# tipo: modelo, marca, referencia, escopo, dados, entrevista, benchmark, regra ou voz.
+# estado: pedido, recebido, em falta ou dispensado. Material que já estava no projeto: registre o caminho onde ele está.
+id	material	tipo	pedido_a	pedido_em	prazo	estado	caminho	observacao
