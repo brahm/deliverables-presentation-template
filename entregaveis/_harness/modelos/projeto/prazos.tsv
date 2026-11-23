@@ -1,0 +1,3 @@
+# Histórico de datas. Toda mudança de prazo deixa aqui a data anterior. Nenhuma linha é apagada.
+# Quem grava é o rotina.py --remarcar. O status mostra estas linhas como datas deslocadas.
+item	data_original	data_anterior	data_nova	mudou_em	quem	motivo

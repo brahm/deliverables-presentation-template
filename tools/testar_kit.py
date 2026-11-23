@@ -9,14 +9,18 @@ Uso: python3 tools/testar_kit.py
 """
 from __future__ import annotations
 
+import ast
+import datetime
 import http.server
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import threading
+import zipfile
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -1358,6 +1362,330 @@ def testar_levantamento(tmp: Path) -> None:
     confere("levantar.py lista o que o projeto já tem", saida.returncode == 0 and "proposta.docx" in saida.stdout and "AGENTS.md" in saida.stdout, saida.stdout + saida.stderr)
 
 
+# --- Atas, prazos e rotina diária -----------------------------------------
+
+
+def dia_util(inicio: datetime.date, n: int) -> datetime.date:
+    """O dia que fica n dias úteis depois de `inicio` (antes, quando n é negativo)."""
+    dia, passo = inicio, 1 if n >= 0 else -1
+    while n:
+        dia += datetime.timedelta(days=passo)
+        if dia.weekday() < 5:
+            n -= passo
+    return dia
+
+
+def testar_rotina(tmp: Path) -> None:
+    print("Atas, prazos e rotina diária")
+    projeto = tmp / "rotina"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    reg = base / "_projeto"
+    confere("a instalação cria a pasta de atas e a pasta de entrada", (base / "_atas/LEIA-ME.md").is_file() and (base / "_intake/entrada/.gitkeep").is_file())
+    confere("a instalação cria os registros do dia a dia", all((reg / n).is_file() for n in ("acoes.tsv", "reunioes.tsv", "ritos.tsv", "riscos.tsv", "prazos.tsv", "cadencias.tsv", "alertas.tsv", "diario.md")))
+    ignorados = (projeto / ".gitignore").read_text(encoding="utf-8")
+    confere("as atas e a pasta de entrada ficam fora do git", "entregaveis/_atas/*" in ignorados and "entregaveis/_intake/entrada/*" in ignorados and "!entregaveis/_atas/LEIA-ME.md" in ignorados)
+    pasta = montar_exemplo(projeto)
+
+    def rotina(*args) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/rotina.py", *args], projeto)
+
+    def secao(saida: str, titulo: str) -> str:
+        """As linhas de uma seção do resumo."""
+        dentro, linhas = False, []
+        for linha in saida.splitlines():
+            if not linha.startswith("- "):
+                dentro = linha.startswith(titulo)
+            elif dentro:
+                linhas.append(linha)
+        return "\n".join(linhas)
+
+    def acao(*campos) -> None:
+        with (reg / "acoes.tsv").open("a", encoding="utf-8") as f:
+            f.write("\t".join(str(c) for c in campos) + "\n")
+
+    def linha_de(arquivo: Path, ident: str) -> str:
+        return next((l for l in arquivo.read_text(encoding="utf-8").splitlines() if l.startswith(ident + "\t")), "")
+
+    # O dia de referência é um dia útil. Os arquivos do teste têm a data de hoje, e a rotina olha essa data.
+    a = dia_util(datetime.date.today(), 0) if datetime.date.today().weekday() < 5 else dia_util(datetime.date.today(), 1)
+    vazio = rotina("--hoje", a)
+    confere("projeto sem prazo nem ata: nada a tratar", vazio.returncode == 0 and "Nada chegou e nenhum prazo pede atenção hoje" in vazio.stdout, vazio.stdout + vazio.stderr)
+
+    # As três fases, pelo cronograma. Janela de 20 dias úteis: parado depois de 7, próximo com 4 ou menos.
+    acao("T-001", "tarefa", "Enviar o inventário de contratos", "Compras do cliente", "cliente", dia_util(a, -10), dia_util(a, 10), "nao", "aberta", "consultor", dia_util(a, -10), "")
+    acao("T-002", "tarefa", "Marcar as entrevistas", "Consultora", "consultoria", dia_util(a, -10), dia_util(a, 10), "nao", "aberta", "consultor", dia_util(a, -1), "")
+    parado = rotina("--abrir", "--hoje", a)
+    confere("fase 1: item sem movimento dentro do prazo recebe o aviso leve", "T-001" in secao(parado.stdout, "Parece parado") and "T-001" not in secao(parado.stdout, "Vencidos") and "T-001" not in secao(parado.stdout, "Prazo próximo"), parado.stdout + parado.stderr)
+    confere("fase 1: item que andou ontem não recebe aviso", "T-002" not in parado.stdout, parado.stdout)
+    confere("o aviso mostrado fica em alertas.tsv", linha_de(reg / "alertas.tsv", "T-001").split("\t")[1:2] == ["parado"], (reg / "alertas.tsv").read_text(encoding="utf-8"))
+    de_novo = rotina("--abrir", "--hoje", dia_util(a, 1))
+    confere("fase 1: o aviso leve é dado uma vez só", "T-001" not in de_novo.stdout, de_novo.stdout)
+    proximo = rotina("--hoje", dia_util(a, 6))
+    confere("fase 2: prazo próximo avisa quando resta um quinto da janela", "T-001" in secao(proximo.stdout, "Prazo próximo") and "em 4 dia(s) útil(eis)" in proximo.stdout, proximo.stdout)
+    confere("fase 2: com cinco dias úteis de folga ainda não avisa", "T-001" not in secao(rotina("--hoje", dia_util(a, 5)).stdout, "Prazo próximo"))
+    vencido = rotina("--hoje", dia_util(a, 11))
+    confere("fase 3: prazo vencido pede uma das três respostas", "T-001" in secao(vencido.stdout, "Vencidos") and "concluído, nova data ou não é mais necessário" in vencido.stdout, vencido.stdout)
+    confere("fase 3: no dia do prazo o item ainda não está vencido", "T-001" not in secao(rotina("--hoje", dia_util(a, 10)).stdout, "Vencidos"))
+    for passo in (11, 12):
+        rotina("--abrir", "--hoje", dia_util(a, passo))
+    terceiro = rotina("--hoje", dia_util(a, 13))
+    confere("fase 3: o terceiro aviso sem resposta sugere o risco", "Terceiro aviso sem resposta" in secao(terceiro.stdout, "Vencidos"), terceiro.stdout)
+
+    # As respostas: nova data com histórico, concluído e não é mais necessário.
+    acao("T-003", "tarefa", "Aprovar o roteiro das entrevistas", "Diretora de marketing", "cliente", dia_util(a, -8), dia_util(a, -3), "nao", "aberta", "consultor", dia_util(a, -8), "")
+    original = str(dia_util(a, -3))
+    aviso = validar(projeto, "--so", "prazos")
+    confere("checagem de prazos: avisa do item vencido sem resposta", "T-003" in aviso.stdout and "venceu em" in aviso.stdout and "ERRO" not in aviso.stdout, aviso.stdout)
+    confere("o estado mostra a linha da rotina do dia", "Rotina do dia:" in rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout)
+    sem_motivo = rotina("--remarcar", "T-003", dia_util(a, 5))
+    confere("nova data sem motivo é recusada", sem_motivo.returncode == 2 and original in linha_de(reg / "acoes.tsv", "T-003"), sem_motivo.stdout)
+    sem_data = rotina("--remarcar", "T-003", "depois", "--motivo", "A diretora está de férias")
+    confere("não existe adiar sem data", sem_data.returncode == 2 and "Não existe adiar sem data" in sem_data.stdout, sem_data.stdout)
+    primeira = rotina("--remarcar", "T-003", dia_util(a, 5), "--motivo", "A diretora está de férias", "--quem", "Consultora", "--hoje", a)
+    historico = linha_de(reg / "prazos.tsv", "T-003").split("\t")
+    confere("nova data: a anterior fica no histórico, com quem mudou e o motivo", primeira.returncode == 0 and historico[1:7] == [original, original, str(dia_util(a, 5)), str(a), "Consultora", "A diretora está de férias"], str(historico))
+    confere("nova data: o registro de ações recebe o prazo novo", str(dia_util(a, 5)) in linha_de(reg / "acoes.tsv", "T-003"))
+    confere("nova data: o item sai dos vencidos e da checagem", "T-003" not in validar(projeto, "--so", "prazos").stdout and "T-003" not in secao(rotina("--hoje", a).stdout, "Vencidos"))
+    segunda = rotina("--remarcar", "T-003", dia_util(a, 8), "--motivo", "O roteiro mudou", "--hoje", dia_util(a, 4))
+    confere("segunda remarcação do mesmo item ganha destaque", "Segunda remarcação" in segunda.stdout and "ATENÇÃO" in rotina("--datas").stdout, segunda.stdout)
+    terceira = rotina("--remarcar", "T-003", dia_util(a, 12), "--motivo", "Falta a aprovação do jurídico", "--hoje", dia_util(a, 7))
+    confere("terceira remarcação vira risco", "Terceira remarcação" in terceira.stdout and "riscos.tsv" in terceira.stdout, terceira.stdout)
+    datas = rotina("--datas").stdout
+    linhas_do_item = [l for l in (reg / "prazos.tsv").read_text(encoding="utf-8").splitlines() if l.startswith("T-003\t")]
+    confere("o histórico guarda toda mudança e mantém a data original", len(linhas_do_item) == 3 and all(l.split("\t")[1] == original for l in linhas_do_item) and f"original {original}" in datas and "3 remarcação(ões)" in datas, datas)
+    confere("o resumo diz quantas vezes o item foi remarcado", "Remarcado 3 vez(es)" in rotina("--hoje", dia_util(a, 13)).stdout)
+    acao("T-004", "marco", "Entrega do relatório final", "Consultora", "consultoria", dia_util(a, -5), dia_util(a, 15), "sim", "aberta", "consultor", a, "")
+    de_base = rotina("--remarcar", "T-004", dia_util(a, 20), "--motivo", "O cliente pediu mais uma área", "--hoje", a)
+    confere("data de base: a mudança pede o acordo do cliente", "acordo do cliente" in de_base.stdout and "acordo do cliente" not in primeira.stdout, de_base.stdout)
+    concluida = rotina("--concluir", "T-001", "--hoje", dia_util(a, 11))
+    confere("concluído: o item sai dos avisos e fica no registro", concluida.returncode == 0 and "\tconcluida\t" in linha_de(reg / "acoes.tsv", "T-001") and "T-001" not in rotina("--hoje", dia_util(a, 13)).stdout, concluida.stdout)
+    sem_porque = rotina("--dispensar", "T-002")
+    confere("dispensa sem motivo é recusada", sem_porque.returncode == 2 and "\taberta\t" in linha_de(reg / "acoes.tsv", "T-002"), sem_porque.stdout)
+    dispensada = rotina("--dispensar", "T-002", "--motivo", "O cliente já tinha as entrevistas gravadas", "--hoje", a)
+    confere("não é mais necessário: o item é cancelado com o motivo e não é apagado", dispensada.returncode == 0 and "\tcancelada\t" in linha_de(reg / "acoes.tsv", "T-002") and "O cliente já tinha as entrevistas gravadas" in linha_de(reg / "acoes.tsv", "T-002"), dispensada.stdout)
+    confere("não é mais necessário: os avisos do item param", "T-002" not in rotina("--hoje", dia_util(a, 30)).stdout)
+    confere("item que não existe: o comando diz o que vale", rotina("--concluir", "T-999").returncode != 0 and rotina("--remarcar", "X-1", dia_util(a, 3), "--motivo", "teste").returncode != 0)
+
+    # Pedido de material e entregável também têm prazo.
+    with (base / "_intake/registro.tsv").open("a", encoding="utf-8") as f:
+        f.write(f"M-001\tRelatórios de uso\tdados\tTecnologia do cliente\t{dia_util(a, -10)}\t{dia_util(a, -2)}\tpedido\t\t\n")
+    material = rotina("--hoje", a)
+    confere("pedido de material vencido entra nos vencidos", "M-001 (pedido de material)" in secao(material.stdout, "Vencidos"), material.stdout)
+    confere("material não é concluído pela rotina", rotina("--concluir", "M-001").returncode == 2)
+    rotina("--dispensar", "M-001", "--motivo", "O cliente desistiu da análise de uso", "--hoje", a)
+    confere("material dispensado sai dos avisos", "\tdispensado\t" in linha_de(base / "_intake/registro.tsv", "M-001") and "M-001" not in rotina("--hoje", a).stdout)
+    with (base / "_intake/registro.tsv").open("a", encoding="utf-8") as f:
+        f.write(f"M-002\tLista de usuários\tdados\tTecnologia do cliente\t{dia_util(a, -15)}\t{dia_util(a, -1)}\tem falta\t\t\n")
+    rotina("--remarcar", "M-002", dia_util(a, 20), "--motivo", "O cliente pediu mais um mês", "--hoje", a)
+    remarcado = rotina("--hoje", a)
+    confere("material remarcado: a data nova vai ao registro e conta como movimento", str(dia_util(a, 20)) in linha_de(base / "_intake/registro.tsv", "M-002") and "M-002" not in remarcado.stdout, remarcado.stdout)
+    confere("material remarcado: volta a parecer parado se ninguém mexe", "M-002" in secao(rotina("--hoje", dia_util(a, 13)).stdout, "Parece parado"))
+    briefing = pasta / "briefing.md"
+    briefing.write_text(briefing.read_text(encoding="utf-8").replace("prazo:\n", f"prazo: {dia_util(a, 1)}\n", 1), encoding="utf-8")
+    apertado = rotina("--hoje", a)
+    confere("entregável: avisa quando as etapas que faltam não cabem no prazo", "diag (entregável)" in secao(apertado.stdout, "Prazo próximo") and "faltam 2 etapa(s)" in apertado.stdout, apertado.stdout)
+    rotina("--remarcar", "diag", dia_util(a, 15), "--motivo", "A reunião da diretoria mudou de data", "--hoje", a)
+    confere("entregável: a data nova vai ao briefing e ao histórico", f"prazo: {dia_util(a, 15)}" in briefing.read_text(encoding="utf-8") and linha_de(reg / "prazos.tsv", "diag").split("\t")[2] == str(dia_util(a, 1)) and "diag" not in rotina("--hoje", a).stdout)
+
+    # Atas: a pasta manda. Nova, processada, alterada.
+    semana_passada = a - datetime.timedelta(days=7)
+    with (reg / "ritos.tsv").open("a", encoding="utf-8") as f:
+        f.write(f"Comitê semanal\tsemanal\t{a - datetime.timedelta(days=14)}\t\tConsultora, diretora de marketing\t\n")
+    ata = base / "_atas" / f"{semana_passada} comite semanal.md"
+    ata.write_text("# Comitê semanal\n\nA diretora aprovou o roteiro.\nO inventário chega na sexta.\n", encoding="utf-8")
+    chegou = rotina("--hoje", a)
+    confere("ata nova na pasta aparece no resumo, com a data e o rito do nome", f"Ata nova: {ata.name}" in secao(chegou.stdout, "Chegou") and f"data {semana_passada}" in chegou.stdout and 'rito "Comitê semanal"' in chegou.stdout, chegou.stdout)
+    confere("o guia da pasta de atas não conta como ata", "LEIA-ME" not in chegou.stdout)
+    confere("o estado conta a ata nova", "arquivo(s) novo(s) em atas e entrada" in rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout)
+    lida = rotina("--ler", ata.name)
+    confere("--ler devolve o texto da ata", lida.returncode == 0 and "A diretora aprovou o roteiro." in lida.stdout, lida.stdout + lida.stderr)
+    registrada = rotina("--ata", ata.name, "--data", semana_passada, "--reuniao", "Comitê semanal", "--rito", "Comitê semanal", "--resultado", "1 decisão, 1 ação", "--hoje", a)
+    da_ata = linha_de(reg / "reunioes.tsv", "A-001")
+    confere("ata processada entra em reunioes.tsv com o arquivo e a marca", registrada.returncode == 0 and ata.name in da_ata and "ata processada" in da_ata and "1 decisão, 1 ação" in da_ata, registrada.stdout + da_ata)
+    confere("ata processada sai do resumo", "Ata" not in rotina("--hoje", a).stdout)
+    ata.write_text(ata.read_text(encoding="utf-8") + "O jurídico pediu para ver o contrato.\n", encoding="utf-8")
+    alterada = rotina("--hoje", a)
+    confere("ata alterada depois de processada volta ao resumo", "Ata alterada depois de processada (A-001)" in alterada.stdout, alterada.stdout)
+    diferenca = rotina("--ler", ata.name)
+    confere("ata alterada: --ler mostra só a diferença", "ENTROU: O jurídico pediu para ver o contrato." in diferenca.stdout and "A diretora aprovou o roteiro." not in diferenca.stdout, diferenca.stdout)
+    rotina("--ata", ata.name, "--data", semana_passada, "--reuniao", "Comitê semanal", "--rito", "Comitê semanal", "--hoje", a)
+    confere("ata alterada e reprocessada não cria outra reunião", "Ata" not in rotina("--hoje", a).stdout and not linha_de(reg / "reunioes.tsv", "A-002"))
+    fora = projeto / "ata-solta.md"
+    fora.write_text("Ata fora da pasta.\n", encoding="utf-8")
+    confere("ata fora da pasta de atas é recusada", rotina("--ata", str(fora), "--data", a, "--reuniao", "Avulsa").returncode == 1)
+    confere("ata sem data ou sem nome de reunião é recusada", rotina("--ata", ata.name, "--reuniao", "Comitê").returncode == 2)
+    legenda = base / "_atas" / "gravacao.vtt"
+    legenda.write_text("WEBVTT\n\n1\n00:00:01.000 --> 00:00:04.000\n<v Diretora>O prazo fica para março.</v>\n", encoding="utf-8")
+    da_legenda = rotina("--ler", "gravacao.vtt").stdout
+    confere("legenda de gravação: sai o texto, sem os tempos", "Diretora: O prazo fica para março." in da_legenda and "-->" not in da_legenda, da_legenda)
+    with zipfile.ZipFile(base / "_atas" / "ata.docx", "w") as pacote:
+        pacote.writestr("word/document.xml", "<w:document><w:body><w:p><w:r><w:t>Decidido: sai a plataforma B.</w:t></w:r></w:p></w:body></w:document>")
+    confere("ata em Word é lida sem pacote extra", "Decidido: sai a plataforma B." in rotina("--ler", "ata.docx").stdout)
+    (base / "_atas" / "audio.m4a").write_bytes(b"\x00\x01")
+    confere("formato que o script não lê: manda abrir com as ferramentas do agente", "não é lido por este script" in rotina("--ler", "audio.m4a").stdout)
+    for nome in ("gravacao.vtt", "ata.docx", "audio.m4a"):
+        (base / "_atas" / nome).unlink()
+    relato = rotina("--ata", "--data", a, "--reuniao", "Conversa com a diretora financeira", "--hoje", a)
+    confere("reunião sem ata entra como relato de memória", relato.returncode == 0 and "relato de memória" in linha_de(reg / "reunioes.tsv", "A-002") and "realizada" in linha_de(reg / "reunioes.tsv", "A-002"), relato.stdout)
+
+    # Cadência: rito sem ata, propostas paradas, entrada esquecida, pausa.
+    um_ciclo = rotina("--hoje", dia_util(a, 2))
+    confere("rito: a reunião sem ata é cobrada depois de um dia útil", f'A reunião "Comitê semanal" de {a} não tem ata' in secao(um_ciclo.stdout, "Cadência"), um_ciclo.stdout)
+    confere("rito: no dia da reunião a ata ainda não é cobrada", "Comitê semanal" not in secao(rotina("--hoje", a).stdout, "Cadência"))
+    dois_ciclos = rotina("--hoje", dia_util(a, 7))
+    confere("rito: dois ciclos sem ata viram outra pergunta", "sem ata há dois ciclos" in secao(dois_ciclos.stdout, "Cadência"), dois_ciclos.stdout)
+    sem_ata = rotina("--sem-ata", a, "--rito", "Comitê semanal", "--motivo", "A reunião foi cancelada pelo cliente", "--hoje", dia_util(a, 2))
+    confere("rito: a reunião registrada sem ata deixa de ser cobrada", sem_ata.returncode == 0 and "sem ata" in linha_de(reg / "reunioes.tsv", "A-003") and "Comitê semanal" not in secao(rotina("--hoje", dia_util(a, 2)).stdout, "Cadência"), sem_ata.stdout)
+    acao("T-005", "tarefa", "Rever o contrato da plataforma B", "", "cliente", dia_util(a, -5), "", "nao", "proposta", "A-001", dia_util(a, -5), "O jurídico pediu para ver o contrato")
+    proposta = rotina("--hoje", a)
+    confere("proposta de ata espera o sim do consultor", "T-005 (proposta, origem A-001)" in secao(proposta.stdout, "Espera o seu sim") and "T-005" in secao(proposta.stdout, "Cadência"), proposta.stdout)
+    confere("proposta não gera aviso de prazo nem de checagem", "T-005" not in validar(projeto, "--so", "prazos").stdout)
+    entrada = base / "_intake/entrada/custos.xlsx"
+    entrada.write_bytes(b"planilha")
+    confere("arquivo na pasta de entrada aparece no resumo", "Na pasta de entrada, sem classificar: custos.xlsx" in secao(rotina("--hoje", a).stdout, "Chegou"))
+    confere("arquivo esquecido na pasta de entrada vira aviso de cadência", "custos.xlsx" in secao(rotina("--hoje", dia_util(a, 3)).stdout, "Cadência") and "custos.xlsx" not in secao(rotina("--hoje", a).stdout, "Cadência"))
+    entrada.unlink()
+    confere("projeto sem registro novo há dias pergunta pela pausa", "Ele está pausado?" in rotina("--hoje", dia_util(a, 6)).stdout and "Ele está pausado?" not in rotina("--hoje", a).stdout)
+    acao("T-006", "tarefa", "Enviar a lista de usuários", "Tecnologia do cliente", "cliente", dia_util(a, -9), dia_util(a, -4), "nao", "aberta", "consultor", dia_util(a, -9), "")
+    confere("antes da pausa, o vencido aparece", "T-006" in secao(rotina("--hoje", a).stdout, "Vencidos") and "T-006" in validar(projeto, "--so", "prazos").stdout)
+    rotina("--pausar", dia_util(a, 20))
+    pausado = rotina("--hoje", a)
+    confere("pausa: os avisos de prazo e de cadência ficam em silêncio", "Projeto em pausa até" in pausado.stdout and "Vencidos" not in pausado.stdout and "Cadência" not in pausado.stdout, pausado.stdout)
+    confere("pausa: a checagem de prazos e o estado também calam", "T-006" not in validar(projeto, "--so", "prazos").stdout and "Projeto em pausa até" in rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout)
+    confere("pausa: acaba sozinha na data de retomada", "T-006" in secao(rotina("--hoje", dia_util(a, 21)).stdout, "Vencidos"))
+    rotina("--retomar")
+    confere("retomada: os avisos voltam", "T-006" in secao(rotina("--hoje", a).stdout, "Vencidos"))
+    (reg / "cadencias.tsv").write_text((reg / "cadencias.tsv").read_text(encoding="utf-8").replace("proximo_maximo\t5", "proximo_maximo\t8").replace("proximo_fracao\t0.2", "proximo_fracao\t0.5"), encoding="utf-8")
+    confere("os limites dos avisos são do projeto", "T-004" in secao(rotina("--hoje", dia_util(a, 12)).stdout, "Prazo próximo"))
+
+    # Diário.
+    rotina("--fechar", "Ata do comitê processada. Falta a resposta sobre T-006.", "--hoje", a)
+    rotina("--fechar", "O cliente confirmou a reunião de quinta.", "--hoje", a)
+    diario = (reg / "diario.md").read_text(encoding="utf-8")
+    confere("o diário grava uma linha por dia", diario.count(f"| {a} |") == 1 and "Ata do comitê processada." in diario and "O cliente confirmou a reunião de quinta." in diario, diario)
+
+    # A checagem acusa o registro malformado.
+    acao("T-007", "tarefa", "Item com estado errado", "Consultora", "consultoria", a, dia_util(a, 5), "nao", "em andamento", "consultor", a, "")
+    acao("T-008", "tarefa", "Item com data errada", "Consultora", "consultoria", a, "15/12/2026", "nao", "aberta", "consultor", a, "")
+    acao("T-009", "tarefa", "Item sem dono", "", "consultoria", a, dia_util(a, 5), "nao", "aberta", "consultor", a, "")
+    acao("T-010", "tarefa", "Item sem prazo", "Consultora", "consultoria", a, "", "nao", "aberta", "consultor", a, "")
+    errado = validar(projeto, "--so", "prazos")
+    confere("checagem de prazos: estado que não existe é erro", errado.returncode != 0 and "T-007: o estado 'em andamento' não existe" in errado.stdout, errado.stdout)
+    confere("checagem de prazos: data fora do formato é erro", "T-008: o campo 'prazo' precisa de uma data" in errado.stdout)
+    confere("checagem de prazos: ação aberta sem dono ou sem prazo é aviso", "T-009 está aberta sem dono" in errado.stdout and "T-010 está aberta sem prazo" in errado.stdout)
+    confere("a rotina não quebra com registro malformado", rotina("--hoje", a).returncode == 0)
+
+    # O hook de mensagem lembra a skill do momento.
+    hooks = base / "_harness/hooks"
+
+    def mensagem(texto: str) -> str:
+        return rodar([PY, hooks / "mensagem.py"], projeto, json.dumps({"cwd": str(projeto), "prompt": texto})).stdout
+
+    confere("mensagem: dispensa lembra a skill registrar-dispensa", "registrar-dispensa" in mensagem("o relatório de uso não é mais necessário, o cliente desistiu") or "registrar-dispensa" in mensagem("a análise de subuso não vai mais ser feita"))
+    confere("mensagem: ata lembra a skill processar-ata", "processar-ata" in mensagem("salvei a ata da reunião de ontem na pasta"))
+    comum_ = mensagem("inclua uma página sobre mídia paga")
+    confere("mensagem: pedido comum não lembra ata nem dispensa", "processar-ata" not in comum_ and "registrar-dispensa" not in comum_, comum_)
+
+    # Atas no git são erro de confidencialidade.
+    if shutil.which("git") is not None:
+        shutil.rmtree(projeto / ".git")
+        rodar(["git", "init", "-q"], projeto)
+        limpo = validar(projeto, "--so", "confidencialidade")
+        confere("ata fora do git: a checagem passa", "ata ou transcrição" not in limpo.stdout, limpo.stdout)
+        rodar(["git", "add", "-f", str(ata)], projeto)
+        versionada = validar(projeto, "--so", "confidencialidade")
+        confere("ata no git: a checagem acusa", versionada.returncode != 0 and "de ata ou transcrição estão no git" in versionada.stdout, versionada.stdout)
+        ignorada = rodar(["git", "check-ignore", "-q", str(base / "_intake/entrada/custos.xlsx")], projeto)
+        confere("o git ignora o que está na pasta de entrada e nas atas", ignorada.returncode == 0 and rodar(["git", "check-ignore", "-q", str(base / "_atas/LEIA-ME.md")], projeto).returncode != 0)
+
+    # Um projeto de versão anterior recebe os registros novos na atualização, sem perder os que já tem.
+    antigo = tmp / "rotina-antigo"
+    antigo.mkdir()
+    instalar(antigo)
+    for nome in ("acoes.tsv", "prazos.tsv", "reunioes.tsv", "cadencias.tsv"):
+        (antigo / "entregaveis/_projeto" / nome).unlink()
+    shutil.rmtree(antigo / "entregaveis/_atas")
+    (antigo / "entregaveis/_projeto/riscos.tsv").write_text((antigo / "entregaveis/_projeto/riscos.tsv").read_text(encoding="utf-8") + "RS-001\tO cliente troca de diretor\t\t\tConsultora\taberto\tconsultor\t\n", encoding="utf-8")
+    (antigo / "entregaveis/_harness/VERSAO").write_text("0.7.1\n", encoding="utf-8")
+    atualizado = instalar(antigo, "--atualizar")
+    confere("--atualizar cria os registros e a pasta de atas que a versão nova trouxe", atualizado.returncode == 0 and all((antigo / "entregaveis/_projeto" / n).is_file() for n in ("acoes.tsv", "prazos.tsv", "reunioes.tsv", "cadencias.tsv")) and (antigo / "entregaveis/_atas/LEIA-ME.md").is_file(), atualizado.stdout + atualizado.stderr)
+    confere("--atualizar não toca no registro que o projeto já tinha", "RS-001" in (antigo / "entregaveis/_projeto/riscos.tsv").read_text(encoding="utf-8"))
+
+
+# --- Conferência do ambiente ----------------------------------------------
+
+
+def testar_ambiente(tmp: Path) -> None:
+    print("Conferência do ambiente")
+    script = HARNESS / "scripts" / "ambiente.py"
+    fonte = script.read_text(encoding="utf-8")
+    arvore = ast.parse(fonte)
+    novidades = [type(no).__name__ for no in ast.walk(arvore) if isinstance(no, (ast.JoinedStr, ast.NamedExpr, ast.AnnAssign, ast.Match if hasattr(ast, "Match") else ast.NamedExpr))]
+    anotadas = [no.name for no in ast.walk(arvore) if isinstance(no, ast.FunctionDef) and (no.returns or any(a.annotation for a in no.args.args))]
+    confere("ambiente.py roda em Python antigo para conseguir avisar da versão", not novidades and not anotadas and "from __future__" not in fonte and "pathlib" not in fonte, str(novidades + anotadas))
+
+    def ambiente(*args, caminho: str | None = None, sem_pacotes: bool = False) -> subprocess.CompletedProcess:
+        variaveis = dict(os.environ)
+        if caminho is not None:
+            variaveis["PATH"] = caminho
+        return subprocess.run([PY, *(["-S"] if sem_pacotes else []), str(script), *args], capture_output=True, text=True, timeout=120, env=variaveis)
+
+    aqui = ambiente()
+    tem_python3 = shutil.which("python3") is not None
+    confere("lista o que a máquina tem", "Ambiente desta máquina" in aqui.stdout and "Python " in aqui.stdout and "LibreOffice" in aqui.stdout, aqui.stdout + aqui.stderr)
+    if tem_python3:
+        confere("com o essencial pronto, sai com zero", aqui.returncode == 0 and "[essencial]" not in aqui.stdout, aqui.stdout)
+    sem_nada = tmp / "caminho-vazio"
+    sem_nada.mkdir()
+    falta = ambiente(caminho=str(sem_nada))
+    confere("sem o comando python3, acusa o essencial e sai com erro", falta.returncode == 1 and "[essencial]" in falta.stdout and "Falta o essencial" in falta.stdout, falta.stdout + falta.stderr)
+    confere("cada falta vem com o comando que resolve", "Como resolver o que falta:" in falta.stdout and "1. Comando python3" in falta.stdout and "Git\n" in falta.stdout, falta.stdout)
+    confere("oferece o agente ou o passo a passo, e o caminho sem instalação", "com o seu sim, ou você roda um a um" in falta.stdout and "ambientes/LEIA-ME.md" in falta.stdout, falta.stdout)
+    sem_pacotes = ambiente(sem_pacotes=True)
+    confere("pacote do gerador em falta não é essencial e traz o pip", "FALTA  python-pptx" in sem_pacotes.stdout and "pip install python-pptx" in sem_pacotes.stdout and "ambiente.py --instalar" in sem_pacotes.stdout and (sem_pacotes.returncode == 0 or not tem_python3), sem_pacotes.stdout)
+    if tem_python3:
+        confere("sem os pacotes, diz que o essencial está pronto", "O essencial está pronto" in sem_pacotes.stdout)
+    if all(tem_pacote(p) for p in ("pptx", "docx", "openpyxl")):
+        confere("--instalar não faz nada quando os pacotes já estão", "já estão instalados" in ambiente("--instalar").stdout)
+
+    # As instruções de cada sistema.
+    codigo = (
+        "import sys; sys.path.insert(0, sys.argv[1]); import ambiente as a\n"
+        "a.platform.system = lambda: sys.argv[2]; a.shutil.which = lambda c: None\n"
+        "print(a.relatorio(a.conferir())); print(a.faltas_em_uma_linha())\n"
+    )
+    por_sistema = {s: rodar([PY, "-c", codigo, script.parent, s], RAIZ).stdout for s in ("Windows", "Darwin", "Linux", "FreeBSD")}
+    confere("Windows: instruções com a loja e o winget", "(Windows)" in por_sistema["Windows"] and "Microsoft Store" in por_sistema["Windows"] and "winget install Git.Git" in por_sistema["Windows"] and "winget install TheDocumentFoundation.LibreOffice" in por_sistema["Windows"], por_sistema["Windows"])
+    confere("macOS: instruções com o Homebrew", "(macOS)" in por_sistema["Darwin"] and "brew install python" in por_sistema["Darwin"] and "brew install --cask libreoffice" in por_sistema["Darwin"] and "winget" not in por_sistema["Darwin"], por_sistema["Darwin"])
+    confere("Linux: instruções com apt e dnf", "sudo apt install python3" in por_sistema["Linux"] and "sudo dnf install git" in por_sistema["Linux"], por_sistema["Linux"])
+    confere("sistema desconhecido recebe as instruções de Linux", "sudo apt install python3" in por_sistema["FreeBSD"], por_sistema["FreeBSD"])
+    confere("a linha do instalador nomeia as faltas", "Nesta máquina falta: Comando python3, Git" in por_sistema["Linux"] and "Falta o essencial." in por_sistema["Linux"], por_sistema["Linux"][-400:])
+
+    # O instalador confere a máquina e avisa.
+    destino = tmp / "ambiente-instalado"
+    destino.mkdir()
+    saida = subprocess.run([PY, str(HARNESS / "scripts" / "instalar.py"), "--destino", str(destino)], capture_output=True, text=True, timeout=120, env={**os.environ, "PATH": str(sem_nada)})
+    confere("o instalador avisa do que falta na máquina e aponta o script", saida.returncode == 0 and "Nesta máquina falta" in saida.stdout and "entregaveis/_harness/scripts/ambiente.py" in saida.stdout, saida.stdout + saida.stderr)
+    confere("a instalação termina mesmo com a máquina incompleta", (destino / "entregaveis/_harness/REGRAS.md").is_file() and (destino / "entregaveis/_projeto/brief.md").is_file())
+    if tem_python3 and shutil.which("git") and all(tem_pacote(p) for p in ("pptx", "docx", "openpyxl")) and (shutil.which("soffice") or shutil.which("libreoffice")) and shutil.which("pdftoppm"):
+        completo = tmp / "ambiente-completo"
+        completo.mkdir()
+        confere("com a máquina pronta, o instalador não avisa de nada", "Nesta máquina falta" not in instalar(completo).stdout)
+
+    # As skills, as regras e os outros ambientes começam pela conferência.
+    for skill in ("iniciar-projeto", "adotar-projeto"):
+        texto = re.sub(r"\s+", " ", (RAIZ / ".claude" / "skills" / skill / "SKILL.md").read_text(encoding="utf-8"))
+        confere(f"{skill}: confere a máquina e oferece instalar ou repassar os passos", "scripts/ambiente.py" in texto and "passo a passo" in texto)
+    instrucoes = (HARNESS / "ambientes" / "instrucoes.md").read_text(encoding="utf-8")
+    confere("as instruções dos outros ambientes mandam conferir o ambiente", "## Confira o ambiente" in instrucoes)
+    guia = (HARNESS / "ambientes" / "LEIA-ME.md").read_text(encoding="utf-8")
+    confere("o guia dos ambientes cobre quem só tem o Copilot web", "### Só o Copilot web, sem instalar nada" in guia and "## Conferir o ambiente" in guia)
+    confere("o INSTALL manda conferir a máquina antes de instalar", "scripts/ambiente.py" in (RAIZ / "INSTALL.md").read_text(encoding="utf-8"))
+
+
 # --- Exemplo completo -----------------------------------------------------
 
 
@@ -1380,6 +1708,14 @@ def testar_exemplo(tmp: Path) -> None:
     confere("a revisão registrada no exemplo é a do conteúdo atual", em_dia.stdout.strip() == "True", em_dia.stdout + em_dia.stderr)
     estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto)
     confere("o estado mostra o material em falta, a decisão assumida e o item adiado", all(t in estado.stdout for t in ("Materiais pendentes: 1", "Decisões assumidas à espera do consultor: 1", "Itens adiados em aberto: 1")), estado.stdout)
+
+    do_dia = rodar([PY, "entregaveis/_harness/scripts/rotina.py", "--hoje", "2026-11-27"], projeto)
+    confere("a rotina do exemplo mostra a tarefa que vence e o pedido remarcado", "T-003" in do_dia.stdout and "Prazo próximo" in do_dia.stdout and "M-007" in do_dia.stdout and "Remarcado 1 vez(es), a partir de 2026-10-09" in do_dia.stdout, do_dia.stdout + do_dia.stderr)
+    deslocadas = rodar([PY, "entregaveis/_harness/scripts/rotina.py", "--datas"], projeto)
+    confere("o exemplo guarda a data original do pedido remarcado", "M-007: original 2026-10-09" in deslocadas.stdout and "nova 2026-12-04" in deslocadas.stdout, deslocadas.stdout)
+    reunioes = (projeto / "entregaveis/_projeto/reunioes.tsv").read_text(encoding="utf-8")
+    origens = {l.split("\t")[9] for l in (projeto / "entregaveis/_projeto/acoes.tsv").read_text(encoding="utf-8").splitlines() if l.startswith("T-")}
+    confere("toda tarefa do exemplo aponta para uma reunião registrada", origens == {"A-001"} and "\nA-001\t2026-11-05\t" in reunioes, str(origens))
 
     marcados = [str(a.relative_to(origem)) for a in sorted(origem.rglob("*")) if a.suffix in (".md", ".tsv") and "PREENCHER" in a.read_text(encoding="utf-8")]
     confere("nenhum arquivo do exemplo ficou com marca de preenchimento", not marcados, str(marcados))
@@ -1433,6 +1769,8 @@ def main() -> int:
         testar_ambientes(tmp)
         testar_pacotes(tmp)
         testar_levantamento(tmp)
+        testar_rotina(tmp)
+        testar_ambiente(tmp)
         testar_exemplo(tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

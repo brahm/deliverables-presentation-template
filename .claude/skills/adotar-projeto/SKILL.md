@@ -13,7 +13,10 @@ levante, encaixe e pergunte.
 
 1. Não mova, não renomeie e não apague nada do que já existe. A adoção
    só acrescenta registros.
-2. Rode `python3 entregaveis/_harness/scripts/repositorio.py`. Um
+2. Confira a máquina com `python3 entregaveis/_harness/scripts/ambiente.py`
+   e trate o que faltar como no passo 1 de `iniciar-projeto`: você
+   instala com o sim do consultor, ou ele segue o passo a passo.
+   Depois rode `python3 entregaveis/_harness/scripts/repositorio.py`. Um
    projeto de cliente só fica em git local ou em repositório privado.
    Se o remoto for público, pare e leve ao consultor as saídas: tornar o
    repositório privado ou remover o remoto. Se não pôde ser verificado,
@@ -51,8 +54,11 @@ levante, encaixe e pergunte.
    - se as storylines reconstruídas valem como aprovadas ou precisam
      mudar;
    - o que do material existente deve ser refeito pelo método.
+   - as reuniões que se repetem e onde as atas ficam hoje. Os ritos
+     vão para `_projeto/ritos.tsv`, e as atas passam a ser salvas em
+     `entregaveis/_atas/`.
 9. Ative os pacotes do tipo de trabalho e abra o intake para o que falta,
-   como nos passos 5 a 8 de `iniciar-projeto`. Os métodos e os padrões
+   como nos passos 6 a 9 de `iniciar-projeto`. Os métodos e os padrões
    que o projeto já segue entram no domínio, com a skill
    `calibrar-dominio`.
 10. Marque `iniciado: sim`, rode `validar.py` e relate com

@@ -1,6 +1,6 @@
 # Modelos
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.7.1. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.8.0. Gerado por empacotar.py: não edite à mão.
 
 Cada modelo é a forma de uma seção do registro do projeto ou de uma parte de um entregável. PREENCHER marca o que ainda precisa ser escrito.
 
@@ -416,6 +416,86 @@ id	item	motivo	para_quando	estado
 # Troca os limites de palavras das checagens de densidade. Deixe vazio para usar os padrões.
 # veiculo: projetado, workshop, leitura ou documento. limite: titulo, corpo_aviso, corpo_erro, marcadores, paragrafo_aviso, frase_aviso.
 veiculo	limite	valor
+~~~
+
+### acoes.tsv
+
+~~~text
+# Ações, marcos, decisões pedidas e aprovações com prazo. É daqui que a rotina tira os avisos de prazo.
+# tipo: tarefa, marco, decisao ou aprovacao. lado: consultoria ou cliente.
+# inicio: a data planejada de início, ou o dia em que o item foi criado. prazo: AAAA-MM-DD.
+# base: sim quando o prazo é da linha de base ou do contrato. A data nova pede o acordo do cliente.
+# estado: proposta (espera o sim do consultor), aberta, concluida ou cancelada.
+# origem: A-nnn quando veio de uma ata, com o trecho em observacao, ou consultor. movida_em: a última vez em que o item andou.
+# O prazo só muda com rotina.py --remarcar, que guarda a data anterior em prazos.tsv.
+id	tipo	item	dono	lado	inicio	prazo	base	estado	origem	movida_em	observacao
+~~~
+
+### riscos.tsv
+
+~~~text
+# Riscos, problemas e preocupações do projeto.
+# estado: proposto (veio de uma ata e espera o sim do consultor), aberto ou fechado.
+# origem: A-nnn quando veio de uma ata, T-nnn quando veio de uma terceira remarcação, ou consultor.
+id	risco	causa	efeito	dono	estado	origem	revisado_em
+~~~
+
+### reunioes.tsv
+
+~~~text
+# Reuniões e atas do projeto. As atas ficam em entregaveis/_atas/, fora do git. Quem grava aqui é o rotina.py.
+# fonte: a ferramenta que gerou a ata, anotação do consultor ou relato de memória.
+# versao: a marca do arquivo processado. Quando o arquivo muda, a rotina mostra só a diferença.
+# situacao: prevista, realizada, sem ata ou ata processada. resultado: quantas decisões, ações e riscos saíram dela.
+id	data	reuniao	rito	participantes	fonte	arquivo	versao	situacao	resultado	processada_em
+~~~
+
+### ritos.tsv
+
+~~~text
+# Reuniões que se repetem. A rotina espera uma ata para cada ocorrência e avisa quando ela não chega.
+# cadencia: semanal, quinzenal ou mensal. desde: a data da primeira ocorrência (AAAA-MM-DD). ate: preencha quando o rito acabar.
+# Formato de uma linha, com dados fictícios:
+# Comitê semanal	semanal	2026-09-14		Consultora, diretora de marketing	Segundas, 10h
+rito	cadencia	desde	ate	participantes	observacao
+~~~
+
+### prazos.tsv
+
+~~~text
+# Histórico de datas. Toda mudança de prazo deixa aqui a data anterior. Nenhuma linha é apagada.
+# Quem grava é o rotina.py --remarcar. O status mostra estas linhas como datas deslocadas.
+item	data_original	data_anterior	data_nova	mudou_em	quem	motivo
+~~~
+
+### cadencias.tsv
+
+~~~text
+# Limites dos avisos da rotina. O cronograma manda: estes números só dizem quando avisar dentro da janela de cada item.
+# A janela vai do início ao prazo do item, em dias úteis. Troque um valor para ajustar o projeto.
+sinal	valor	observacao
+parado_fracao	0.33	Sem movimento por mais desta fração da janela, o item parece parado. Aviso leve, dado uma vez
+parado_minimo	2	Dias úteis sem movimento antes do aviso leve, por menor que seja a janela
+proximo_fracao	0.2	Quando resta esta fração da janela ou menos, o prazo está próximo
+proximo_minimo	1	O aviso de prazo próximo nunca vem com menos dias úteis do que este
+proximo_maximo	5	O aviso de prazo próximo nunca vem com mais dias úteis do que este
+ata_depois_da_reuniao	1	Dias úteis para a ata de uma reunião do calendário chegar
+propostas_sem_resposta	3	Dias úteis que uma proposta de ata espera o sim antes de voltar ao resumo como aviso
+entrada_sem_classificar	1	Dias úteis que um arquivo pode ficar na pasta de entrada
+projeto_sem_evento	3	Dias úteis sem nenhum registro antes de a rotina perguntar se o projeto está pausado
+pausa_ate		Data até a qual os avisos ficam em silêncio. Quem grava é o rotina.py --pausar
+~~~
+
+### diario.md
+
+~~~text
+# Diário do projeto
+
+Uma linha por dia de trabalho, gravada no fechamento do dia pela skill
+`rotina-diaria`: o que chegou, o que mudou e o que ficou à espera.
+
+| Data | O que aconteceu |
+| --- | --- |
 ~~~
 
 ## Fase

@@ -459,21 +459,23 @@ def confidencialidade(pasta: Path, rigoroso: bool = False) -> list[Achado]:
 
 
 def materiais_fora_do_git() -> list[Achado]:
-    """Nenhum material recebido do cliente está versionado."""
-    materiais = comum.INTAKE / "materiais"
-    if not materiais.is_dir():
-        return []
-    try:
-        saida = subprocess.run(
-            ["git", "-C", str(comum.RAIZ), "ls-files", "--", str(materiais)],
-            capture_output=True, text=True, timeout=20,
-        )
-    except (OSError, subprocess.SubprocessError):
-        return []
-    rastreados = [l for l in saida.stdout.splitlines() if l.strip() and not l.endswith(".gitkeep")]
-    if saida.returncode == 0 and rastreados:
-        return [Achado("erro", "confidencialidade", comum.relativo(materiais), 0, f"{len(rastreados)} arquivo(s) de material recebido estão no git. Tire-os do controle de versão.")]
-    return []
+    """Nenhum material recebido, nenhuma ata e nenhum arquivo da pasta de entrada está versionado."""
+    achados: list[Achado] = []
+    pastas = [(comum.INTAKE / "materiais", "de material recebido"), (comum.INTAKE / "entrada", "da pasta de entrada"), (comum.BASE / "_atas", "de ata ou transcrição")]
+    for pasta, nome in pastas:
+        if not pasta.is_dir():
+            continue
+        try:
+            saida = subprocess.run(
+                ["git", "-C", str(comum.RAIZ), "ls-files", "--", str(pasta)],
+                capture_output=True, text=True, timeout=20,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return achados
+        rastreados = [l for l in saida.stdout.splitlines() if l.strip() and not l.endswith((".gitkeep", "_atas/LEIA-ME.md"))]
+        if saida.returncode == 0 and rastreados:
+            achados.append(Achado("erro", "confidencialidade", comum.relativo(pasta), 0, f"{len(rastreados)} arquivo(s) {nome} estão no git. Tire-os do controle de versão."))
+    return achados
 
 
 def repositorio_do_projeto() -> list[Achado]:
@@ -502,6 +504,38 @@ def intake() -> list[Achado]:
             prazo = linha.get("prazo", "")
             atraso = " O prazo passou." if re.fullmatch(r"\d{4}-\d{2}-\d{2}", prazo) and prazo < hoje else ""
             achados.append(Achado("aviso", "intake", nome, 0, f"{linha.get('id', '?')} ({linha.get('material', '')}) está '{linha.get('estado', '')}'.{atraso}"))
+    return achados
+
+
+# --- Prazos e reuniões ----------------------------------------------------
+
+_ESTADOS_DE_ACAO = {"proposta", "aberta", "concluida", "cancelada"}
+
+
+def prazos() -> list[Achado]:
+    """Ações com campo fora do formato e itens vencidos que esperam a resposta do consultor."""
+    import rotina
+
+    achados: list[Achado] = []
+    nome = comum.relativo(comum.PROJETO / "acoes.tsv")
+    for linha in comum.ler_tsv(comum.PROJETO / "acoes.tsv"):
+        ident, estado = linha.get("id", "?"), comum.normalizar(linha.get("estado", ""))
+        if estado not in _ESTADOS_DE_ACAO:
+            achados.append(Achado("erro", "prazos", nome, 0, f"{ident}: o estado '{linha.get('estado', '')}' não existe. Vale proposta, aberta, concluida ou cancelada."))
+        for campo in ("inicio", "prazo"):
+            if linha.get(campo, "") and not rotina.data(linha[campo]):
+                achados.append(Achado("erro", "prazos", nome, 0, f"{ident}: o campo '{campo}' precisa de uma data no formato AAAA-MM-DD."))
+        if estado == "aberta" and not linha.get("prazo", ""):
+            achados.append(Achado("aviso", "prazos", nome, 0, f"{ident} está aberta sem prazo. Pergunte a data ao consultor, ou deixe o item como proposta."))
+        if estado == "aberta" and not linha.get("dono", ""):
+            achados.append(Achado("aviso", "prazos", nome, 0, f"{ident} está aberta sem dono."))
+    parametros = rotina.parametros()
+    hoje = datetime.date.today()
+    if parametros["pausa_ate"] and parametros["pausa_ate"] >= hoje:
+        return achados
+    for item in rotina.itens_com_prazo():
+        if hoje > item.prazo:
+            achados.append(Achado("aviso", "prazos", comum.relativo(comum.PROJETO), 0, f"{item.ident} ({item.tipo}) venceu em {item.prazo} e está sem resposta: concluído, nova data (rotina.py --remarcar) ou não é mais necessário (rotina.py --dispensar)."))
     return achados
 
 

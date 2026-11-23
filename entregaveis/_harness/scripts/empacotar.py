@@ -136,7 +136,8 @@ def modelos() -> str:
     partes = [topo("Modelos", nota)]
     grupos = (
         ("Entregável", comum.MODELOS / "entregavel", ("briefing.md", "storyline.md", "storyboard.md", "conteudo.md", "documento.md", "planilha.md", "revisao.md")),
-        ("Projeto", comum.MODELOS / "projeto", ("brief.md", "fases.md", "audiencia.md", "marca.md", "regras-de-material.md", "decisoes.md", "licoes.md", "evidencias.tsv", "glossario.tsv", "adiados.tsv", "limites.tsv")),
+        ("Projeto", comum.MODELOS / "projeto", ("brief.md", "fases.md", "audiencia.md", "marca.md", "regras-de-material.md", "decisoes.md", "licoes.md", "evidencias.tsv", "glossario.tsv", "adiados.tsv", "limites.tsv",
+             "acoes.tsv", "riscos.tsv", "reunioes.tsv", "ritos.tsv", "prazos.tsv", "cadencias.tsv", "diario.md")),
         ("Fase", comum.MODELOS / "fase", ("passagem.md",)),
         ("Materiais", comum.MODELOS / "intake", ("registro.tsv",)),
         ("Domínio", comum.MODELOS / "dominio", ("dominio.md", "checagens.tsv", "casos.tsv")),
@@ -182,7 +183,8 @@ def arquivos_do_kit(do_projeto: bool = False) -> dict[str, str]:
 
 # --- o pacote de um projeto -------------------------------------------------
 
-REGISTROS = ("brief.md", "fases.md", "audiencia.md", "marca.md", "regras-de-material.md", "decisoes.md", "licoes.md", "glossario.tsv", "evidencias.tsv", "adiados.tsv", "limites.tsv")
+REGISTROS = ("brief.md", "fases.md", "audiencia.md", "marca.md", "regras-de-material.md", "decisoes.md", "licoes.md", "glossario.tsv", "evidencias.tsv", "adiados.tsv", "limites.tsv",
+             "acoes.tsv", "riscos.tsv", "reunioes.tsv", "ritos.tsv", "prazos.tsv", "cadencias.tsv", "diario.md")
 
 
 def pacotes_do_projeto() -> list[str]:

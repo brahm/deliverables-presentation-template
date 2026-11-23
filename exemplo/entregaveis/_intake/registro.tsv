@@ -8,6 +8,6 @@ M-003	Proposta e escopo contratado	escopo	Consultora	2026-09-14	2026-09-16	receb
 M-004	Contratos e faturas das plataformas de marketing	dados	Compras do cliente	2026-09-14	2026-09-25	recebido	_intake/materiais/contratos.xlsx	Origem de E-001, E-003, E-006, E-007 e E-008
 M-005	Regras de confidencialidade do cliente	regra	Jurídico do cliente	2026-09-14	2026-09-18	recebido	_intake/materiais/regras.pdf	Levadas a _projeto/regras-de-material.md
 M-006	Roteiro de avaliação usado pela consultora	referencia	Consultora	2026-09-14	2026-09-18	recebido	_intake/materiais/roteiro.docx	Base do domínio do projeto
-M-007	Relatórios de uso das plataformas	dados	Tecnologia do cliente	2026-09-21	2026-10-09	em falta		Trava a análise de subuso (B-001)
+M-007	Relatórios de uso das plataformas	dados	Tecnologia do cliente	2026-09-21	2026-12-04	em falta		Trava a análise de subuso (B-001)
 M-008	Notas das entrevistas com os donos das plataformas	entrevista	Consultora	2026-09-21	2026-10-09	recebido	_intake/materiais/entrevistas.md	Origem de E-002 e E-005
 M-009	Medição do caso de carrinho abandonado	dados	Tecnologia do cliente	2026-10-01	2026-10-08	recebido	_intake/materiais/carrinho.csv	Origem de E-004

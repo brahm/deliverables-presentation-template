@@ -237,7 +237,7 @@ class Instalador:
         saida = subprocess.run([sys.executable, str(script)], capture_output=True, text=True, timeout=60)
         criados = [l.strip() for l in saida.stdout.splitlines() if l.startswith("  ")]
         if criados:
-            self.nota(f"{len(criados)} registros do projeto criados em {self.pasta}/_projeto, {self.pasta}/_intake e {self.pasta}/_dominio")
+            self.nota(f"{len(criados)} registros do projeto criados em {self.pasta}/_projeto, {self.pasta}/_intake, {self.pasta}/_dominio e {self.pasta}/_atas")
 
     def instalar(self) -> int:
         base = self.destino / self.pasta
@@ -258,6 +258,14 @@ class Instalador:
                 print(f"  {linha}")
         else:
             print("\nNada a fazer: o harness já está instalado nesta versão.")
+        try:
+            import ambiente  # noqa: PLC0415
+
+            falta = ambiente.faltas_em_uma_linha()
+        except Exception:  # noqa: BLE001 - a instalação não falha por causa da conferência do ambiente
+            falta = ""
+        if falta:
+            self.mantido.append(falta + f" Rode: python3 {self.pasta}/_harness/scripts/ambiente.py")
         if self.mantido:
             print("\nAtenção:")
             for linha in self.mantido:

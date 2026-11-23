@@ -1,0 +1,8 @@
+# Ações, marcos, decisões pedidas e aprovações com prazo. É daqui que a rotina tira os avisos de prazo.
+# tipo: tarefa, marco, decisao ou aprovacao. lado: consultoria ou cliente.
+# inicio: a data planejada de início, ou o dia em que o item foi criado. prazo: AAAA-MM-DD.
+# base: sim quando o prazo é da linha de base ou do contrato. A data nova pede o acordo do cliente.
+# estado: proposta (espera o sim do consultor), aberta, concluida ou cancelada.
+# origem: A-nnn quando veio de uma ata, com o trecho em observacao, ou consultor. movida_em: a última vez em que o item andou.
+# O prazo só muda com rotina.py --remarcar, que guarda a data anterior em prazos.tsv.
+id	tipo	item	dono	lado	inicio	prazo	base	estado	origem	movida_em	observacao

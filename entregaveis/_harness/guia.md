@@ -6,7 +6,9 @@ dezenas. Quem está começando segue a ordem das seções. Quem já tem
 prática vai direto à tabela de recursos e à seção de ajustes.
 
 A instalação está no `README.md` e no `INSTALL.md` do repositório do
-template.
+template. Antes de começar, o agente confere se a máquina tem o que o
+harness precisa e resolve com você o que faltar: veja a seção "Ambiente
+da máquina".
 
 ## A ideia em um minuto
 
@@ -61,6 +63,13 @@ As frases abaixo são exemplos. Use as suas palavras.
 | Pedir outro idioma | "Preciso desta apresentação também em espanhol." |
 | Adiar algo | "A análise de subuso fica para depois dos relatórios de uso." |
 | Corrigir o agente | "A diretoria diz plataforma, não ferramenta. Não repita." |
+| Começar o dia | "O que temos para hoje?" |
+| Entregar uma ata | "Salvei a ata da reunião de ontem na pasta de atas." |
+| Contar uma reunião sem ata | "Falei com a diretora financeira hoje. Ela aprovou o prazo e pediu o custo por loja." |
+| Responder a um prazo vencido | "A nomeação fica para o dia 20, porque o diretor está de férias." |
+| Dispensar algo | "O relatório de uso não é mais necessário. O cliente desistiu dessa frente." |
+| Trazer algo feito à mão | "Montei esta planilha de custos no fim de semana. Está na pasta de entrada." |
+| Encerrar o dia | "Por hoje é isso." |
 | Fechar um entregável | "Apresentei hoje. Aprovaram a saída de duas plataformas e perguntaram pela multa." |
 | Mudar a natureza do projeto | "A proposta foi vendida. Agora começa o diagnóstico." |
 | Levar a outro aplicativo | "Vou continuar isto no Copilot. Monte o pacote." |
@@ -96,6 +105,11 @@ anterior parou.
 | `licoes.md` | O que deu errado e a guarda que impede a repetição |
 | `limites.tsv` | Os limites de palavras por veículo, quando você muda o padrão |
 | `fases.md` | As fases do projeto: proposta, trabalho vendido, extensão |
+| `reunioes.tsv` e `ritos.tsv` | As atas processadas, as reuniões sem ata e as reuniões que se repetem |
+| `acoes.tsv` | As tarefas, os marcos, as decisões pedidas e as aprovações, com dono e prazo |
+| `riscos.tsv` | Os riscos, com causa, efeito e dono |
+| `prazos.tsv` | O histórico de cada data mudada |
+| `diario.md` | O fechamento de cada dia de trabalho |
 
 ### Materiais e pedido de dados
 
@@ -204,6 +218,62 @@ palavras. Uma decisão que o agente tomou por você fica como `Vigente
 uma linha com o motivo. Uma correção sua vira uma lição com guarda: de
 preferência uma checagem, que impede a repetição.
 
+### Atas e reuniões
+
+Você salva a ata ou a transcrição em `entregaveis/_atas/`, em texto,
+Markdown, Word ou legenda de gravação. O agente acha o arquivo novo, lê
+e leva cada trecho ao registro certo, sempre com a reunião de origem:
+decisão, tarefa com dono e prazo, risco, dado novo, pedido de material.
+Você vê o que mudou no resumo do dia e corrige ali. Só espera o seu sim
+o que toca o contrato ou sai do projeto: escopo novo, data de base,
+aceite e mensagem ao cliente. Uma ata corrigida é lida de novo só no
+trecho que mudou. Sem ata, você conta a reunião e o agente registra do
+mesmo jeito, marcando que a fonte é o seu relato. A pasta fica fora do
+git.
+
+### Rotina do dia
+
+No começo do dia, o agente mostra em uma tela o que chegou, o que espera
+o seu sim, os prazos e o que parou. No fim, grava no diário o que foi
+feito e o que fica para amanhã. As reuniões que se repetem ficam em
+`_projeto/ritos.tsv`, e o agente avisa quando uma delas passa sem ata.
+Em uma pausa do projeto, diga até quando, e os avisos param até essa
+data.
+
+### Prazos pelo cronograma
+
+Os avisos acompanham o cronograma e têm três fases.
+
+| Fase | Quando | O que você vê |
+| --- | --- | --- |
+| Parado dentro do prazo | O item não se move há mais de um terço da janela dele, e há pelo menos dois dias úteis | Um aviso leve, uma vez só |
+| Prazo próximo | Resta um quinto da janela ou menos, entre um e cinco dias úteis, ou as etapas que faltam não cabem no tempo | Aviso em todo resumo |
+| Vencido | A data passou | Aviso em todo resumo, até você responder |
+
+Um item vencido pede uma de três respostas: concluído, nova data ou não
+é mais necessário. Com a data nova, a anterior fica guardada em
+`_projeto/prazos.tsv`, com quem mudou e o motivo, e aparece nos
+relatórios de estado como deslocamento. A segunda mudança do mesmo item
+é destacada, e a terceira vira um risco. Uma data de base, que está no
+contrato ou foi acordada com o cliente, só muda com a concordância dele.
+Os limites ficam em `_projeto/cadencias.tsv` e são seus para ajustar. Os
+dias úteis vão de segunda a sexta e não contam feriados.
+
+### Dispensas
+
+Quando algo deixa de ser necessário ou não depende mais de aprovação,
+diga com as suas palavras. O agente registra a decisão com o motivo,
+cancela o item sem apagar nada, leva o efeito a todos os registros que o
+citam e para de avisar. Ele nunca presume uma dispensa: sem a sua frase,
+o item segue cobrado.
+
+### Material feito à mão
+
+O que você fez fora do fluxo ou recebeu por outro caminho vai para
+`entregaveis/_intake/entrada/`. O agente classifica cada arquivo, leva
+ao lugar certo e confere se ele contradiz os registros. Você não refaz
+nada.
+
 ### Fases do projeto
 
 Um projeto muda de natureza e continua o mesmo: a proposta vendida vira
@@ -227,6 +297,22 @@ No Claude desktop, no ChatGPT desktop e no Microsoft Copilot, o método
 chega como um texto de instruções e arquivos de conhecimento, sem as
 travas. O agente monta o pacote e traz de volta o que foi feito fora. O
 passo a passo está em [ambientes/LEIA-ME.md](ambientes/LEIA-ME.md).
+
+### Ambiente da máquina
+
+O harness usa scripts em Python. No início do projeto e na instalação, o
+agente confere a máquina: o Python, o Git e os programas que geram os
+arquivos. Para cada falta, ele mostra o comando do seu sistema e
+pergunta se instala ele mesmo ou se você prefere seguir o passo a passo.
+Só o Python é essencial. O resto é pedido na hora de gerar o arquivo de
+um formato.
+
+Quem não pode instalar nada tem saída. No projeto do Claude desktop e do
+ChatGPT desktop e no Microsoft Copilot, o método roda no ambiente do
+próprio aplicativo. Quem só tem o Copilot web usa um caderno do Copilot
+ou uma conversa com as instruções e os arquivos de conhecimento
+anexados. Nesses casos não há checagem em script: o agente confere à mão
+e diz isso no relatório.
 
 ### Atualização
 
@@ -252,6 +338,9 @@ No Claude Code, três situações bloqueiam o agente. Todas têm saída.
 | O gerador diz que falta um pacote | Instale `python-pptx`, `python-docx` ou `openpyxl`. Para PDF, instale o LibreOffice |
 | Uma checagem acusa algo que você quer manter | Diga o motivo. O agente ajusta o limite, o glossário ou a regra do projeto e registra a decisão |
 | A página ficou com uma lacuna visível | Falta um dado. Veja o pedido em `_intake/registro.tsv` e o item em `_projeto/adiados.tsv` |
+| O agente diz que falta algo na máquina | Diga sim para ele instalar, ou siga os comandos que ele mostrar. Só o Python impede o trabalho |
+| Um aviso de prazo não faz mais sentido | Diga se foi concluído, a data nova ou que não é mais necessário. O aviso some com a resposta |
+| Os avisos chegam cedo ou tarde demais para este projeto | Peça ao agente para ajustar os limites em `_projeto/cadencias.tsv` |
 | Uma sessão nova parece não lembrar do projeto | Pergunte "como está o projeto?". O agente lê os registros e retoma |
 
 ## Ajustes para quem já tem prática
@@ -285,3 +374,6 @@ Rode na raiz do projeto.
 | `python3 entregaveis/_harness/scripts/fase.py` | As fases do projeto |
 | `python3 entregaveis/_harness/scripts/repositorio.py` | Se o remoto é local, privado ou público |
 | `python3 entregaveis/_harness/scripts/empacotar.py --projeto` | O pacote para levar o projeto a outro aplicativo |
+| `python3 entregaveis/_harness/scripts/rotina.py` | O resumo do dia: o que chegou, o que espera o seu sim e os prazos |
+| `python3 entregaveis/_harness/scripts/rotina.py --datas` | As datas que mudaram, com a original e o motivo |
+| `python3 entregaveis/_harness/scripts/ambiente.py` | O que a máquina tem e o que falta, com o comando de cada falta |

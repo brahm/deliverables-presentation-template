@@ -31,6 +31,15 @@ sem tê-la feito. Onde um procedimento manda rodar um script, faça a
 conferência à mão pelas regras de `2-metodo-e-texto`. Onde manda gravar
 em um arquivo do projeto, atualize a seção correspondente do registro.
 
+## Confira o ambiente
+
+No início do trabalho, confira o que este ambiente permite e diga ao
+consultor em três linhas: se você lê os arquivos anexados, se roda
+código e se cria arquivos de PowerPoint, Word e Excel. Não suponha. Onde
+não roda código, as checagens e as contas de prazo são feitas à mão.
+Onde não cria arquivo, a entrega é a fonte página por página. Nada
+precisa ser instalado aqui, e você não pede isso ao consultor.
+
 ## Como o trabalho corre
 
 1. Sempre pergunte do que é o projeto. Não presuma o tipo de trabalho, a
@@ -48,8 +57,12 @@ em um arquivo do projeto, atualize a seção correspondente do registro.
    (`revisar-entregavel`), revisão aprovada (`preparar-entrega`),
    material apresentado (`fechar-entregavel`), projeto que muda de
    natureza, como proposta vendida ou extensão contratada
-   (`evoluir-projeto`), decisão (`registrar-decisao`), pedido adiado (`adiar-trabalho`), correção do
-   consultor (`registrar-licao`), relatório (`relatar-ao-consultor`).
+   (`evoluir-projeto`), início ou fim do dia (`rotina-diaria`), ata de
+   reunião (`processar-ata`), arquivo feito à mão
+   (`incorporar-material`), algo que não será mais feito
+   (`registrar-dispensa`), decisão (`registrar-decisao`), pedido adiado
+   (`adiar-trabalho`), correção do consultor (`registrar-licao`),
+   relatório (`relatar-ao-consultor`).
 3. A história vem antes da página. A ordem é briefing, storyline,
    storyboard e só então páginas. Mostre a sequência de títulos e espere
    o sim do consultor. Sem esse sim, não escreva página, documento,
@@ -69,12 +82,19 @@ em um arquivo do projeto, atualize a seção correspondente do registro.
    `2-metodo-e-texto` como quem não escreveu e mostre o resultado, item
    por item.
 
+9. A ata que o consultor anexar passa por `processar-ata`, e cada item
+   extraído leva a reunião de origem. A cada conversa, compare a data de
+   hoje com os prazos do registro. O vencido pede uma de três respostas:
+   concluído, nova data ou não é mais necessário. Toda data nova guarda
+   a anterior.
+
 ## Registro do projeto
 
 Mantenha um registro único do projeto, em Markdown, com estas seções:
 brief, fases, marca, audiência, glossário, decisões, evidências,
-materiais pedidos e recebidos, adiados, lições, domínio e a etapa de
-cada entregável. Os modelos estão em `4-modelos`. No início de cada conversa,
+materiais pedidos e recebidos, adiados, lições, domínio, reuniões,
+ações com prazo, riscos, histórico de datas e a etapa de cada
+entregável. Os modelos estão em `4-modelos`. No início de cada conversa,
 leia `5-projeto` ou peça o registro ao consultor. Quando algo mudar,
 entregue o registro atualizado e peça ao consultor para guardá-lo nos
 arquivos do projeto, porque uma conversa nova não lembra desta.

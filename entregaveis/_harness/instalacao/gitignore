@@ -1,6 +1,10 @@
 # harness-de-entregaveis: inicio
 entregaveis/_intake/materiais/*
 !entregaveis/_intake/materiais/.gitkeep
+entregaveis/_intake/entrada/*
+!entregaveis/_intake/entrada/.gitkeep
+entregaveis/_atas/*
+!entregaveis/_atas/LEIA-ME.md
 entregaveis/_harness/.estado/
 entregaveis/_ambiente/
 __pycache__/

@@ -1,0 +1,6 @@
+# Reuniões e atas do projeto. As atas ficam em entregaveis/_atas/, fora do git. Quem grava aqui é o rotina.py.
+# fonte: a ferramenta que gerou a ata, anotação do consultor ou relato de memória.
+# versao: a marca do arquivo processado. Quando o arquivo muda, a rotina mostra só a diferença.
+# situacao: prevista, realizada, sem ata ou ata processada. resultado: quantas decisões, ações e riscos saíram dela.
+id	data	reuniao	rito	participantes	fonte	arquivo	versao	situacao	resultado	processada_em
+A-001	2026-11-05	Reunião de diretoria		Diretoria da Lojas Exemplo, consultora	relato da consultora			realizada	2 decisões, 3 ações	2026-11-06

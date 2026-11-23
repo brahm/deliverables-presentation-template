@@ -1,0 +1,13 @@
+# Limites dos avisos da rotina. O cronograma manda: estes números só dizem quando avisar dentro da janela de cada item.
+# A janela vai do início ao prazo do item, em dias úteis. Troque um valor para ajustar o projeto.
+sinal	valor	observacao
+parado_fracao	0.33	Sem movimento por mais desta fração da janela, o item parece parado. Aviso leve, dado uma vez
+parado_minimo	2	Dias úteis sem movimento antes do aviso leve, por menor que seja a janela
+proximo_fracao	0.2	Quando resta esta fração da janela ou menos, o prazo está próximo
+proximo_minimo	1	O aviso de prazo próximo nunca vem com menos dias úteis do que este
+proximo_maximo	5	O aviso de prazo próximo nunca vem com mais dias úteis do que este
+ata_depois_da_reuniao	1	Dias úteis para a ata de uma reunião do calendário chegar
+propostas_sem_resposta	3	Dias úteis que uma proposta de ata espera o sim antes de voltar ao resumo como aviso
+entrada_sem_classificar	1	Dias úteis que um arquivo pode ficar na pasta de entrada
+projeto_sem_evento	3	Dias úteis sem nenhum registro antes de a rotina perguntar se o projeto está pausado
+pausa_ate		Data até a qual os avisos ficam em silêncio. Quem grava é o rotina.py --pausar
