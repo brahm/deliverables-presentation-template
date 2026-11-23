@@ -194,6 +194,22 @@ audiência dele e aprovada pelo consultor.
 6. O que precisa ser decidido agora, por causa das datas de renovação
 7. O pedido
 
+## Controles de governança
+
+Os controles estão em `controles.tsv` e aparecem com
+`governanca.py --controles`. Eles dizem o que precisa ficar registrado e
+aprovado em qualquer assessment, seja qual for o método do projeto.
+
+| Controle | Antes de | O que protege |
+| --- | --- | --- |
+| Critérios, pesos e escala aprovados antes de avaliar | Storyline | Evita viés e discussão do critério depois do resultado |
+| Registro de achados com evidência e severidade | Redação | Achado sem prova não entra em página |
+| Rastreabilidade do caso de uso à recomendação | Revisão | Cada recomendação responde a uma lacuna real |
+| Validação dos achados com os donos das plataformas | Envio | Corrige erro de fato antes do material final |
+
+Um controle só é dado como cumprido com a evidência e com o nome de quem
+confirmou. A dispensa é do consultor, com o motivo.
+
 ## Evidência que cada afirmação pede
 
 | Afirmação | Fonte aceitável |

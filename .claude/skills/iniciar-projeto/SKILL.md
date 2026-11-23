@@ -38,8 +38,8 @@ sem esperar que ele dite cada passo.
    - Do que é o projeto e que decisão ele precisa provocar. Esta você
      faz sempre: diga o que entendeu e peça a confirmação.
    - O tipo de trabalho: transformação de marketing, assessment de
-     martech e adtech, mídia, retail media, processos agênticos,
-     proposta, treinamento ou outro.
+     martech e adtech, mídia, definição de processos de mídia digital,
+     retail media, processos agênticos, proposta, treinamento ou outro.
    - Os entregáveis previstos, com formato, audiência e prazo.
    - Os idiomas dos entregáveis.
    - As regras da organização e do cliente para materiais: onde podem

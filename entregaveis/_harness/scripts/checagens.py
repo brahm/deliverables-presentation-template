@@ -579,6 +579,19 @@ def governanca_do_projeto() -> list[Achado]:
         codigo = linha.get("codigo", "")
         if codigo not in codigos and not re.fullmatch(r"SM-\d+", codigo):
             achados.append(Achado("erro", "governanca", comum.relativo(comum.PROJETO / "governanca.tsv"), 0, f"O material '{codigo}' não está no catálogo. Um material próprio entra com governanca.py --sob-medida."))
+    do_kit = {c["codigo"] for pacote in sorted((comum.HARNESS / "pacotes").glob("*/controles.tsv")) for c in governanca.controles_do_pacote(pacote.parent.name)}
+    registro = comum.relativo(comum.PROJETO / "controles.tsv")
+    for linha in comum.ler_tsv(comum.PROJETO / "controles.tsv"):
+        codigo = linha.get("codigo", "")
+        if codigo not in do_kit:
+            achados.append(Achado("erro", "governanca", registro, 0, f"O controle '{codigo}' não existe em nenhum pacote. Veja os códigos com governanca.py --controles."))
+        if comum.normalizar(linha.get("situacao", "")) not in governanca.SITUACOES:
+            achados.append(Achado("erro", "governanca", registro, 0, f"{codigo}: a situação '{linha.get('situacao', '')}' não existe. Vale pendente, a confirmar, cumprido ou nao se aplica."))
+        if comum.normalizar(linha.get("situacao", "")) == "cumprido" and not (linha.get("evidencia", "") and linha.get("confirmado_por", "")):
+            achados.append(Achado("erro", "governanca", registro, 0, f"{codigo}: controle cumprido sem evidência ou sem quem confirmou. Grave com governanca.py --controle {codigo} --cumprido."))
+    for codigo, texto in governanca.controles_em_aberto():
+        if "sem evidência" in texto:
+            achados.append(Achado("aviso", "governanca", registro, 0, texto))
     # Quem depende de quem: um id que não existe quebra a lista do dia em silêncio.
     acoes = comum.ler_tsv(comum.PROJETO / "acoes.tsv")
     conhecidos = {l.get("id", "") for l in acoes} | {l.get("id", "") for l in comum.ler_tsv(comum.INTAKE / "registro.tsv")}

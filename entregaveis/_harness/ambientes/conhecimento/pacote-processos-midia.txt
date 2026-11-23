@@ -1,0 +1,112 @@
+# Pacote processos-midia
+
+Arquivo de conhecimento do harness de entregáveis, versão 0.12.0. Gerado por empacotar.py: não edite à mão.
+
+Ponto de partida genérico para este tipo de projeto. O domínio do projeto vence o pacote onde os dois se contradizem.
+
+## Pacote: definição de processos de mídia digital
+
+### Quando usar
+
+O projeto define ou redesenha os processos de mídia digital de uma
+empresa: como um pedido vira plano, como o plano é aprovado, executado,
+medido e pago, e quem responde por cada passo entre o anunciante, a
+agência e as plataformas.
+
+Este pacote traz só a governança deste tipo de projeto: os controles que
+precisam estar registrados e aprovados. Ele não traz método, etapas de
+trabalho, lista de dados nem roteiro de entrevista. O método e o que é
+do cliente chegam durante o projeto e ficam em `entregaveis/_dominio/`,
+pela skill `calibrar-dominio`.
+
+Quando o projeto também avalia o investimento ou o resultado da mídia,
+some o pacote de mídia. Quando avalia as plataformas, some o de martech
+e adtech.
+
+### O que perguntar ao consultor no início
+
+Além das perguntas de `iniciar-projeto`:
+
+- Quais processos estão no escopo, e quem é o dono de cada um hoje?
+- Quais partes participam: anunciante, agência, plataformas, outras
+  áreas da empresa? Quem fala por cada uma?
+- Quem aprova o processo novo no anunciante, e a agência precisa dar o
+  de acordo?
+- O contrato com a agência já traz níveis de serviço ou alçadas que o
+  processo novo precisa respeitar?
+- O processo novo muda o trabalho, o papel ou a ferramenta de alguém?
+
+### Controles de governança
+
+Os controles estão em `controles.tsv` e aparecem com
+`governanca.py --controles`. Cada um diz o que precisa ficar registrado,
+antes de que etapa do entregável e que evidência o fecha.
+
+| Controle | Vale | Antes de | O que protege |
+| --- | --- | --- | --- |
+| Taxonomia de campanhas e dicionário de métricas aprovados | Sempre | Storyline | Todos contam a mesma coisa do mesmo jeito antes de o processo ser desenhado |
+| Papéis e níveis de serviço entre anunciante, agência e plataformas | Sempre | Revisão | Cada passagem entre as partes tem responsável e prazo aceitos pelos dois lados |
+| Alçadas de aprovação de planos e autorizações de mídia | Sempre | Revisão | O processo diz quem aprova o quê e até que valor |
+| Validação de cada processo com o dono | Sempre | Envio | O material não sai com erro de fato sobre o trabalho de alguém |
+| Plano e registro de entrevistas e workshops | Quando o levantamento ouve mais de uma área ou empresa | Storyline | O levantamento ouviu quem precisava, e cada conversa deixou registro |
+| Avaliação de impacto da mudança | Quando o processo muda o trabalho de alguém | Envio | As áreas afetadas sabem o que muda e que apoio terão |
+
+O controle condicional começa como "a confirmar", e o consultor diz se
+vale. Um controle só é dado como cumprido com a evidência e com o nome
+de quem confirmou. A dispensa é do consultor, com o motivo.
+
+### O que este pacote não traz
+
+- O desenho dos processos, a notação e o nível de detalhe.
+- A lista de dados e de documentos a pedir.
+- O roteiro das entrevistas e dos workshops.
+- Os termos e as métricas do cliente.
+
+Tudo isso é fornecido pelo consultor durante a execução do projeto.
+
+## Procedimento do pacote processos-midia
+
+Quando: em projeto de definição ou redesenho de processos de mídia digital, ao iniciar o projeto, ao abrir um entregável, antes da storyline, da revisão e do envio, e quando a lista do dia ou o estado mostram um controle do tipo de projeto pendente ou a confirmar. Traz só os controles de governança deste tipo de projeto, sem método e sem etapas de trabalho.
+
+O conteúdo do pacote está em
+`entregaveis/_harness/pacotes/processos-midia/`. Ele traz a governança
+deste tipo de projeto. O método, as etapas e o que é do cliente vêm do
+consultor durante o projeto e ficam no domínio, com `calibrar-dominio`.
+As skills do fluxo continuam valendo.
+
+1. No início do projeto, faça ao consultor as perguntas da seção "O que
+   perguntar ao consultor no início" de `PACOTE.md`, junto com as de
+   `iniciar-projeto`.
+2. Mostre os controles com
+   `python3 entregaveis/_harness/scripts/governanca.py --controles` e
+   leve a lista ao consultor, com a tabela de "Controles de governança".
+3. Para cada controle a confirmar, pergunte uma vez se ele vale neste
+   projeto. Sim: `--controle CODIGO --pendente`. Não:
+   `--controle CODIGO --nao-se-aplica --motivo MOTIVO`.
+4. Antes da storyline, da revisão e do envio, confira os controles que
+   valem antes daquela etapa. O que falta vira pedido ao cliente ou
+   pergunta ao consultor, e não é contornado.
+5. Um controle só fecha com a evidência e com quem confirmou:
+   `--controle CODIGO --cumprido --evidencia ID --quem NOME`. A
+   confirmação vem do consultor ou do cliente, nunca do agente.
+6. Registre papéis e prazos de resposta em `_projeto/papeis.tsv`, as
+   aprovações em `_projeto/decisoes.md` e as conversas em
+   `_projeto/reunioes.tsv`. A evidência do controle cita esses ids.
+7. Não escreva método, etapa de trabalho ou roteiro a partir deste
+   pacote. Leia a seção "O que este pacote não traz" e peça ao consultor
+   o que faltar.
+
+## Controles de governança
+
+~~~text
+# Controles de governança deste tipo de projeto. Dizem o que precisa ficar registrado e aprovado, e não como fazer o trabalho.
+# condicao: sempre, ou a situação em que o controle vale (começa por quando). antes_de: a etapa do entregável antes da qual o controle precisa estar cumprido: storyline, storyboard, redacao, revisao ou envio.
+# registra: o que fica registrado. comprova: a evidência que fecha o controle.
+codigo	controle	condicao	antes_de	registra	comprova
+taxonomia-e-metricas	Taxonomia de campanhas e dicionário de métricas aprovados	sempre	storyline	Padrão de nomes, dimensões, e a definição e a fórmula de cada métrica que os processos usam	Decisão registrada (D-nnn) com quem aprovou no anunciante e na agência
+papeis-e-niveis-de-servico	Papéis e níveis de serviço entre anunciante, agência e plataformas	sempre	revisao	Quem executa, quem aprova, quem é consultado e quem é informado em cada processo, e o prazo de cada passagem entre as partes	Matriz de papéis e níveis de serviço com o de acordo de cada parte, em ata (A-nnn) ou decisão (D-nnn)
+alcadas-de-autorizacao	Alçadas de aprovação de planos e autorizações de mídia	sempre	revisao	Quem aprova cada plano e cada autorização, até que valor, onde a aprovação fica registrada e como uma alteração é aprovada	Decisão registrada (D-nnn) com quem aprovou as alçadas no anunciante
+validacao-com-donos-dos-processos	Validação de cada processo com o dono	sempre	envio	Processo, dono, se confirma ou corrige, e a data	Resposta de cada dono de processo, em ata (A-nnn) ou em mensagem guardada
+entrevistas-e-workshops	Plano e registro de entrevistas e workshops	quando o levantamento ouve pessoas de mais de uma área ou de mais de uma empresa	storyline	Pessoa, tema, data, situação e a síntese do que foi dito	Reuniões registradas em reunioes.tsv (A-nnn), uma por entrevista ou workshop realizado
+impacto-da-mudanca	Avaliação de impacto da mudança	quando o processo novo muda o trabalho, o papel ou a ferramenta de alguém	envio	Público, o que muda para ele, a intensidade da mudança e o apoio necessário	Avaliação validada com o gestor de cada área afetada, em ata (A-nnn) ou decisão (D-nnn)
+~~~

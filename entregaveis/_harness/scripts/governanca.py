@@ -17,6 +17,10 @@ Uso:
     governanca.py --versao ENTREGAVEL --mudou TXT [--enviada-a NOME]
                                            a versão enviada abre a aprovação, com o prazo de resposta
     governanca.py --aceite ENTREGAVEL --quem NOME [--ressalvas TXT]
+    governanca.py --controles              os controles que os pacotes ativos trazem para o tipo de projeto
+    governanca.py --controle CODIGO --cumprido --evidencia TXT --quem NOME
+    governanca.py --controle CODIGO --nao-se-aplica --motivo TXT
+    governanca.py --controle CODIGO --pendente
     governanca.py --mudanca "PEDIDO" --solicitante NOME [--origem TXT]
     governanca.py --analisar MU-nnn [--impacto-prazo TXT] [--impacto-esforco TXT] [--impacto-escopo TXT]
     governanca.py --decidir MU-nnn --decisao aprovada|rejeitada --quem NOME [--motivo TXT]
@@ -468,6 +472,9 @@ def registrar_versao(ident: str, mudou: str, enviada_a: str, hoje: datetime.date
     print(f"{ident} v{numero} registrada em {hoje}" + (f", enviada a {enviada_a}" if enviada_a else "") + ".")
     if enviada_a:
         print(abrir_aprovacao(ident, f"v{numero}", enviada_a, hoje))
+        sem_evidencia = [f"{c.get('controle', '')} [{c['codigo']}]" for c in controles() if c["situacao"] in ("pendente", "a confirmar")]
+        if sem_evidencia:
+            print("ATENÇÃO: o envio saiu com controle do tipo de projeto sem evidência: " + "; ".join(sem_evidencia) + ". Leve ao consultor e responda com governanca.py --controle.")
     return 0
 
 
@@ -573,12 +580,126 @@ def decidir_mudanca(ident: str, decisao: str, quem: str, motivo: str, hoje: date
     return 0
 
 
+# --- Controles do tipo de projeto ------------------------------------------
+
+PORTOES = ["storyline", "storyboard", "redacao", "revisao", "envio"]  # o controle vale antes de o entregável chegar a esta etapa
+SITUACOES = ("pendente", "a confirmar", "cumprido", "nao se aplica")
+
+
+def pacotes_ativos() -> list[str]:
+    meta, _ = comum.cabecalho(comum.ler(comum.PROJETO / "brief.md"))
+    return [p.strip() for p in meta.get("pacotes", "").split(",") if p.strip()]
+
+
+def controles_do_pacote(nome: str) -> list[dict]:
+    return [dict(l, pacote=nome) for l in comum.ler_tsv(comum.HARNESS / "pacotes" / nome / "controles.tsv") if l.get("codigo", "")]
+
+
+def controles() -> list[dict]:
+    """Os controles dos pacotes ativos, com a situação que o projeto registrou. Sem registro, o controle está pendente; o condicional, a confirmar."""
+    respostas = {l.get("codigo", ""): l for l in comum.ler_tsv(comum.PROJETO / "controles.tsv")}
+    saida = []
+    for nome in pacotes_ativos():
+        for c in controles_do_pacote(nome):
+            resposta = respostas.get(c["codigo"], {})
+            padrao = "pendente" if comum.normalizar(c.get("condicao", "")) == "sempre" else "a confirmar"
+            saida.append(dict(c, situacao=comum.normalizar(resposta.get("situacao", "")) or padrao, evidencia=resposta.get("evidencia", ""),
+                              confirmado_por=resposta.get("confirmado_por", ""), confirmado_em=resposta.get("confirmado_em", ""), observacao=resposta.get("observacao", "")))
+    return saida
+
+
+def no_portao(controle: dict) -> list[str]:
+    """Os entregáveis da fase atual que já chegaram à etapa antes da qual o controle precisa estar cumprido."""
+    portao = comum.normalizar(controle.get("antes_de", ""))
+    if portao not in PORTOES:
+        return []
+    enviados = {l.get("entregavel", "") for l in comum.ler_tsv(comum.PROJETO / "versoes.tsv") if l.get("enviada_a", "")}
+    chegaram = []
+    for pasta in comum.entregaveis():
+        meta, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))
+        if comum.fase_do_entregavel(meta) != comum.fase_atual():
+            continue
+        etapa = comum.ETAPAS[comum.etapa(meta)]
+        if (portao == "envio" and (etapa == "entregue" or pasta.name in enviados)) or (portao != "envio" and comum.etapa(meta) >= comum.ETAPAS.index(portao)):
+            chegaram.append(pasta.name)
+    return chegaram
+
+
+def controles_em_aberto() -> list[tuple[str, str]]:
+    """O que os controles pedem do consultor hoje: (código, texto). O condicional a confirmar e o pendente cujo portão já chegou."""
+    saida = []
+    for c in controles():
+        nome = f"{c.get('controle', '')} [{c['codigo']}]"
+        if c["situacao"] == "a confirmar":
+            saida.append((c["codigo"], f"Controle do tipo de projeto: {nome}. Ele vale {c.get('condicao', '')}. Vale neste projeto?"))
+        elif c["situacao"] == "pendente" and no_portao(c):
+            saida.append((c["codigo"], f"Controle do tipo de projeto sem evidência: {nome}. Ele vale antes da etapa {c.get('antes_de', '')}, e {', '.join(no_portao(c))} já chegou lá. "
+                          f"Fecha com: {c.get('comprova', '')}"))
+    return saida
+
+
+def listar_controles() -> int:
+    lista = controles()
+    if not lista:
+        print("Nenhum pacote ativo traz controles de governança. Os pacotes do projeto: " + (", ".join(pacotes_ativos()) or "nenhum") + ".")
+        return 0
+    print("Controles de governança do tipo de projeto:")
+    for c in lista:
+        situacao = c["situacao"] + (f", por {c['confirmado_por']} em {c['confirmado_em']}" if c["confirmado_por"] else "")
+        print(f"- {c['codigo']} ({c['pacote']}): {c.get('controle', '')}. Situação: {situacao}.")
+        print(f"    Vale {c.get('condicao', '')}, antes da etapa {c.get('antes_de', '')}. Registra: {c.get('registra', '')}. Fecha com: {c.get('comprova', '')}.")
+        if c["evidencia"] or c["observacao"]:
+            print("    " + " ".join(p for p in (f"Evidência: {c['evidencia']}." if c["evidencia"] else "", c["observacao"]) if p))
+    print("O controle diz o que precisa ficar registrado e aprovado. O método e o conteúdo vêm do projeto, em _dominio/.")
+    print("Para responder: --controle CODIGO com --cumprido, --nao-se-aplica ou --pendente.")
+    return 0
+
+
+def responder_controle(args, hoje: datetime.date) -> int:
+    controle = next((c for c in controles() if c["codigo"] == args.controle), None)
+    if controle is None:
+        print(f"Os pacotes ativos não trazem o controle '{args.controle}'. Veja a lista com governanca.py --controles.")
+        return 1
+    if sum(bool(x) for x in (args.cumprido, args.nao_se_aplica, args.pendente)) != 1:
+        print("Diga uma resposta: --cumprido, --nao-se-aplica ou --pendente.")
+        return 2
+    if args.cumprido and not (args.evidencia and args.quem):
+        print("O controle cumprido pede a evidência (--evidencia, com o id do registro ou o arquivo) e quem confirmou (--quem).")
+        return 2
+    if args.nao_se_aplica and not args.motivo:
+        print("Diga em uma linha por que o controle não se aplica (--motivo). A dispensa é do consultor.")
+        return 2
+    caminho = rotina.garantir("controles.tsv")
+    comentarios, colunas, linhas = rotina.abrir_tsv(caminho)
+    linha = next((l for l in linhas if l.get("codigo", "") == args.controle), None)
+    if linha is None:
+        linha = {"codigo": args.controle}
+        linhas.append(linha)
+    if args.cumprido:
+        linha.update({"situacao": "cumprido", "evidencia": args.evidencia, "confirmado_por": args.quem, "confirmado_em": str(hoje)})
+        print(f"{args.controle} cumprido em {hoje}, confirmado por {args.quem}. Evidência: {args.evidencia}. Um entregável novo do mesmo tipo reabre o controle com --pendente.")
+    elif args.nao_se_aplica:
+        linha.update({"situacao": "nao se aplica", "evidencia": "", "confirmado_por": "", "confirmado_em": str(hoje), "observacao": (linha.get("observacao", "") + f" Não se aplica ({hoje}): {args.motivo}").strip()})
+        print(f"{args.controle} não se aplica a este projeto: {args.motivo}. Registre a dispensa com a skill registrar-dispensa.")
+    else:
+        linha.update({"situacao": "pendente", "evidencia": "", "confirmado_por": "", "confirmado_em": ""})
+        print(f"{args.controle} está pendente. Vale antes da etapa {controle.get('antes_de', '')} e fecha com: {controle.get('comprova', '')}.")
+    rotina.gravar_tsv(caminho, comentarios, colunas, linhas)
+    return 0
+
+
 def linha_de_estado() -> list[str]:
-    """A linha de governança do estado do projeto."""
+    """As linhas de governança do estado do projeto."""
     nivel = nivel_atual()
     if not nivel:
-        return ["Nível de governança não definido: aplique a skill definir-governanca."]
-    return [f"Governança: nível {NOMES.get(nivel, nivel)}, {len(mantidos())} material(is) emitido(s). A lista sai com scripts/governanca.py."]
+        linhas = ["Nível de governança não definido: aplique a skill definir-governanca."]
+    else:
+        linhas = [f"Governança: nível {NOMES.get(nivel, nivel)}, {len(mantidos())} material(is) emitido(s). A lista sai com scripts/governanca.py."]
+    lista = controles()
+    if lista:
+        conta = {s: sum(1 for c in lista if c["situacao"] == s) for s in SITUACOES}
+        linhas.append(f"Controles do tipo de projeto: {len(lista)}, com {conta['pendente']} pendente(s) e {conta['a confirmar']} a confirmar. A lista sai com scripts/governanca.py --controles.")
+    return linhas
 
 
 def main() -> int:
@@ -610,6 +731,12 @@ def main() -> int:
     analisador.add_argument("--aceite", metavar="ENTREGAVEL")
     analisador.add_argument("--quem", default="")
     analisador.add_argument("--ressalvas", default="")
+    analisador.add_argument("--controles", action="store_true")
+    analisador.add_argument("--controle", metavar="CODIGO")
+    analisador.add_argument("--cumprido", action="store_true")
+    analisador.add_argument("--nao-se-aplica", dest="nao_se_aplica", action="store_true")
+    analisador.add_argument("--pendente", action="store_true")
+    analisador.add_argument("--evidencia", default="")
     analisador.add_argument("--mudanca", metavar="PEDIDO")
     analisador.add_argument("--solicitante", default="")
     analisador.add_argument("--origem", default="")
@@ -640,6 +767,10 @@ def main() -> int:
         return registrar_versao(args.versao, args.mudou, args.enviada_a, hoje)
     if args.aceite:
         return registrar_aceite(args.aceite, args.quem, args.ressalvas, hoje)
+    if args.controles:
+        return listar_controles()
+    if args.controle:
+        return responder_controle(args, hoje)
     if args.mudanca:
         return abrir_mudanca(args.mudanca, args.solicitante, args.origem, hoje)
     if args.analisar:

@@ -68,7 +68,12 @@ comando é `python3 entregaveis/_harness/scripts/governanca.py`.
     frente, um comitê, um pagamento por marco, um compromisso de
     benefício ou dois desvios acima da tolerância. Desça, ou tire o
     material, quando ele deixar de ser lido.
-12. O esforço fica em `_projeto/esforco.tsv` quando o consultor informa.
+12. Os pacotes ativos podem trazer controles do tipo de projeto.
+    `governanca.py --controles` mostra a lista. Pergunte uma vez se
+    cada controle condicional vale e responda com `--controle CODIGO` e
+    `--pendente`, `--cumprido` ou `--nao-se-aplica`. O controle fecha
+    com a evidência e com quem confirmou, nunca por suposição.
+13. O esforço fica em `_projeto/esforco.tsv` quando o consultor informa.
     Não pergunte por horas e não avise que falta lançamento.
 
 Relate com `relatar-ao-consultor`: o nível, a lista de materiais e o que

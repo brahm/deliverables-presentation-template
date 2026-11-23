@@ -1,0 +1,8 @@
+# As respostas do projeto aos controles de governança que os pacotes ativos trazem. Quem grava é o governanca.py --controle.
+# O controle sem linha aqui está pendente, e o condicional, a confirmar. situacao: pendente, a confirmar, cumprido ou nao se aplica.
+# evidencia: o id do registro (D-nnn, E-nnn, A-nnn) ou o arquivo que comprova. confirmado_em: AAAA-MM-DD.
+codigo	situacao	evidencia	confirmado_por	confirmado_em	observacao
+criterios-de-avaliacao	cumprido	D-004 e entregaveis/_dominio/dominio.md	Consultora responsável	2026-09-22	
+achados-com-evidencia	cumprido	E-001 a E-008	Consultora responsável	2026-10-27	
+rastreabilidade	cumprido	entregaveis/leitura-executiva/storyboard.md	Consultora responsável	2026-11-03	
+validacao-com-donos-das-plataformas	cumprido	M-008	Consultora responsável	2026-11-03	

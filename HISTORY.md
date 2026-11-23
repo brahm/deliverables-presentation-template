@@ -3,6 +3,33 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.12.0
+
+- Controles de governança por tipo de projeto. Um pacote pode trazer
+  `controles.tsv`: o que precisa ficar registrado e aprovado, antes de
+  que etapa do entregável, e que evidência fecha. O controle não
+  descreve método nem atividade.
+- `governanca.py --controles` mostra os controles dos pacotes ativos.
+  `--controle CODIGO` responde com `--cumprido` (pede a evidência e quem
+  confirmou), `--nao-se-aplica` (pede o motivo) ou `--pendente`. As
+  respostas ficam em `_projeto/controles.tsv`.
+- O estado conta os controles pendentes e os que falta confirmar. A
+  lista do dia pergunta pelo controle condicional e cobra o pendente
+  quando o entregável chega à etapa. A checagem de governança avisa, e
+  o registro de um envio diz que controles ficaram sem evidência.
+- O pacote `martech-adtech` ganhou quatro controles: critérios
+  aprovados antes de avaliar, achados com evidência, rastreabilidade e
+  validação com os donos das plataformas.
+- Pacote novo `processos-midia`, para definição de processos de mídia
+  digital. Traz só governança: quatro controles fixos e dois
+  condicionais. Um pacote passa a poder existir sem pedido de dados,
+  roteiro de entrevista e glossário.
+
+O que o projeto precisa fazer: atualize com `--atualizar`. Um projeto
+com o pacote `martech-adtech` ativo passa a ver quatro controles
+pendentes. Responda cada um com a evidência que já existe, ou dispense
+com o motivo.
+
 ## 0.11.0
 
 - Materiais montados dos registros. `scripts/emitir.py` monta o status

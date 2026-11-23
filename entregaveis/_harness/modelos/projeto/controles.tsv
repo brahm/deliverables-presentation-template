@@ -1,0 +1,4 @@
+# As respostas do projeto aos controles de governança que os pacotes ativos trazem. Quem grava é o governanca.py --controle.
+# O controle sem linha aqui está pendente, e o condicional, a confirmar. situacao: pendente, a confirmar, cumprido ou nao se aplica.
+# evidencia: o id do registro (D-nnn, E-nnn, A-nnn) ou o arquivo que comprova. confirmado_em: AAAA-MM-DD.
+codigo	situacao	evidencia	confirmado_por	confirmado_em	observacao

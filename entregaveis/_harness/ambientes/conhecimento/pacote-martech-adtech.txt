@@ -1,6 +1,6 @@
 # Pacote martech-adtech
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.11.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.12.0. Gerado por empacotar.py: não edite à mão.
 
 Ponto de partida genérico para este tipo de projeto. O domínio do projeto vence o pacote onde os dois se contradizem.
 
@@ -200,6 +200,22 @@ audiência dele e aprovada pelo consultor.
 6. O que precisa ser decidido agora, por causa das datas de renovação
 7. O pedido
 
+### Controles de governança
+
+Os controles estão em `controles.tsv` e aparecem com
+`governanca.py --controles`. Eles dizem o que precisa ficar registrado e
+aprovado em qualquer assessment, seja qual for o método do projeto.
+
+| Controle | Antes de | O que protege |
+| --- | --- | --- |
+| Critérios, pesos e escala aprovados antes de avaliar | Storyline | Evita viés e discussão do critério depois do resultado |
+| Registro de achados com evidência e severidade | Redação | Achado sem prova não entra em página |
+| Rastreabilidade do caso de uso à recomendação | Revisão | Cada recomendação responde a uma lacuna real |
+| Validação dos achados com os donos das plataformas | Envio | Corrige erro de fato antes do material final |
+
+Um controle só é dado como cumprido com a evidência e com o nome de quem
+confirmou. A dispensa é do consultor, com o motivo.
+
 ### Evidência que cada afirmação pede
 
 | Afirmação | Fonte aceitável |
@@ -315,7 +331,7 @@ resultado mostra mais da arquitetura do que uma lista de ferramentas.
 
 ## Procedimento do pacote martech-adtech
 
-Quando: em projeto de assessment de arquitetura de martech e adtech, ao pedir dados e marcar entrevistas, ao montar o briefing e a storyline de um entregável do assessment, ao dar nota de maturidade, ao recomendar manter, consolidar, substituir, desligar ou contratar uma plataforma e ao revisar o material.
+Quando: em projeto de assessment de arquitetura de martech e adtech, ao pedir dados e marcar entrevistas, ao montar o briefing e a storyline de um entregável do assessment, ao dar nota de maturidade, ao recomendar manter, consolidar, substituir, desligar ou contratar uma plataforma, ao revisar o material e quando um controle do tipo de projeto está pendente.
 
 O conteúdo do pacote está em
 `entregaveis/_harness/pacotes/martech-adtech/`. Esta skill diz que parte
@@ -348,9 +364,27 @@ abrir em cada momento. As skills do fluxo continuam valendo.
    recorte que prova o título.
 9. Na revisão, passe pela lista de "Armadilhas" além da rubrica, e
    registre em `revisao.md` as que o material evitou ou corrigiu.
-10. Não recomende um fornecedor pelo nome sem um processo de escolha. O
+10. Os controles de governança do assessment estão na seção "Controles
+    de governança" e saem com `governanca.py --controles`. Antes da
+    storyline, da redação, da revisão e do envio, confira os que valem
+    antes daquela etapa. Um controle fecha com a evidência e com quem
+    confirmou: `--controle CODIGO --cumprido --evidencia ID --quem NOME`.
+11. Não recomende um fornecedor pelo nome sem um processo de escolha. O
     nome de uma plataforma que o cliente já usa aparece como está nos
     materiais dele.
+
+## Controles de governança
+
+~~~text
+# Controles de governança deste tipo de projeto. Dizem o que precisa ficar registrado e aprovado, e não como fazer o trabalho.
+# condicao: sempre, ou a situação em que o controle vale (começa por quando). antes_de: a etapa do entregável antes da qual o controle precisa estar cumprido: storyline, storyboard, redacao, revisao ou envio.
+# registra: o que fica registrado. comprova: a evidência que fecha o controle.
+codigo	controle	condicao	antes_de	registra	comprova
+criterios-de-avaliacao	Critérios, pesos e escala aprovados antes de avaliar	sempre	storyline	Dimensões, critérios, pesos, escala e quem aprovou do lado do cliente	Decisão registrada (D-nnn) com o nome de quem aprovou os critérios
+achados-com-evidencia	Registro de achados com evidência e severidade	sempre	redacao	Achado, evidência, severidade, impacto, recomendação e dono no cliente	Cada achado que o material cita tem linha em evidencias.tsv (E-nnn)
+rastreabilidade	Rastreabilidade do caso de uso à recomendação	sempre	revisao	Caso de uso, requisito, capacidade, plataforma, lacuna e recomendação	Matriz em que toda recomendação aponta para uma lacuna e toda lacuna tem recomendação ou o motivo de ficar
+validacao-com-donos-das-plataformas	Validação dos achados com os donos das plataformas	sempre	envio	Achado, dono da plataforma, se confirma ou corrige, e a data	Resposta de cada dono, em ata (A-nnn) ou em mensagem guardada
+~~~
 
 ## Termos do pacote
 

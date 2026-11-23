@@ -1,6 +1,6 @@
 # Procedimentos
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.11.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.12.0. Gerado por empacotar.py: não edite à mão.
 
 Estes procedimentos foram escritos para um agente que lê e grava arquivos e roda comandos. Neste ambiente, onde o texto manda rodar um script, faça a conferência à mão pelas regras de 2-metodo-e-texto. Onde manda gravar em um arquivo de `entregaveis/_projeto/` ou na pasta de um entregável, atualize a seção correspondente do registro do projeto. As skills citadas pelo nome são os procedimentos deste arquivo.
 
@@ -39,8 +39,8 @@ sem esperar que ele dite cada passo.
    - Do que é o projeto e que decisão ele precisa provocar. Esta você
      faz sempre: diga o que entendeu e peça a confirmação.
    - O tipo de trabalho: transformação de marketing, assessment de
-     martech e adtech, mídia, retail media, processos agênticos,
-     proposta, treinamento ou outro.
+     martech e adtech, mídia, definição de processos de mídia digital,
+     retail media, processos agênticos, proposta, treinamento ou outro.
    - Os entregáveis previstos, com formato, audiência e prazo.
    - Os idiomas dos entregáveis.
    - As regras da organização e do cliente para materiais: onde podem
@@ -983,7 +983,12 @@ comando é `python3 entregaveis/_harness/scripts/governanca.py`.
     frente, um comitê, um pagamento por marco, um compromisso de
     benefício ou dois desvios acima da tolerância. Desça, ou tire o
     material, quando ele deixar de ser lido.
-12. O esforço fica em `_projeto/esforco.tsv` quando o consultor informa.
+12. Os pacotes ativos podem trazer controles do tipo de projeto.
+    `governanca.py --controles` mostra a lista. Pergunte uma vez se
+    cada controle condicional vale e responda com `--controle CODIGO` e
+    `--pendente`, `--cumprido` ou `--nao-se-aplica`. O controle fecha
+    com a evidência e com quem confirmou, nunca por suposição.
+13. O esforço fica em `_projeto/esforco.tsv` quando o consultor informa.
     Não pergunte por horas e não avise que falta lançamento.
 
 Relate com `relatar-ao-consultor`: o nível, a lista de materiais e o que

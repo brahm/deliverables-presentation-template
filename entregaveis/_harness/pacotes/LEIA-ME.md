@@ -13,6 +13,7 @@ soma os termos dele ao glossário do projeto e cita o nome no campo
 | --- | --- |
 | `transformacao-marketing` | Diagnóstico, modelo operacional, roadmap de transformação e plano de mudança |
 | `martech-adtech` | Assessment de arquitetura de martech e adtech, arquitetura alvo, roadmap de plataformas |
+| `processos-midia` | Definição ou redesenho de processos de mídia digital. Traz só os controles de governança |
 | `midia` | Auditoria de mídia, estratégia e plano, alocação de orçamento, medição, modelo de operação com agências |
 | `retail-media` | Rede de mídia de um varejista, ou o investimento de uma marca nas redes dos varejistas |
 | `processos-agenticos` | Desenho de processos com agentes de IA e automação de marketing, do mapa de oportunidades ao piloto |
@@ -33,7 +34,24 @@ Cada pacote é uma pasta com:
 | `pedido-de-dados.tsv` | A lista padrão de dados a pedir ao cliente, com a análise que usa cada item e a prioridade |
 | `entrevistas.md` | Roteiro de entrevista por tipo de interlocutor |
 | `glossario.tsv` | Termos do domínio, para somar ao glossário do projeto |
+| `controles.tsv` | Os controles de governança do tipo de projeto: o que precisa ficar registrado e aprovado, antes de que etapa e com que evidência |
 | `skill/SKILL.md` | A skill `pacote-NOME`, que diz que parte do pacote abrir em cada momento |
+
+`PACOTE.md` e a skill existem em todo pacote. Os outros arquivos são
+opcionais. Um pacote pode trazer só os controles de governança, e nesse
+caso o método, os dados a pedir e os roteiros vêm do consultor durante o
+projeto.
+
+## Os controles de governança
+
+Um controle não descreve atividade. Ele diz o que o tipo de projeto
+precisa ter registrado e aprovado, antes de que etapa do entregável, e
+que evidência o fecha. `governanca.py --controles` mostra os controles
+dos pacotes ativos. O estado conta os pendentes, a lista do dia pergunta
+pelos que chegaram à etapa sem evidência e pelos condicionais, e o
+registro de um envio avisa quando algum ficou para trás. O controle fecha
+com a evidência e com quem confirmou, ou sai com o motivo, por decisão
+do consultor.
 
 ## O que um pacote não traz
 

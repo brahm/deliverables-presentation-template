@@ -1294,8 +1294,10 @@ def testar_pacotes(tmp: Path) -> None:
     leia_me = (HARNESS / "pacotes" / "LEIA-ME.md").read_text(encoding="utf-8")
     for pacote in pacotes:
         nome = pacote.name
-        for arquivo in ("PACOTE.md", "pedido-de-dados.tsv", "entrevistas.md", "glossario.tsv", "skill/SKILL.md"):
+        for arquivo in ("PACOTE.md", "skill/SKILL.md"):
             confere(f"{nome}: tem {arquivo}", (pacote / arquivo).is_file())
+        de_metodo = [a for a in ("pedido-de-dados.tsv", "entrevistas.md", "glossario.tsv") if (pacote / a).is_file()]
+        confere(f"{nome}: traz os três arquivos de conteúdo, ou só os controles de governança", len(de_metodo) == 3 or (not de_metodo and (pacote / "controles.tsv").is_file()), str(de_metodo))
         confere(f"{nome}: está na lista de pacotes disponíveis", f"`{nome}`" in leia_me)
         skill = (pacote / "skill/SKILL.md").read_text(encoding="utf-8")
         cabecalho = skill.split("---\n")[1]
@@ -1307,12 +1309,29 @@ def testar_pacotes(tmp: Path) -> None:
         titulos = set(re.findall(r"^#{2,3} (.+)$", (pacote / "PACOTE.md").read_text(encoding="utf-8"), flags=re.MULTILINE))
         for secao in re.findall(r'"([^"]+)"', " ".join(skill.split())):
             confere(f"{nome}: a seção '{secao}' citada na skill existe em PACOTE.md", secao in titulos)
-        for arquivo, colunas in (("pedido-de-dados.tsv", 5), ("glossario.tsv", 4)):
+        for arquivo, colunas, minimo in (("pedido-de-dados.tsv", 5, 5), ("glossario.tsv", 4, 5), ("controles.tsv", 6, 2)):
+            if not (pacote / arquivo).is_file():
+                continue
             linhas = [l for l in (pacote / arquivo).read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
             tortas = [l for l in linhas if len(l.split("\t")) != colunas]
-            confere(f"{nome}: {arquivo} tem {colunas} colunas em toda linha", len(linhas) > 5 and not tortas, "\n".join(tortas[:3]))
-        prioridades = {l.split("\t")[4] for l in (pacote / "pedido-de-dados.tsv").read_text(encoding="utf-8").splitlines()[4:] if "\t" in l}
-        confere(f"{nome}: as prioridades do pedido de dados são as três previstas", prioridades <= {"essencial", "importante", "complementar"}, str(prioridades))
+            confere(f"{nome}: {arquivo} tem {colunas} colunas em toda linha", len(linhas) > minimo and not tortas, "\n".join(tortas[:3]))
+        if (pacote / "pedido-de-dados.tsv").is_file():
+            prioridades = {l.split("\t")[4] for l in (pacote / "pedido-de-dados.tsv").read_text(encoding="utf-8").splitlines()[4:] if "\t" in l}
+            confere(f"{nome}: as prioridades do pedido de dados são as três previstas", prioridades <= {"essencial", "importante", "complementar"}, str(prioridades))
+        if (pacote / "controles.tsv").is_file():
+            linhas = [l.split("\t") for l in (pacote / "controles.tsv").read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")][1:]
+            confere(f"{nome}: todo controle vale sempre ou em uma condição escrita, antes de uma etapa que existe", all((l[2] == "sempre" or l[2].startswith("quando ")) and l[3] in ("storyline", "storyboard", "redacao", "revisao", "envio") for l in linhas), str([l[:4] for l in linhas]))
+            confere(f"{nome}: todo controle diz o que registra e que evidência o fecha", all(l[1] and l[4] and l[5] for l in linhas))
+            guia = (pacote / "PACOTE.md").read_text(encoding="utf-8")
+            confere(f"{nome}: PACOTE.md apresenta cada controle pelo nome", "## Controles de governança" in guia and all(f"| {l[1]} |" in guia for l in linhas), str([l[1] for l in linhas if f"| {l[1]} |" not in guia]))
+            confere(f"{nome}: a skill do pacote manda conferir os controles", "--controles" in skill and "--cumprido" in skill)
+
+    todos_os_codigos = [l.split("\t")[0] for a in sorted((HARNESS / "pacotes").glob("*/controles.tsv")) for l in a.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")][0:]
+    todos_os_codigos = [c for c in todos_os_codigos if c != "codigo"]
+    confere("nenhum código de controle se repete entre os pacotes", len(todos_os_codigos) == len(set(todos_os_codigos)) and len(todos_os_codigos) >= 10, str(todos_os_codigos))
+    so_governanca = HARNESS / "pacotes" / "processos-midia"
+    texto_do_pacote = (so_governanca / "PACOTE.md").read_text(encoding="utf-8")
+    confere("o pacote de processos de mídia traz só governança", not any((so_governanca / a).exists() for a in ("pedido-de-dados.tsv", "entrevistas.md", "glossario.tsv")) and "## Frameworks" not in texto_do_pacote and "## Esqueletos" not in texto_do_pacote and "## O que este pacote não traz" in texto_do_pacote)
 
     projeto = tmp / "pacotes"
     projeto.mkdir()
@@ -1344,10 +1363,118 @@ def testar_pacotes(tmp: Path) -> None:
     confere("um projeto pode ativar todos os pacotes", all((todos / f".claude/skills/pacote-{p.name}/SKILL.md").is_file() and p.name in ativos for p in pacotes), ativos[:300])
     chaves = [tuple(l.split("\t")[i] for i in (0, 3)) for l in (todos / "entregaveis/_projeto/glossario.tsv").read_text(encoding="utf-8").splitlines() if "\t" in l and not l.startswith("#")]
     confere("pacotes somados não repetem termos no glossário", len(chaves) == len({(t.lower(), i) for t, i in chaves}), str([c for c in chaves if chaves.count(c) > 1][:5]))
+    testar_controles(tmp)
     sem_pacote = tmp / "sem-pacote"
     sem_pacote.mkdir()
     instalar(sem_pacote)
     confere("a skill de pacote não é instalada em projeto que não o ativou", not (sem_pacote / ".claude/skills/pacote-martech-adtech").exists())
+
+
+def testar_controles(tmp: Path) -> None:
+    """Os controles de governança que um pacote traz: situação, portão, lista do dia, checagem e envio."""
+    projeto = tmp / "controles"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    reg = base / "_projeto"
+    montar_exemplo(projeto)
+    hoje = "2026-03-02"
+
+    def gov(*args) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/governanca.py", *args, "--hoje", hoje], projeto)
+
+    def lista() -> str:
+        return rodar([PY, "entregaveis/_harness/scripts/rotina.py", "--lista", "--hoje", hoje], projeto).stdout
+
+    def estado() -> str:
+        return rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout
+
+    def etapa(nome: str) -> None:
+        briefing = base / "diag/briefing.md"
+        briefing.write_text(re.sub(r"^estado: .*$", f"estado: {nome}", briefing.read_text(encoding="utf-8"), flags=re.MULTILINE), encoding="utf-8")
+
+    def linha_de(ident: str) -> str:
+        return next((l for l in (reg / "controles.tsv").read_text(encoding="utf-8").splitlines() if l.startswith(ident + "\t")), "")
+
+    def checagem() -> subprocess.CompletedProcess:
+        return validar(projeto, "--so", "governanca")
+
+    gov("--nivel", "enxuto")
+    sem = gov("--controles")
+    confere("sem pacote ativo, não há controle e o estado não fala deles", "Nenhum pacote ativo traz controles" in sem.stdout and "Controles do tipo de projeto" not in estado() and "Controle do tipo de projeto" not in lista(), sem.stdout)
+    rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--pacote", "treinamento"], projeto)
+    confere("pacote sem controles não cria controle", "Nenhum pacote ativo traz controles" in gov("--controles").stdout and "treinamento" in gov("--controles").stdout)
+    etapa("briefing")
+    ativado = rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--pacote", "processos-midia"], projeto)
+    confere("ativar o pacote só de governança copia a skill, avisa dos controles e não mexe no glossário", ativado.returncode == 0 and (projeto / ".claude/skills/pacote-processos-midia/SKILL.md").is_file() and "6 controle(s) de governança" in ativado.stdout and "termos do pacote" not in ativado.stdout and "treinamento, processos-midia" in (reg / "brief.md").read_text(encoding="utf-8"), ativado.stdout + ativado.stderr)
+    todos = gov("--controles").stdout
+    confere("a lista mostra os seis controles, quatro pendentes e dois a confirmar", todos.count("Situação: pendente.") == 4 and todos.count("Situação: a confirmar.") == 2 and "taxonomia-e-metricas (processos-midia)" in todos and "Fecha com: Decisão registrada (D-nnn)" in todos, todos)
+    confere("o estado conta os controles pendentes e os que falta confirmar", "Controles do tipo de projeto: 6, com 4 pendente(s) e 2 a confirmar" in estado(), estado())
+
+    # O condicional é perguntado; o pendente só quando o entregável chega à etapa.
+    no_briefing = lista()
+    confere("a lista do dia pergunta pelo controle condicional", "Plano e registro de entrevistas e workshops [entrevistas-e-workshops]. Ele vale quando o levantamento ouve pessoas de mais de uma área" in no_briefing and "Vale neste projeto?" in no_briefing, no_briefing)
+    confere("antes da etapa, o controle pendente não é cobrado", "sem evidência" not in no_briefing and "Controle do tipo de projeto" not in checagem().stdout and checagem().returncode == 0, no_briefing + checagem().stdout)
+    etapa("storyline")
+    na_storyline = lista()
+    confere("na etapa, o controle pendente é cobrado, com o que o fecha", "Controle do tipo de projeto sem evidência: Taxonomia de campanhas e dicionário de métricas aprovados [taxonomia-e-metricas]" in na_storyline and "diag já chegou lá" in na_storyline and "papeis-e-niveis-de-servico" not in na_storyline, na_storyline)
+    aviso = checagem()
+    confere("checagem: controle pendente na etapa é aviso, e não erro", aviso.returncode == 0 and "AVISO" in aviso.stdout and "taxonomia-e-metricas" in aviso.stdout and "entrevistas-e-workshops" not in aviso.stdout, aviso.stdout)
+
+    trocar_fase = (reg / "brief.md").read_text(encoding="utf-8")
+    (reg / "brief.md").write_text(trocar_fase.replace("iniciado: sim", "fase: 2\niniciado: sim", 1), encoding="utf-8")
+    confere("entregável de fase anterior não cobra controle", "sem evidência" not in lista() and "Vale neste projeto?" in lista(), lista())
+    (reg / "brief.md").write_text(trocar_fase, encoding="utf-8")
+
+    # As respostas.
+    confere("controle que os pacotes ativos não trazem é recusado", gov("--controle", "criterios-de-avaliacao", "--pendente").returncode == 1 and "Os pacotes ativos não trazem o controle 'criterios-de-avaliacao'" in gov("--controle", "criterios-de-avaliacao", "--pendente").stdout and not linha_de("criterios-de-avaliacao"))
+    confere("a resposta é uma só", gov("--controle", "taxonomia-e-metricas").returncode == 2 and gov("--controle", "taxonomia-e-metricas", "--pendente", "--nao-se-aplica", "--motivo", "x").returncode == 2)
+    confere("cumprido pede a evidência e quem confirmou", gov("--controle", "taxonomia-e-metricas", "--cumprido", "--quem", "Gerente de mídia").returncode == 2 and gov("--controle", "taxonomia-e-metricas", "--cumprido", "--evidencia", "D-004").returncode == 2 and not linha_de("taxonomia-e-metricas"))
+    cumprido = gov("--controle", "taxonomia-e-metricas", "--cumprido", "--evidencia", "D-004", "--quem", "Gerente de mídia")
+    confere("o controle cumprido guarda a evidência, quem confirmou e a data", cumprido.returncode == 0 and linha_de("taxonomia-e-metricas") == f"taxonomia-e-metricas\tcumprido\tD-004\tGerente de mídia\t{hoje}\t", linha_de("taxonomia-e-metricas"))
+    confere("controle cumprido sai da lista do dia e da checagem", "taxonomia-e-metricas" not in lista() and "taxonomia-e-metricas" not in checagem().stdout and "com 3 pendente(s) e 2 a confirmar" in estado())
+    confere("não se aplica pede o motivo", gov("--controle", "impacto-da-mudanca", "--nao-se-aplica").returncode == 2 and not linha_de("impacto-da-mudanca"))
+    dispensado = gov("--controle", "impacto-da-mudanca", "--nao-se-aplica", "--motivo", "O processo novo não muda o trabalho de ninguém")
+    confere("o controle que não se aplica sai da lista, com o motivo guardado", dispensado.returncode == 0 and "impacto-da-mudanca\tnao se aplica\t" in linha_de("impacto-da-mudanca") and "não muda o trabalho de ninguém" in linha_de("impacto-da-mudanca") and "impacto-da-mudanca" not in lista() and "registrar-dispensa" in dispensado.stdout)
+    gov("--controle", "entrevistas-e-workshops", "--pendente")
+    confere("o condicional que vale passa a pendente e é cobrado na etapa", "entrevistas-e-workshops\tpendente\t" in linha_de("entrevistas-e-workshops") and "Controle do tipo de projeto sem evidência: Plano e registro de entrevistas e workshops" in lista() and "Vale neste projeto?" not in lista(), lista())
+    gov("--controle", "taxonomia-e-metricas", "--pendente")
+    confere("reabrir um controle cumprido apaga a evidência antiga", linha_de("taxonomia-e-metricas") == "taxonomia-e-metricas\tpendente\t\t\t\t" and "taxonomia-e-metricas" in lista(), linha_de("taxonomia-e-metricas"))
+    gov("--controle", "taxonomia-e-metricas", "--cumprido", "--evidencia", "D-004", "--quem", "Gerente de mídia")
+    gov("--controle", "entrevistas-e-workshops", "--cumprido", "--evidencia", "A-001, A-002", "--quem", "Consultora")
+
+    # Os portões seguintes e o envio.
+    etapa("redacao")
+    confere("controle de revisão não é cobrado na redação", "papeis-e-niveis-de-servico" not in lista())
+    etapa("revisao")
+    na_revisao = lista()
+    confere("controles de revisão são cobrados na revisão, e o de envio ainda não", "papeis-e-niveis-de-servico" in na_revisao and "alcadas-de-autorizacao" in na_revisao and "validacao-com-donos-dos-processos" not in na_revisao, na_revisao)
+    envio = gov("--versao", "diag", "--mudou", "Versão para os donos", "--enviada-a", "Gerente de mídia")
+    confere("o envio com controle sem evidência é registrado com o aviso", envio.returncode == 0 and "diag v1 registrada" in envio.stdout and "ATENÇÃO: o envio saiu com controle do tipo de projeto sem evidência" in envio.stdout and "[validacao-com-donos-dos-processos]" in envio.stdout and "[taxonomia-e-metricas]" not in envio.stdout and "[impacto-da-mudanca]" not in envio.stdout, envio.stdout)
+    confere("depois do envio, o controle de envio é cobrado", "validacao-com-donos-dos-processos" in lista() and "validacao-com-donos-dos-processos" in checagem().stdout)
+    for codigo in ("papeis-e-niveis-de-servico", "alcadas-de-autorizacao", "validacao-com-donos-dos-processos"):
+        gov("--controle", codigo, "--cumprido", "--evidencia", "A-003", "--quem", "Gerente de mídia")
+    limpo = gov("--versao", "diag", "--mudou", "Versão final", "--enviada-a", "Gerente de mídia")
+    confere("com tudo cumprido ou dispensado, o envio sai sem aviso e nada é cobrado", "ATENÇÃO" not in limpo.stdout and "Controle do tipo de projeto" not in lista() and "Controle do tipo de projeto" not in checagem().stdout and checagem().returncode == 0 and "com 0 pendente(s) e 0 a confirmar" in estado(), limpo.stdout + checagem().stdout)
+
+    # A checagem do registro.
+    original = (reg / "controles.tsv").read_text(encoding="utf-8")
+    for linha, espera, nome in (("inventado\tpendente\t\t\t\t", "O controle 'inventado' não existe em nenhum pacote", "controle fora dos pacotes é erro"),
+                                ("rastreabilidade\tfeito\t\t\t\t", "rastreabilidade: a situação 'feito' não existe", "situação fora da lista é erro"),
+                                ("rastreabilidade\tcumprido\t\t\t\t", "rastreabilidade: controle cumprido sem evidência", "cumprido sem evidência é erro")):
+        (reg / "controles.tsv").write_text(original + linha + "\n", encoding="utf-8")
+        saida = checagem()
+        confere(f"checagem: {nome}", saida.returncode != 0 and espera in saida.stdout, saida.stdout)
+    (reg / "controles.tsv").write_text(original, encoding="utf-8")
+
+    # O assessment de martech e adtech e o pacote para outros ambientes.
+    rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--pacote", "martech-adtech"], projeto)
+    soma = gov("--controles").stdout
+    confere("os controles dos pacotes ativos se somam", "criterios-de-avaliacao (martech-adtech)" in soma and "validacao-com-donos-das-plataformas (martech-adtech)" in soma and "taxonomia-e-metricas (processos-midia)" in soma and soma.count("Situação:") == 10, soma)
+    pacote = rodar([PY, "entregaveis/_harness/scripts/empacotar.py", "--projeto"], projeto)
+    ambiente = base / "_ambiente"
+    confere("o pacote para outros ambientes leva os controles e as respostas do projeto", pacote.returncode == 0 and "## Controles de governança" in (ambiente / "pacote-processos-midia.txt").read_text(encoding="utf-8") and "alcadas-de-autorizacao\tAlçadas" in (ambiente / "pacote-processos-midia.txt").read_text(encoding="utf-8") and "### controles.tsv" in (ambiente / "5-projeto.txt").read_text(encoding="utf-8") and "taxonomia-e-metricas\tcumprido\tD-004" in (ambiente / "5-projeto.txt").read_text(encoding="utf-8"), pacote.stdout + pacote.stderr)
 
 
 def testar_levantamento(tmp: Path) -> None:
@@ -2637,6 +2764,8 @@ def testar_exemplo(tmp: Path) -> None:
     refeito = rodar([PY, "entregaveis/_harness/scripts/emitir.py", "status-semanal", "--hoje", "2026-11-20"], projeto)
     confere("o status semanal guardado no exemplo é o que os registros de hoje produzem", refeito.stdout == guardado and "**Semáforo: amarelo.**" in guardado and "leitura-executiva v1: enviada a Diretoria da Lojas Exemplo em 2026-11-05, sem aceite registrado" in guardado, refeito.stdout + refeito.stderr)
     confere("o exemplo registra a emissão do status", "2026-11-20\tstatus-semanal\t\tentregaveis/_projeto/emitidos/2026-11-20-status-semanal.md\trascunho" in (origem / "entregaveis/_projeto/emitidos.tsv").read_text(encoding="utf-8"))
+    controles = rodar([PY, "entregaveis/_harness/scripts/governanca.py", "--controles"], projeto)
+    confere("o exemplo mostra os quatro controles do assessment cumpridos, com a evidência", controles.stdout.count("Situação: cumprido, por Consultora responsável") == 4 and "Evidência: E-001 a E-008." in controles.stdout and "Controles do tipo de projeto: 4, com 0 pendente(s) e 0 a confirmar" in estado.stdout and "Controle do tipo de projeto" not in lista.stdout, controles.stdout + estado.stdout)
     cerebro = [PY, "entregaveis/_harness/scripts/cerebro.py"]
     confere("o estado do exemplo conta as seis notas, sem nada a absorver", "Segundo cérebro: 6 nota(s). Antes de escrever" in estado.stdout, estado.stdout)
     confere("o segundo cérebro do exemplo absorveu tudo o que o projeto registrou", "Nada a absorver" in rodar(cerebro + ["--pendentes"], projeto).stdout, rodar(cerebro + ["--pendentes"], projeto).stdout)
