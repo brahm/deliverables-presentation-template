@@ -552,6 +552,15 @@ def testar_pacotes(tmp: Path) -> None:
     skill.write_text(skill.read_text(encoding="utf-8") + "\nlinha de versão antiga\n", encoding="utf-8")
     instalar(projeto, "--pasta", "consultoria", "--atualizar")
     confere("--atualizar renova a skill do pacote ativado", "linha de versão antiga" not in skill.read_text(encoding="utf-8"))
+    todos = tmp / "todos-os-pacotes"
+    todos.mkdir()
+    instalar(todos)
+    for pacote in pacotes:
+        rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--pacote", pacote.name], todos)
+    ativos = (todos / "entregaveis/_projeto/brief.md").read_text(encoding="utf-8")
+    confere("um projeto pode ativar todos os pacotes", all((todos / f".claude/skills/pacote-{p.name}/SKILL.md").is_file() and p.name in ativos for p in pacotes), ativos[:300])
+    chaves = [tuple(l.split("\t")[i] for i in (0, 3)) for l in (todos / "entregaveis/_projeto/glossario.tsv").read_text(encoding="utf-8").splitlines() if "\t" in l and not l.startswith("#")]
+    confere("pacotes somados não repetem termos no glossário", len(chaves) == len({(t.lower(), i) for t, i in chaves}), str([c for c in chaves if chaves.count(c) > 1][:5]))
     sem_pacote = tmp / "sem-pacote"
     sem_pacote.mkdir()
     instalar(sem_pacote)

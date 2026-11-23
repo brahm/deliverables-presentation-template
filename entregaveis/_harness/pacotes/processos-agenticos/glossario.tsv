@@ -1,0 +1,21 @@
+# Termos de processos agênticos e automação. Ao ativar o pacote, as linhas entram no glossário do projeto.
+# A coluna evitar fica vazia: o projeto decide que variantes proibir, conforme o vocabulário do cliente.
+termo	definicao	evitar	idioma
+agente de IA	Sistema que usa um modelo de linguagem para cumprir um objetivo em várias etapas, usando ferramentas		pt
+processo agêntico	Processo em que agentes de IA executam parte das etapas, com pontos de controle humano		pt
+automação por regra	Execução automática de uma tarefa com entrada estruturada e regra fixa		pt
+modelo de linguagem	O modelo de IA que lê e escreve texto e sustenta o agente		pt
+instruções do agente	O texto que diz ao agente o objetivo, as regras, os limites e o formato da saída		pt
+ferramenta	Um sistema ou função que o agente pode acionar, como consultar uma base ou criar um rascunho		pt
+permissão	O que o agente pode ler, escrever ou executar em cada sistema		pt
+ponto de controle	Etapa em que uma pessoa revisa ou aprova antes de o processo seguir		pt
+nível de autonomia	O quanto o agente faz sem aprovação, em uma escala declarada		pt
+escalonamento	A passagem de um caso do agente para uma pessoa		pt
+caso de teste	Uma entrada com a saída esperada, usada para avaliar o agente		pt
+conjunto de avaliação	A coleção de casos de teste, incluindo exceções, que mede a qualidade		pt
+alucinação	Afirmação do modelo que parece plausível e não tem base nas fontes		pt
+injeção de instrução	Texto malicioso em um conteúdo lido pelo agente, que tenta mudar o que ele faz		pt
+registro de execução	O rastro de cada caso: entrada, saída, ferramentas usadas e quem aprovou		pt
+piloto	Uso do processo novo em casos reais, por tempo limitado, com critério de sucesso		pt
+custo por execução	O custo de plataforma, de modelo e de revisão humana para um caso		pt
+dono do agente	Quem responde pelas instruções, pela qualidade e pelas mudanças de um agente		pt

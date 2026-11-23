@@ -11,10 +11,17 @@ soma os termos dele ao glossário do projeto e cita o nome no campo
 
 | Nome | Tipo de projeto |
 | --- | --- |
+| `transformacao-marketing` | Diagnóstico, modelo operacional, roadmap de transformação e plano de mudança |
 | `martech-adtech` | Assessment de arquitetura de martech e adtech, arquitetura alvo, roadmap de plataformas |
+| `midia` | Auditoria de mídia, estratégia e plano, alocação de orçamento, medição, modelo de operação com agências |
+| `retail-media` | Rede de mídia de um varejista, ou o investimento de uma marca nas redes dos varejistas |
+| `processos-agenticos` | Desenho de processos com agentes de IA e automação de marketing, do mapa de oportunidades ao piloto |
+| `proposta` | Proposta comercial, resposta a concorrência, apresentação oral, escopo de trabalho |
+| `treinamento` | Cursos, workshops, material didático, exercícios e exames |
 
-Estão previstos os pacotes de transformação de marketing, mídia, retail
-media, processos agênticos, proposta e treinamento.
+Os pacotes se somam. Uma proposta de assessment de martech ativa
+`proposta` e `martech-adtech`. Um projeto de transformação com
+capacitação das equipes ativa `transformacao-marketing` e `treinamento`.
 
 ## O que um pacote traz
 

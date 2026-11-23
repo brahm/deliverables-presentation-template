@@ -1,0 +1,21 @@
+# Lista padrão de pedido de dados para um projeto de retail media. Use as linhas do lado em que o cliente está.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que alguma análise da storyline usa.
+# prioridade: essencial (sem ele não há análise), importante (melhora um achado) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Varejista: tráfego, buscas e páginas vistas por mês, no site e no aplicativo	Tamanho da oportunidade e inventário	Planilha	Comércio eletrônico ou dados	essencial
+Varejista: vendas por categoria e por fornecedor, no digital e na loja física	Tamanho da oportunidade	Planilha	Comercial ou dados	essencial
+Varejista: receita atual de mídia por formato e por anunciante	Ocupação do inventário e ponto de partida	Planilha	Rede de mídia ou financeiro	essencial
+Varejista: verbas comerciais recebidas dos fornecedores, por tipo	Separar dinheiro novo de verba que muda de nome	Planilha	Comercial ou financeiro	essencial
+Varejista: tabela de preços, formatos e pacotes vendidos	Preço e modelo comercial	Apresentação ou planilha	Rede de mídia	importante
+Varejista: inventário de loja física, com telas, espaços e fluxo de clientes	Mapa de inventário	Planilha	Operações de loja	importante
+Varejista: tamanho da base identificada e do programa de fidelidade, com consentimento	Audiências e privacidade	Planilha	CRM ou dados	essencial
+Varejista: tecnologia de anúncios em uso, contratos e custos	Tecnologia	Planilha e contratos	Tecnologia ou rede de mídia	importante
+Varejista: relatórios de campanha entregues aos anunciantes	Proposta de valor e medição	Apresentação	Rede de mídia	importante
+Varejista: estrutura e pessoas da rede de mídia e da área comercial	Modelo operacional	Organograma	Recursos humanos	importante
+Varejista: testes sobre o efeito dos anúncios na conversão da loja	Experiência de compra	Relatório	Comércio eletrônico	complementar
+Marca: investimento por varejista e por formato, com o orçamento de origem	Papel do retail media e alocação	Planilha	Mídia, comercial ou financeiro	essencial
+Marca: vendas por varejista e por categoria	Avaliação das redes	Planilha	Comercial	essencial
+Marca: relatórios de campanha recebidos de cada rede	Medição entre varejistas	Apresentação ou exportação	Mídia ou comércio eletrônico	essencial
+Marca: planos anuais e acordos comerciais com os varejistas	Relação entre mídia e negociação	PDF	Gestão de contas	importante
+Marca: plano de mídia geral e resultados dos outros canais	Papel do retail media no plano	Planilha	Mídia	importante
+Estudos de mercado sobre retail media que o cliente já comprou	Tamanho do mercado com fonte citável	PDF	Diretoria	complementar
