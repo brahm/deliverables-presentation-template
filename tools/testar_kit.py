@@ -68,7 +68,7 @@ def testar_skills() -> None:
 
 def testar_referencias() -> None:
     print("Referências entre arquivos")
-    arquivos = [RAIZ / n for n in ("README.md", "INSTALL.md", "HISTORY.md", "AGENTS.md", "CLAUDE.md")]
+    arquivos = [RAIZ / n for n in ("README.md", "INSTALL.md", "HISTORY.md", "AGENTS.md", "CLAUDE.md", "exemplo/LEIA-ME.md")]
     arquivos += sorted(HARNESS.rglob("*.md")) + sorted((RAIZ / ".claude" / "skills").rglob("*.md"))
     for arquivo in arquivos:
         if not arquivo.is_file():
@@ -1021,6 +1021,8 @@ def testar_gerador(tmp: Path) -> None:
 
         neutro = gerar("diag")
         confere("gera o PowerPoint e avisa que não há modelo", neutro.returncode == 0 and "desenho neutro" in neutro.stdout and (saida / "diag.pptx").is_file(), neutro.stdout + neutro.stderr)
+        propriedades = Presentation(str(saida / "diag.pptx")).core_properties
+        confere("no desenho neutro, o arquivo não leva o autor do arquivo de base da biblioteca", not propriedades.author and not propriedades.last_modified_by and not propriedades.comments, f"{propriedades.author!r} {propriedades.last_modified_by!r} {propriedades.comments!r}")
         slides = list(Presentation(str(saida / "diag.pptx")).slides)
         confere("uma página por slide, com o título de cada uma", [s.shapes.title.text_frame.text for s in slides] == ["Diagnóstico de martech", "Duas plataformas de e-mail fazem o mesmo trabalho", "A diretoria aprova o desligamento até dezembro"])
         confere("a capa leva o texto para o subtítulo", "Para a diretoria de marketing." in textos(slides[0]))
@@ -1356,6 +1358,64 @@ def testar_levantamento(tmp: Path) -> None:
     confere("levantar.py lista o que o projeto já tem", saida.returncode == 0 and "proposta.docx" in saida.stdout and "AGENTS.md" in saida.stdout, saida.stdout + saida.stderr)
 
 
+# --- Exemplo completo -----------------------------------------------------
+
+
+def testar_exemplo(tmp: Path) -> None:
+    """O exemplo de exemplo/ abre em uma instalação limpa e passa no harness de hoje."""
+    print("Exemplo completo")
+    origem = RAIZ / "exemplo"
+    projeto = tmp / "exemplo-aberto"
+    aberto = rodar([PY, str(RAIZ / "tools" / "abrir_exemplo.py"), str(projeto)], RAIZ)
+    confere("abrir_exemplo.py abre o exemplo em uma pasta nova", aberto.returncode == 0 and "Lojas Exemplo" in aberto.stdout, aberto.stdout + aberto.stderr)
+    confere("abrir_exemplo.py recusa uma pasta com arquivos", rodar([PY, str(RAIZ / "tools" / "abrir_exemplo.py"), str(projeto)], RAIZ).returncode == 2)
+    confere("abrir_exemplo.py recusa uma pasta dentro do template", rodar([PY, str(RAIZ / "tools" / "abrir_exemplo.py"), str(RAIZ / "exemplo-aberto")], RAIZ).returncode == 2 and not (RAIZ / "exemplo-aberto").exists())
+    confere("o pacote do brief do exemplo foi ativado", (projeto / ".claude/skills/pacote-martech-adtech/SKILL.md").is_file())
+
+    rigor = validar(projeto, "--rigoroso")
+    confere("o exemplo passa nas checagens rigorosas sem erro", rigor.returncode == 0 and "ERRO" not in rigor.stdout, rigor.stdout)
+    dominio = rodar([PY, "entregaveis/_harness/scripts/dominio.py"], projeto)
+    confere("as regras do domínio do exemplo estão provadas", dominio.returncode == 0 and "3 regra(s) provada(s)" in dominio.stdout, dominio.stdout)
+    em_dia = rodar([PY, "-c", "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import comum, validar; print(validar.revisao_em_dia(comum.BASE / 'leitura-executiva'))"], projeto)
+    confere("a revisão registrada no exemplo é a do conteúdo atual", em_dia.stdout.strip() == "True", em_dia.stdout + em_dia.stderr)
+    estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto)
+    confere("o estado mostra o material em falta, a decisão assumida e o item adiado", all(t in estado.stdout for t in ("Materiais pendentes: 1", "Decisões assumidas à espera do consultor: 1", "Itens adiados em aberto: 1")), estado.stdout)
+
+    marcados = [str(a.relative_to(origem)) for a in sorted(origem.rglob("*")) if a.suffix in (".md", ".tsv") and "PREENCHER" in a.read_text(encoding="utf-8")]
+    confere("nenhum arquivo do exemplo ficou com marca de preenchimento", not marcados, str(marcados))
+    guia = (origem / "LEIA-ME.md").read_text(encoding="utf-8")
+    quebrados = [alvo for alvo in re.findall(r"\]\((?!https?:|#)([^)#]+)\)", guia) if not (origem / alvo).exists()]
+    confere("todo link do guia do exemplo existe", not quebrados, str(quebrados))
+    sys.path.insert(0, str(HARNESS / "scripts"))
+    import checagens  # noqa: PLC0415
+
+    for arquivo in sorted(origem.rglob("*.md")):
+        erros = [a for a in checagens.texto(arquivo, ["pt"]) if a.nivel == "erro"]
+        confere(f"exemplo/{arquivo.relative_to(origem)}: sem vício de texto", not erros, "\n".join(a.formatar() for a in erros[:5]))
+
+    # O exemplo reprova no erro que o guia convida a provocar.
+    conteudo = projeto / "entregaveis/leitura-executiva/conteudo.md"
+    original = conteudo.read_text(encoding="utf-8")
+    titulos = re.findall(r"^## \d+\. (.+)$", original, flags=re.MULTILINE)
+    conteudo.write_text(original.replace("## 4. " + titulos[3], "## 4. Investimento"), encoding="utf-8")
+    com_rotulo = validar(projeto, "leitura-executiva")
+    confere("um título trocado por rótulo reprova o exemplo", com_rotulo.returncode != 0 and "é um rótulo" in com_rotulo.stdout, com_rotulo.stdout)
+    conteudo.write_text(original, encoding="utf-8")
+
+    if not tem_pacote("pptx"):
+        print("  (python-pptx não está instalado: geração do exemplo pulada)")
+        return
+    from pptx import Presentation  # noqa: PLC0415
+
+    gerado = rodar([PY, "entregaveis/_harness/scripts/gerar.py", "leitura-executiva"], projeto)
+    arquivo = projeto / "entregaveis/leitura-executiva/saida/leitura-executiva.pptx"
+    confere("o gerador produz o arquivo do exemplo", gerado.returncode == 0 and arquivo.is_file(), gerado.stdout + gerado.stderr)
+    if arquivo.is_file():
+        confere("o arquivo gerado tem uma página por título", [s.shapes.title.text_frame.text for s in Presentation(str(arquivo)).slides] == [re.sub(r"[*_`]", "", t) for t in titulos])
+    guardado = [s.shapes.title.text_frame.text for s in Presentation(str(origem / "resultado" / "leitura-executiva.pptx")).slides]
+    confere("o arquivo guardado em exemplo/resultado tem os títulos do conteúdo atual", guardado == titulos, str(guardado))
+
+
 def main() -> int:
     tmp = Path(tempfile.mkdtemp(prefix="kit-"))
     try:
@@ -1373,6 +1433,7 @@ def main() -> int:
         testar_ambientes(tmp)
         testar_pacotes(tmp)
         testar_levantamento(tmp)
+        testar_exemplo(tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print()

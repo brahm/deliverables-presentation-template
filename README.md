@@ -97,6 +97,9 @@ Quando o projeto muda de natureza, diga o que aconteceu: a proposta foi
 vendida, uma extensão foi contratada. O agente abre uma fase nova, que
 herda as decisões, as evidências e tudo o que foi produzido.
 
+O [guia de uso](entregaveis/_harness/guia.md) apresenta todos os
+recursos, o que dizer em cada momento e o que fazer quando algo trava.
+
 Você não precisa citar skill nem comando. Os que ajudam a acompanhar:
 
 ```sh
@@ -106,6 +109,17 @@ python3 entregaveis/_harness/scripts/gerar.py ID      # PowerPoint, Word, PDF ou
 python3 entregaveis/_harness/scripts/fase.py          # as fases do projeto: proposta, trabalho vendido, extensão
 python3 entregaveis/_harness/scripts/dominio.py       # os casos de teste do domínio
 python3 entregaveis/_harness/scripts/repositorio.py   # o remoto é local, privado ou público
+```
+
+## Ver um exemplo
+
+A pasta [exemplo/](exemplo/LEIA-ME.md) traz um projeto fictício inteiro,
+do brief à entrega: o que a consultora disse em cada etapa, o que o
+agente registrou e o [arquivo final](exemplo/resultado/leitura-executiva.pdf).
+Para abrir o exemplo com o harness rodando:
+
+```sh
+python3 tools/abrir_exemplo.py ../exemplo-aberto
 ```
 
 ## O que o harness segura
@@ -137,6 +151,8 @@ em [ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md).
 | Para saber | Leia |
 | --- | --- |
 | As regras e o momento de cada skill | [REGRAS.md](entregaveis/_harness/REGRAS.md) |
+| Todos os recursos e como usar cada um | [guia.md](entregaveis/_harness/guia.md) |
+| Um projeto fictício, do brief à entrega | [exemplo/LEIA-ME.md](exemplo/LEIA-ME.md) |
 | O método, etapa por etapa | [metodo.md](entregaveis/_harness/metodo/metodo.md) |
 | As práticas de texto | [texto.md](entregaveis/_harness/metodo/texto.md) |
 | Formatos, veículos e idiomas | [formatos.md](entregaveis/_harness/metodo/formatos.md) |
@@ -145,10 +161,6 @@ em [ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md).
 | Os pacotes por tipo de projeto | [LEIA-ME.md](entregaveis/_harness/pacotes/LEIA-ME.md) |
 | As peças do kit, as checagens e os créditos | [kit.md](entregaveis/_harness/kit.md) |
 | O que mudou em cada versão | [HISTORY.md](HISTORY.md) |
-
-## O que esta versão ainda não tem
-
-- Um exemplo completo, do brief à entrega.
 
 ## Testar o kit
 

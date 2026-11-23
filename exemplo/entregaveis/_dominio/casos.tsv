@@ -1,0 +1,13 @@
+# Casos de teste das regras do domínio. Para cada regra, ao menos um texto que ela acusa e um que ela deixa passar.
+# espera: acusa ou passa. texto: use \n para quebra de linha. Uma linha em branco (\n\n) separa páginas ou parágrafos.
+# Escreva os casos com frases que poderiam estar em um entregável deste projeto, sem dado real do cliente.
+# Formato, com dados fictícios:
+# D-001	acusa	A nota de maturidade da frente de dados é 2.
+# D-001	passa	A nota de maturidade da frente de dados é 2. O critério: não há identificador único de cliente.
+checagem	espera	texto
+R-001	acusa	A nota de maturidade em dados e identidade é 2.
+R-001	passa	A nota de maturidade em dados e identidade é 2. O critério da nota: a capacidade existe em uma área, sem dono definido.
+R-002	acusa	A diretoria desliga a plataforma B de e-mail.
+R-002	passa	A diretoria desliga a plataforma B de e-mail quando o contrato vence, em março.
+R-003	acusa	Três plataformas repetem o trabalho de outras.
+R-003	passa	A saída de duas plataformas traz um custo evitado de R$ 1,2 milhão por ano.

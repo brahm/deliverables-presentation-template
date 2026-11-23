@@ -1,0 +1,35 @@
+# Um termo por conceito. A coluna 'evitar' lista as variantes que não devem aparecer, separadas por ponto e vírgula.
+# A checagem de termos reprova uma variante da coluna 'evitar' e avisa de sigla que não está aqui.
+termo	definicao	evitar	idioma
+martech	O conjunto de plataformas que o marketing usa para dados, conteúdo, campanhas e medição		pt
+adtech	O conjunto de plataformas usadas para comprar, entregar e medir mídia paga		pt
+CDP	Plataforma de dados de clientes: junta os dados de uma pessoa em um perfil e o entrega aos canais		pt
+CRM	Gestão do relacionamento com o cliente: a base de clientes e as plataformas que a usam		pt
+DMP	Plataforma de gestão de dados de audiência, em geral anônimos e de terceiros, para mídia		pt
+DSP	Plataforma de compra de mídia programática, do lado do anunciante		pt
+SSP	Plataforma de venda de espaço publicitário, do lado do veículo		pt
+servidor de anúncios	Sistema que entrega os anúncios e conta impressões e cliques		pt
+CMP	Plataforma de gestão de consentimento: coleta e guarda a escolha da pessoa por finalidade		pt
+CMS	Sistema de gestão de conteúdo de sites e aplicativos		pt
+DAM	Gestão de ativos digitais: o acervo de imagens, vídeos e peças		pt
+ESP	Provedor de envio de e-mail em escala		pt
+MMP	Parceiro de medição de aplicativos: atribui instalações e eventos a campanhas		pt
+MMM	Modelo de mix de marketing: estima a contribuição de cada canal com dados agregados		pt
+MTA	Atribuição multitoque: divide o crédito da conversão entre os contatos de uma pessoa		pt
+incrementalidade	O resultado que só aconteceu por causa da campanha, medido com grupo de controle		pt
+dados próprios	Dados que a empresa coleta diretamente de clientes e visitantes, com consentimento		pt
+resolução de identidade	O processo de reconhecer a mesma pessoa em canais e dispositivos diferentes		pt
+sala limpa de dados	Ambiente em que duas empresas cruzam dados sem que uma veja os dados individuais da outra		pt
+coleta pelo servidor	Envio de eventos do servidor da empresa para as plataformas, sem depender do navegador		pt
+orquestração de jornadas	Definição e execução da sequência de contatos com uma pessoa entre canais		pt
+CDP componível	Arquitetura em que o armazém de dados da empresa faz o papel do perfil de cliente e ferramentas menores cuidam da ativação		pt
+custo total de propriedade	Licença, implantação, integração e operação de uma plataforma ao longo do contrato		pt
+caso de uso	Uma ação de negócio que a arquitetura precisa permitir, descrita pelo resultado para o cliente		pt
+plataforma	Um sistema contratado ou construído que o marketing usa. É o nome que a diretoria da rede usa	ferramenta;ferramentas;solução;soluções	pt
+capacidade	O que a arquitetura precisa fazer, dito sem o nome do produto	funcionalidade;funcionalidades	pt
+plataforma repetida	Plataforma paga para uma capacidade que outra plataforma da rede já atende, confirmada com os dois donos	plataforma redundante;plataforma duplicada	pt
+custo evitado	O valor de contrato que deixa de ser pago quando uma plataforma sai	economia;saving	pt
+plataforma	Um sistema contratado ou construído que o marketing usa. É o nome que a diretoria da rede usa	ferramenta;ferramentas;solução;soluções	pt
+capacidade	O que a arquitetura precisa fazer, dito sem o nome do produto	funcionalidade;funcionalidades	pt
+plataforma repetida	Plataforma paga para uma capacidade que outra plataforma da rede já atende, confirmada com os dois donos	plataforma redundante;plataforma duplicada	pt
+custo evitado	O valor de contrato que deixa de ser pago quando uma plataforma sai	economia;saving	pt

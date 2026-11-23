@@ -10,6 +10,7 @@
 | Peça | O que faz | Quando roda |
 | --- | --- | --- |
 | `REGRAS.md` | As regras e o momento de cada skill | Lida por todo agente no início da sessão |
+| `guia.md` | O guia de uso para o consultor, com todos os recursos | Lido pelo consultor, e pelo agente quando ele pergunta como usar |
 | `.claude/skills/` | Um procedimento curto por momento | Aberta pelo agente quando o momento chega |
 | `.claude/settings.json` | Liga os seis hooks | Pelo Claude Code |
 | `scripts/estado.py` | O estado do projeto em poucas linhas | No início da sessão |
@@ -121,7 +122,8 @@ criado a partir do template, apague-os ao iniciar:
 - `HISTORY.md`
 - `.github/about.md`
 - `LICENSE` (a licença do kit segue em `_harness/LICENCA.txt`)
-- `tools/testar_kit.py`
+- `tools/testar_kit.py` e `tools/abrir_exemplo.py`
+- `exemplo/`, o projeto fictício do brief à entrega
 - `.github/workflows/kit.yml`
 
 ## Fontes do método

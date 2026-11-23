@@ -1,0 +1,14 @@
+# Regras do domínio deste projeto. Uma por linha. O template traz só o formato.
+# tipo: proibido (o padrão não pode aparecer), obrigatorio (precisa aparecer ao menos uma vez),
+#       junto ('A => B': onde A aparece, B aparece na mesma página ou parágrafo), ordem ('A => B': B só depois de A).
+# aplica: * ou tipo, veículo, formato ou id de entregável, separados por vírgula.
+# onde: titulos, conteudo, storyline, briefing ou tudo.
+# padrao: expressão regular, sem diferença entre maiúsculas e minúsculas.
+# mensagem: o que corrigir, em uma frase. nivel: erro ou aviso. origem: o material, a fala do consultor ou a decisão.
+# Cada regra precisa de dois casos em casos.tsv: um que ela acusa e um que ela deixa passar.
+# Formato de uma linha, com dados fictícios:
+# D-001	junto	apresentacao	conteudo	nota de maturidade => crit[ée]rio	Toda nota de maturidade vem com o critério que a justifica.	erro	M-003
+id	tipo	aplica	onde	padrao	mensagem	nivel	origem
+R-001	junto	*	conteudo	nota de maturidade => crit[ée]rio	Toda nota de maturidade vem com o critério que a justifica.	erro	M-006
+R-002	junto	*	conteudo	\b(deslig|substitu|consolid)\w* => \b(contrato|venc|renova)\w*	Toda recomendação de desligar, substituir ou consolidar diz quando o contrato vence.	erro	M-006
+R-003	obrigatorio	apresentacao	conteudo	custo evitado	O material mostra o custo evitado, que é o número em que o financeiro acredita primeiro.	erro	Fala da consultora em 2026-09-21

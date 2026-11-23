@@ -1,0 +1,94 @@
+# Exemplo: um projeto do brief à entrega
+
+Este é um projeto completo feito com o harness, para você ver como o
+trabalho fica antes de começar o seu. Ele mostra o que o consultor diz,
+o que o agente registra e o arquivo que sai no fim.
+
+Tudo aqui é inventado: a empresa, as pessoas, os contratos, os números
+e também o método de avaliação do projeto. Nada serve como referência de
+mercado. Em um projeto de verdade, esses registros ficam em repositório
+privado.
+
+## O projeto
+
+A Lojas Exemplo, uma rede fictícia de varejo, contratou um diagnóstico
+das plataformas de marketing. O entregável é uma leitura executiva de
+dez páginas, projetada em uma reunião de diretoria de 30 minutos. A
+grande ideia cabe em uma frase: a rede paga R$ 1,9 milhão por ano por
+três plataformas repetidas, e a decisão sobre duas delas vence em 15 de
+janeiro.
+
+O arquivo final está em [resultado/leitura-executiva.pdf](resultado/leitura-executiva.pdf)
+e em [resultado/leitura-executiva.pptx](resultado/leitura-executiva.pptx).
+Ele saiu no desenho neutro do gerador, porque a consultora do exemplo
+dispensou o modelo de apresentação.
+
+| O resumo | O fluxo | O custo evitado |
+| --- | --- | --- |
+| ![Página 2, com a conclusão do diagnóstico](resultado/pagina-02.png) | ![Página 5, com o fluxo do carrinho abandonado](resultado/pagina-05.png) | ![Página 8, com o gráfico do custo evitado](resultado/pagina-08.png) |
+
+## O caminho, etapa por etapa
+
+A coluna do meio traz o que a consultora disse ou fez. A consultora
+nunca citou uma skill: o agente aplicou cada uma no momento certo.
+
+| Data | O que a consultora disse ou fez | O que o agente fez | Onde está |
+| --- | --- | --- | --- |
+| 14 de setembro | Disse do que é o projeto e dispensou o modelo e o guia de marca | Fechou o brief, ativou o pacote do tipo de trabalho e pediu os materiais | [brief.md](entregaveis/_projeto/brief.md), [registro.tsv](entregaveis/_intake/registro.tsv), decisões D-001 a D-003 |
+| 21 de setembro | Entregou o roteiro de avaliação que usa | Escreveu o método do projeto, três regras de checagem e os casos que provam cada uma | [dominio.md](entregaveis/_dominio/dominio.md), [checagens.tsv](entregaveis/_dominio/checagens.tsv), [casos.tsv](entregaveis/_dominio/casos.tsv) |
+| 25 de setembro a 12 de outubro | Trouxe os contratos, as entrevistas e a medição do carrinho | Registrou cada número com fonte e data. Os relatórios de uso não chegaram, e a análise que dependia deles foi adiada | [evidencias.tsv](entregaveis/_projeto/evidencias.tsv), [adiados.tsv](entregaveis/_projeto/adiados.tsv) |
+| 12 de outubro | Não disse o prazo da migração | Assumiu três meses, registrou como decisão assumida e escreveu a suposição na página | D-005 em [decisoes.md](entregaveis/_projeto/decisoes.md) |
+| 19 de outubro | Pediu a leitura executiva para a diretoria | Preparou o briefing: audiência, grande ideia, pedido e resistências | [briefing.md](entregaveis/leitura-executiva/briefing.md) |
+| 21 de outubro | "Aprovada. Só ponha o custo antes da nota de maturidade" | Registrou a aprovação da storyline e montou o storyboard | [storyline.md](entregaveis/leitura-executiva/storyline.md), [storyboard.md](entregaveis/leitura-executiva/storyboard.md) |
+| 27 de outubro | Corrigiu dois títulos que diziam "ferramenta" | Escreveu as páginas e guardou a lição como uma checagem de termos | [conteudo.md](entregaveis/leitura-executiva/conteudo.md), L-001 em [licoes.md](entregaveis/_projeto/licoes.md) |
+| 3 de novembro | | Revisou com a rubrica. A página 5 reprovou por trazer o fluxo como lista, e virou um desenho | [revisao.md](entregaveis/leitura-executiva/revisao.md) |
+| 4 de novembro | | Preparou a versão curta, as perguntas previstas, o roteiro e a pré-leitura | [entrega.md](entregaveis/leitura-executiva/entrega.md) |
+| 5 e 6 de novembro | Apresentou e contou o que a diretoria decidiu e perguntou | Registrou as decisões, respondeu à pergunta sobre a multa e guardou a lição | [fechamento.md](entregaveis/leitura-executiva/fechamento.md), D-008, D-009 e L-002 |
+
+## Se você tem cinco minutos
+
+1. Abra o [PDF](resultado/leitura-executiva.pdf) e leia só os títulos.
+   Eles contam a história sem o corpo das páginas.
+2. Abra o [conteudo.md](entregaveis/leitura-executiva/conteudo.md). É a
+   fonte de onde o arquivo sai, com a evidência de cada página.
+3. Procure "Vigente (assumida)" em [decisoes.md](entregaveis/_projeto/decisoes.md).
+   É assim que o agente mostra o que decidiu sem perguntar.
+4. Leia a linha "Diagrama" da [revisão](entregaveis/leitura-executiva/revisao.md).
+   Uma revisão de verdade reprova alguma coisa.
+
+## Abrir o exemplo rodando
+
+O comando abaixo cria uma pasta nova com o harness instalado e o exemplo
+dentro. Rode na raiz deste repositório e aponte para uma pasta fora dele.
+
+```sh
+python3 tools/abrir_exemplo.py ../exemplo-aberto
+```
+
+Na pasta nova, estes comandos mostram o harness trabalhando:
+
+```sh
+python3 entregaveis/_harness/scripts/estado.py
+python3 entregaveis/_harness/scripts/validar.py --rigoroso
+python3 entregaveis/_harness/scripts/gerar.py leitura-executiva --pdf --imagens
+```
+
+O estado lista um material em falta, uma decisão assumida e um item
+adiado. Eles fazem parte da história do exemplo. O gerador pede o pacote
+`python-pptx`, e o PDF e as imagens pedem o LibreOffice.
+
+Para experimentar, abra a pasta com o seu agente e peça uma mudança, por
+exemplo trocar o título da página 4 por um rótulo como "Investimento". A
+checagem devolve o que corrigir.
+
+## O que o exemplo não mostra
+
+O exemplo tem uma fase, um entregável e um idioma. Ele não traz modelo
+de apresentação do cliente, documento em Word, planilha, peça interativa
+nem versão em espanhol ou inglês. O método de cada uma dessas partes
+está em `entregaveis/_harness/metodo/`.
+
+## Em um projeto seu
+
+A pasta `exemplo/` serve só ao repositório do template. Em um projeto
+criado a partir dele, apague a pasta ao iniciar.
