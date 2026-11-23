@@ -1,6 +1,6 @@
 # Pacote proposta
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.12.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.13.0. Gerado por empacotar.py: não edite à mão.
 
 Ponto de partida genérico para este tipo de projeto. O domínio do projeto vence o pacote onde os dois se contradizem.
 
@@ -8,339 +8,170 @@ Ponto de partida genérico para este tipo de projeto. O domínio do projeto venc
 
 ### Quando usar
 
-O entregável pede uma decisão de compra: proposta comercial, resposta a
-uma concorrência, apresentação oral da proposta, extensão de um projeto
-em andamento ou pedido interno de investimento.
+O trabalho é uma proposta: proposta comercial, resposta a uma
+concorrência, apresentação oral da proposta, extensão de um projeto em
+andamento ou pedido interno de investimento.
 
-O pacote completa a seção 7 de `metodo/metodo.md`, "Argumento de venda".
-O conteúdo técnico da proposta vem do pacote do tipo de trabalho
-proposto.
+Uma proposta não é um projeto. Ela dura pouco, não tem linha de base,
+status nem aceite, e por isso pede menos governança do que o nível
+enxuto. Este pacote faz duas coisas: pede ao consultor as informações de
+que a proposta é feita e mantém dois controles.
+
+Ele não traz método de construção de proposta, roteiro de seções,
+esqueleto de história nem argumento pronto. O método, o contexto e o
+conteúdo chegam do consultor durante a construção e ficam em
+`entregaveis/_dominio/`, pela skill `calibrar-dominio`. A forma do texto
+e da história continua vindo das páginas de método do harness.
+
+Quando a proposta é de um trabalho que tem pacote próprio, some esse
+pacote. Enquanto o projeto for uma proposta, os controles dele ficam em
+espera e passam a valer quando o trabalho for vendido.
 
 ### O que perguntar ao consultor no início
 
 Além das perguntas de `iniciar-projeto`:
 
-- Quem decide a compra, quem influencia, quem usa e quem pode vetar?
-- Por que o cliente quer resolver isso agora? O que acontece se não
-  resolver?
-- Há concorrência? Contra quem, e que critérios de avaliação o cliente
-  declarou?
-- Há pedido formal de proposta, com requisitos e formato obrigatório?
-- Que orçamento o cliente tem ou espera?
-- O que o consultor já conversou com o cliente e o que foi prometido?
-- Que casos, pessoas e credenciais podem ser citados, e com que
-  autorização?
-- Quem aprova preço, escopo e termos do lado do consultor?
+- Quem decide a compra, quem influencia e quem pode vetar?
+- Há concorrência e pedido formal do cliente, com formato e prazo?
+- A organização do consultor tem método, roteiro ou modelo próprio de
+  proposta que este material precisa seguir?
+- Quem aprova o preço, o escopo e os termos do lado do consultor?
+- Que casos, clientes e pessoas podem ser citados, e quem autoriza?
+- Em que ordem o consultor prefere fornecer as informações da tabela
+  abaixo, e quais ele já tem prontas?
 
-### Entregáveis típicos
+### Informações que o consultor fornece
 
-| Entregável | Veículo | Formato | Audiência que decide |
+As informações estão em `insumos.tsv` e aparecem com
+`governanca.py --insumos`. O agente pede cada uma, guarda onde a tabela
+diz e não escreve nenhuma no lugar do consultor.
+
+| Informação | Vale | Antes de | O que perguntar |
 | --- | --- | --- | --- |
-| Proposta comercial | leitura | pptx ou docx | Decisor econômico e comitê de avaliação |
-| Apresentação oral da proposta | projetado | pptx | Comitê de avaliação |
-| Resumo executivo ou carta | documento | docx ou pdf | Decisor econômico |
-| Matriz de resposta aos requisitos | planilha | xlsx | Compras e avaliadores técnicos |
-| Escopo de trabalho | documento | docx | Compras, jurídico e patrocinador |
-| Estimativa de investimento | planilha | xlsx | Consultor, antes de ir ao cliente |
+| Objetivo da proposta | Sempre | Storyline | O que o cliente quer alcançar e que decisão a proposta precisa provocar |
+| Ponto de vista | Sempre | Storyline | A leitura do consultor sobre o problema e a tese que a proposta defende |
+| Abordagem | Sempre | Storyline | Como o trabalho será feito, em que fases e com que entregas |
+| Tarefas | Sempre | Redação | As tarefas de cada fase, o que está dentro, o que está fora e o que depende do cliente |
+| Cronograma | Sempre | Redação | A duração de cada fase, os marcos e as datas já fixadas |
+| Equipe recomendada | Sempre | Redação | Quem compõe a equipe, com que papel e dedicação |
+| Preço | Sempre | Revisão | O preço, as premissas, as condições comerciais e quem aprovou |
+| Método e modelo de proposta da casa | Quando a organização do consultor tem método ou modelo próprio | Storyline | O método, o roteiro de seções e o modelo a seguir |
+| Pedido formal do cliente | Quando o cliente enviou pedido, requisitos ou critérios | Storyline | Os requisitos, o formato obrigatório, os critérios e o prazo |
 
-### Frameworks
+A informação condicional começa como "a confirmar", e o consultor diz se
+vale. A lista do dia mostra o que falta. Um entregável que chega à etapa
+sem a informação é acusado como erro pelo `validar.py`, e a página que
+dependia dela fica com a lacuna à vista.
 
-#### 1. Qualificação
+### Controles de governança
 
-Antes de escrever, confira: há um problema reconhecido, um decisor
-identificado, orçamento provável, prazo de decisão e uma razão para o
-cliente escolher esta proposta. O que falta vira pergunta ao consultor. Uma
-proposta escrita sem o decisor identificado é escrita para ninguém.
+Os controles estão em `controles.tsv` e aparecem com
+`governanca.py --controles`.
 
-#### 2. Mapa de decisores
+| Controle | Vale | Antes de | O que protege |
+| --- | --- | --- | --- |
+| Aprovação do preço, do escopo e dos termos | Sempre | Envio | Nada chega ao cliente com um número ou uma condição que ninguém aprovou |
+| Autorização para citar casos, clientes e pessoas | Quando a proposta cita um caso, outro cliente, um resultado ou um currículo | Envio | Nenhum outro cliente e nenhuma pessoa aparecem sem autorização registrada |
 
-| Papel | O que quer saber |
-| --- | --- |
-| Decisor econômico | O que ganho, quanto custa, que risco corro |
-| Usuário | O que muda no meu trabalho e quanto esforço me pede |
-| Avaliador técnico | Se a abordagem funciona e se a equipe sabe fazer |
-| Compras | Se atende aos requisitos e como o preço se compara |
-| Patrocinador interno | Como isso me ajuda a defender a escolha |
+Um controle só é dado como cumprido com a evidência e com o nome de quem
+confirmou. A dispensa é do consultor, com o motivo.
 
-Para cada pessoa: a dor, o critério de decisão e a objeção provável. A
-proposta escrita é lida por todos, então cada um precisa achar a sua
-resposta em menos de um minuto.
+### Nível de governança
 
-#### 3. Temas da proposta
+`governanca.py --sugerir` propõe o nível proposta, que fica abaixo do
+enxuto: nenhum material de governança é emitido. Os registros continuam
+disponíveis para o que precisar ser anotado, como uma decisão ou uma
+premissa. O consultor pode pedir um material avulso ou escolher um nível
+de projeto, se quiser acompanhar a proposta como um.
 
-Dois ou três temas que atravessam o material. Cada tema liga uma dor de
-um decisor a uma capacidade da proposta e a uma prova. Tema sem prova é
-adjetivo. Três temas com prova valem mais do que seis sem.
+Quando a proposta é vendida, a skill `evoluir-projeto` abre a fase do
+trabalho. O que a proposta prometeu vira a linha de base dessa fase, e o
+nível de governança é escolhido de novo.
 
-#### 4. Entendimento do problema
+### O que este pacote não traz
 
-O problema com as palavras e os números do cliente, e não com os da
-proposta. Inclua o custo de não agir, com a conta à vista. Esta seção
-mostra que o cliente foi ouvido e decide se o resto será lido.
+- O método e o processo de construção de proposta.
+- O roteiro de seções, a ordem do material e o modelo de documento.
+- Os argumentos, os temas, os casos e as provas.
+- A forma de calcular e de apresentar o preço.
+- O contexto do cliente e da concorrência.
 
-#### 5. Abordagem e entregas
-
-As fases, o que o cliente recebe ao fim de cada uma e que decisão cada
-entrega permite. Explique por que esta abordagem e não outra. Mostre o
-que o cliente precisa fazer e em que momento. É um diagrama de fluxo
-linear com os marcos.
-
-#### 6. Escopo
-
-O que está dentro, o que está fora, as premissas e o que depende do
-cliente. A lista do que está fora evita a maior parte dos conflitos do
-projeto. O escopo da proposta e o do escopo de trabalho dizem a mesma
-coisa, com as mesmas palavras.
-
-#### 7. Equipe e governança
-
-Quem faz o quê, com que dedicação e com que experiência relevante para
-este problema. Os fóruns de acompanhamento e como as decisões e as
-mudanças de escopo são tratadas.
-
-#### 8. Provas
-
-Casos, resultados, credenciais e referências. Regras:
-
-- só entra o caso que o consultor confirmou que pode ser citado, com o nível
-  de identificação autorizado;
-- cada caso diz o problema, o que foi feito e o resultado com número;
-- o caso é escolhido pela semelhança com o problema deste cliente.
-
-Nenhum outro cliente é citado pelo nome sem autorização registrada.
-
-#### 9. Investimento e opções
-
-Duas ou três opções com escopo e valor diferentes, e a recomendação.
-Mostre o valor ao lado do que o cliente recebe e do custo de não agir.
-As premissas de preço ficam à vista. O valor e os termos comerciais são
-do consultor: o agente monta a estrutura e a conta, e o consultor define e aprova
-cada número.
-
-#### 10. Riscos e objeções
-
-As objeções previsíveis, cada uma com a resposta no ponto do material em
-que ela nasce. Os riscos do projeto, com a mitigação e o que depende do
-cliente.
-
-#### 11. Próximos passos
-
-O que acontece depois do sim: datas, responsáveis e o que o cliente
-precisa preparar. Um pedido claro, com a data em que a proposta expira
-ou em que a equipe deixa de estar disponível, quando isso for verdade.
-
-#### 12. Matriz de requisitos
-
-Em concorrência com pedido formal: uma linha por requisito, com onde a
-proposta responde, o grau de atendimento e a ressalva. Feita antes de
-escrever, ela vira o roteiro da proposta. Um requisito obrigatório sem
-resposta desclassifica.
-
-### Esqueletos de storyline
-
-#### Proposta comercial
-
-1. Capa
-2. Resumo: o que o cliente ganha, como, por quanto e o pedido
-3. O que entendemos do problema, com os números do cliente
-4. O que custa não agir
-5. O que propomos, em uma página
-6. Primeiro tema, com a prova
-7. Segundo tema, com a prova
-8. Terceiro tema, com a prova
-9. Como o trabalho anda: fases, entregas e decisões
-10. O que está dentro e o que está fora
-11. A equipe e a governança
-12. Casos parecidos e o que eles mostram
-13. Opções de investimento e a recomendada
-14. Riscos e como são tratados
-15. Próximos passos e o pedido
-16. Apêndice: currículos, detalhes de método, termos e premissas
-
-#### Apresentação oral
-
-1. O que ouvimos de vocês
-2. O que está em jogo
-3. A nossa resposta, em uma frase
-4. Os dois ou três motivos, cada um com a prova
-5. Como seria trabalhar juntos
-6. O investimento e a opção recomendada
-7. O pedido
-
-#### Resumo executivo
-
-Um documento de uma ou duas páginas: o problema, a resposta, os motivos,
-o investimento e o próximo passo, nesta ordem.
-
-### Evidência que cada afirmação pede
-
-| Afirmação | Fonte aceitável |
-| --- | --- |
-| Problema e números do cliente | Material do cliente ou conversa registrada, com data |
-| Custo de não agir | Cálculo com dados do cliente e as premissas escritas |
-| Resultado de um caso | Caso autorizado pelo consultor, com o número conferido |
-| Experiência de uma pessoa da equipe | Currículo fornecido pelo consultor |
-| Credencial ou certificação | Documento que a comprove |
-| Prazo e esforço | Estimativa do consultor, com as premissas |
-| Valor da proposta | Definido e aprovado pelo consultor |
-| Atendimento a um requisito | Linha da matriz de requisitos, com o trecho que responde |
-
-### Armadilhas
-
-- Abrir falando de quem propõe. O cliente quer ler sobre o problema
-  dele.
-- Descrever o método e esquecer o que o cliente recebe.
-- Usar adjetivos no lugar de provas.
-- Citar outro cliente sem autorização.
-- Inventar ou arredondar o resultado de um caso.
-- Deixar o que está fora do escopo implícito.
-- Apresentar uma opção só. Sem alternativa, a conversa vira sim ou não.
-- Esconder o preço no fim ou sem contexto de valor.
-- Responder a uma concorrência sem a matriz de requisitos.
-- Reaproveitar texto de outra proposta com o nome ou o contexto de
-  outro cliente. Confira com `validar.py --so confidencialidade` e ponha
-  os nomes de outros clientes em `confidencial.tsv`.
-- Enviar a proposta. Quem envia é o consultor.
-
-## Roteiros de conversa
-
-Em proposta, as conversas são de descoberta e acontecem antes de
-escrever. Quem conversa com o cliente é o consultor. Estes roteiros o ajudam
-a preparar a conversa e ajudam o agente a perguntar ao consultor o que ele
-ouviu. Registre no intake com o tipo `entrevista`, com a data.
-
-O que o cliente disse com as próprias palavras vale mais do que a
-descrição formal do pedido. Anote as frases.
-
-### Com o consultor, antes de qualquer conversa
-
-- Como a oportunidade chegou e o que já foi dito ao cliente?
-- Quem decide, quem influencia e quem você ainda não conhece?
-- Por que o cliente escolheria esta proposta, e por que não?
-- Que casos e pessoas podem ser citados?
-- Que faixa de valor faz sentido e quem aprova o preço?
-- O que não queremos assumir neste projeto?
-
-### Decisor econômico
-
-- Que resultado faria este investimento valer a pena?
-- O que acontece se nada for feito nos próximos 12 meses?
-- O que já foi tentado e por que não resolveu?
-- Como a decisão será tomada, por quem e até quando?
-- O que mais preocupa você em um projeto como este?
-
-### Patrocinador interno
-
-- Como você descreve o problema para a diretoria?
-- Quem apoia e quem resiste?
-- Que critérios vão pesar mais na escolha?
-- De que você precisa para defender a proposta internamente?
-- Que orçamento existe ou pode ser pedido?
-
-### Usuários e equipes afetadas
-
-- Como é o trabalho hoje e onde ele trava?
-- O que um projeto anterior deixou de bom e de ruim?
-- Quanto tempo da equipe estará disponível?
-- O que faria o projeto ser bem recebido pela equipe?
-
-### Avaliadores técnicos
-
-- Que restrições de arquitetura, dados e segurança valem?
-- O que uma abordagem precisa mostrar para ser considerada viável?
-- Que entregas vocês esperam receber e em que formato?
-
-### Compras
-
-- Quais são as etapas e as datas do processo?
-- Que formato de proposta e que documentos são obrigatórios?
-- Como as propostas serão comparadas?
-- Que termos comerciais e contratuais não são negociáveis?
+Tudo isso é do consultor ou da organização dele, chega durante a
+construção da proposta e fica só no projeto.
 
 ## Procedimento do pacote proposta
 
-Quando: quando o entregável é uma proposta comercial, uma resposta a concorrência, a apresentação oral de uma proposta, um escopo de trabalho ou um pedido de investimento, ao levantar as informações com o consultor, ao montar o briefing e a storyline, ao citar casos e valores e ao revisar o material.
+Quando: quando o trabalho é uma proposta comercial, uma resposta a concorrência, a apresentação oral de uma proposta ou um pedido de investimento, ao iniciar o projeto, ao abrir um entregável, antes da storyline, da redação, da revisão e do envio, e quando o estado ou a lista do dia mostram uma informação que o consultor ainda não forneceu ou um controle pendente. Pede ao consultor o objetivo, o ponto de vista, a abordagem, as tarefas, o cronograma, a equipe recomendada e o preço, e mantém só os controles de uma proposta.
 
 O conteúdo do pacote está em `entregaveis/_harness/pacotes/proposta/`.
-Esta skill diz que parte abrir em cada momento. As skills do fluxo
-continuam valendo, e a seção 7 de `metodo/metodo.md` dá o argumento.
+Uma proposta não é um projeto: a governança é menor do que a do nível
+enxuto, e o trabalho do agente é obter do consultor as informações de
+que a proposta é feita. O método, o contexto e o conteúdo são do
+consultor e ficam no domínio, com `calibrar-dominio`. As skills do fluxo
+continuam valendo.
 
-1. No início, faça ao consultor as perguntas da seção "O que perguntar ao
-   consultor no início" de `PACOTE.md`. Sem decisor identificado, diga ao
-   consultor que a proposta ainda não tem leitor e pergunte como descobrir.
-2. No intake, parta de `pedido-de-dados.tsv`. Quase tudo vem do consultor.
-   Ponha em `_projeto/confidencial.tsv` os nomes de outros clientes que
-   não podem aparecer.
-3. Quando há pedido formal de proposta, monte a matriz de requisitos
-   antes de qualquer storyline. Ela é uma planilha e vira o roteiro.
-4. No briefing, a audiência é o mapa de decisores: uma linha por
-   pessoa, com a dor, o critério e a objeção.
-5. Na storyline, parta do esqueleto em "Esqueletos de storyline".
-   Escolha dois ou três temas e registre a prova de cada um na seção
-   de recursos planejados da storyline.
-6. Cada afirmação usa a fonte que a tabela "Evidência que cada
-   afirmação pede" aceita. Um caso só entra com a autorização do consultor
-   registrada em `decisoes.md`, e o resultado dele nunca é arredondado
-   nem completado.
-7. O valor, o prazo e os termos são do consultor. Monte a estrutura das
-   opções e a conta, deixe os números que faltam como lacuna visível e
-   peça cada um.
-8. O que está fora do escopo aparece escrito. A proposta e o escopo de
-   trabalho usam as mesmas palavras.
-9. Na revisão, leia a proposta no papel de cada decisor do mapa e passe
-   pela lista de "Armadilhas". Rode
-   `validar.py --so confidencialidade`.
+1. No início, faça ao consultor as perguntas da seção "O que perguntar
+   ao consultor no início" de `PACOTE.md`, junto com as de
+   `iniciar-projeto`.
+2. Rode `python3 entregaveis/_harness/scripts/governanca.py --sugerir`.
+   Com o sim do consultor, grave `--nivel proposta`. Não proponha status,
+   linha de base, ritos nem aceite para uma proposta.
+3. Mostre as informações com `governanca.py --insumos` e peça todas de
+   uma vez, com a pergunta de cada uma. O consultor responde na ordem
+   que preferir, em texto, em arquivo ou em conversa.
+4. Para cada informação condicional, pergunte uma vez se ela vale. Sim:
+   `--insumo CODIGO --pendente`. Não:
+   `--insumo CODIGO --nao-se-aplica --motivo MOTIVO`.
+5. Quando uma informação chega, guarde-a onde a tabela "Informações que
+   o consultor fornece" diz e grave
+   `--insumo CODIGO --recebido --onde ONDE --quem NOME`. Arquivo recebido
+   entra pelo intake e fica fora do git. Método e modelo da casa entram
+   pelo domínio e nunca voltam ao template.
+6. Não escreva no lugar do consultor. Sem o objetivo, o ponto de vista e
+   a abordagem não há storyline. Sem as tarefas, o cronograma e a
+   equipe, a página correspondente fica com a lacuna à vista. O preço
+   nunca é estimado pelo agente.
+7. Se o consultor mudar uma informação já recebida, grave de novo e
+   registre a mudança com `registrar-decisao`.
+8. Antes do envio, confira os controles com `governanca.py --controles`.
+   Um controle fecha com `--controle CODIGO --cumprido --evidencia ID
+   --quem NOME`, e a confirmação vem do consultor.
+9. Rode `validar.py --so confidencialidade` na revisão, com os nomes de
+   outros clientes em `_projeto/confidencial.tsv`.
 10. Quem envia a proposta é o consultor. Prepare o texto de envio com
     `preparar-entrega` e pare.
-11. Quando o consultor disser que a proposta foi vendida, aplique
-    `evoluir-projeto`: o projeto passa à fase do trabalho vendido, e o
-    que a proposta prometeu vira a linha de base dela.
+11. Não escreva método, roteiro de seções ou argumento a partir deste
+    pacote. Leia a seção "O que este pacote não traz" e peça ao
+    consultor o que faltar.
+12. Quando o consultor disser que a proposta foi vendida, aplique
+    `evoluir-projeto`. A fase nova escolhe o nível de governança de
+    novo, e os controles do pacote do trabalho passam a valer.
 
-## Termos do pacote
+## Informações que o consultor fornece
 
 ~~~text
-# Termos de proposta. Ao ativar o pacote, as linhas entram no glossário do projeto.
-# A coluna evitar fica vazia: o projeto decide que variantes proibir, conforme o vocabulário do cliente.
-termo	definicao	evitar	idioma
-proposta comercial	O documento que descreve o problema, a resposta, as entregas, a equipe e o investimento		pt
-pedido de proposta	O documento em que o cliente descreve o que quer comprar e como vai avaliar		pt
-decisor econômico	Quem tem a palavra final sobre o investimento		pt
-patrocinador interno	Quem defende a proposta dentro do cliente		pt
-comitê de avaliação	O grupo do cliente que compara as propostas		pt
-tema da proposta	Uma ideia que liga uma dor do cliente a uma capacidade e a uma prova		pt
-custo de não agir	O que o cliente perde, em dinheiro ou em risco, se mantiver a situação atual		pt
-escopo de trabalho	O documento que fixa entregas, prazos, responsabilidades e premissas		pt
-premissa	Uma condição assumida como verdadeira para o escopo, o prazo ou o preço valerem		pt
-entrega	O que o cliente recebe ao fim de uma fase, em forma verificável		pt
-marco	Um ponto do cronograma com entrega ou decisão		pt
-matriz de requisitos	A tabela que liga cada requisito do cliente ao trecho da proposta que o responde		pt
-caso	O relato de um trabalho anterior, com problema, o que foi feito e resultado		pt
-opção de investimento	Uma combinação de escopo e valor oferecida ao cliente		pt
-objeção	Uma razão que o cliente pode ter para não aprovar a proposta		pt
-validade da proposta	A data até a qual as condições oferecidas se mantêm		pt
+# As informações que o consultor fornece durante a construção da proposta. O pacote diz o que pedir, e nunca o conteúdo.
+# condicao: sempre, ou a situação em que a informação vale (começa por quando). antes_de: a etapa do entregável que não começa sem ela: storyline, storyboard, redacao, revisao ou envio.
+# pergunta: o que perguntar ao consultor. guarda: onde a resposta fica no projeto.
+codigo	insumo	condicao	antes_de	pergunta	guarda
+objetivo	Objetivo da proposta	sempre	storyline	O que o cliente quer alcançar, que decisão a proposta precisa provocar, de quem e até quando?	Brief do projeto e briefing do entregável
+ponto-de-vista	Ponto de vista	sempre	storyline	Qual é a leitura do consultor sobre o problema do cliente e a tese que a proposta defende?	Briefing do entregável, na grande ideia, e decisão registrada (D-nnn)
+abordagem	Abordagem	sempre	storyline	Como o trabalho será feito, em que fases, com que entregas, e por que deste jeito?	Domínio do projeto, com calibrar-dominio, e decisão registrada (D-nnn)
+tarefas	Tarefas	sempre	redacao	Quais são as tarefas de cada fase, o que está dentro, o que está fora e o que depende do cliente?	Material recebido (M-nnn) ou domínio do projeto, e premissas em premissas.tsv
+cronograma	Cronograma	sempre	redacao	Qual é a duração de cada fase, quais são os marcos e que datas o cliente já fixou?	Material recebido (M-nnn) ou decisão registrada (D-nnn)
+equipe-recomendada	Equipe recomendada	sempre	redacao	Quem compõe a equipe, com que papel e dedicação, e quais currículos podem ser usados?	Material recebido (M-nnn)
+preco	Preço	sempre	revisao	Qual é o preço, como ele se divide, que premissas o sustentam, que condições comerciais valem e quem aprovou?	Decisão registrada (D-nnn), com quem aprovou
+metodo-da-casa	Método e modelo de proposta da casa	quando a organização do consultor tem método, roteiro ou modelo próprio de proposta	storyline	Que método, roteiro de seções e modelo de documento a proposta precisa seguir?	Domínio do projeto e marca.md. Nunca volta ao template
+pedido-do-cliente	Pedido formal do cliente	quando o cliente enviou pedido de proposta, requisitos ou critérios de avaliação	storyline	Qual é o pedido do cliente, com os requisitos, o formato obrigatório, os critérios e o prazo de resposta?	Material recebido (M-nnn), fora do git
 ~~~
 
-## Pedido de dados
+## Controles de governança
 
 ~~~text
-# Lista padrão de informações a pedir para montar uma proposta. Quase tudo vem do consultor.
-# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que a proposta usa.
-# prioridade: essencial (sem ele não há proposta), importante (melhora um argumento) ou complementar.
-item	para_que	formato	quem_costuma_ter	prioridade
-Pedido de proposta do cliente, com anexos, requisitos e cronograma do processo	Matriz de requisitos e formato	PDF ou documentos	Consultor	essencial
-Critérios de avaliação declarados pelo cliente e os pesos	Temas da proposta e ordem do material	Documento	Consultor	essencial
-Notas das conversas com o cliente, com as frases dele	Entendimento do problema	Documento	Consultor	essencial
-Materiais do cliente sobre o problema: relatórios, números, apresentações	Entendimento do problema e custo de não agir	Qualquer formato	Cliente, via consultor	importante
-Mapa de decisores: nomes, papéis e posição conhecida	Mapa de decisores	Planilha	Consultor	essencial
-Casos autorizados para citação, com o nível de identificação permitido e os resultados	Provas	Documento	Consultor	essencial
-Currículos da equipe proposta	Equipe e governança	Documento	Consultor	importante
-Credenciais e certificações da organização, com comprovante	Provas	Documento	Consultor	complementar
-Estimativa de esforço e de prazo por fase	Abordagem e investimento	Planilha	Consultor	essencial
-Regras de preço, tabela de valores e alçadas de aprovação	Investimento e opções	Documento ou planilha	Consultor	essencial
-Termos comerciais e contratuais padrão	Escopo de trabalho	Documento	Jurídico da organização do consultor	importante
-Modelo de proposta e guia de marca da organização do consultor	Formato e identidade visual	Arquivo de modelo	Consultor	essencial
-Propostas anteriores para o mesmo cliente e o retorno recebido	Lições e tom	Arquivos	Consultor	complementar
-O que se sabe dos concorrentes na disputa	Posicionamento e objeções	Notas	Consultor	complementar
-Orçamento disponível ou esperado pelo cliente	Opções de investimento	Nota	Consultor	importante
-Lista de nomes de outros clientes que não podem aparecer	Checagem de confidencialidade	Lista	Consultor	essencial
+# Controles de governança deste tipo de projeto. Uma proposta não é um projeto, e por isso são só dois.
+# condicao: sempre, ou a situação em que o controle vale (começa por quando). antes_de: a etapa do entregável antes da qual o controle precisa estar cumprido: storyline, storyboard, redacao, revisao ou envio.
+# registra: o que fica registrado. comprova: a evidência que fecha o controle.
+codigo	controle	condicao	antes_de	registra	comprova
+aprovacao-de-preco-e-termos	Aprovação do preço, do escopo e dos termos	sempre	envio	O preço, o escopo, as premissas e as condições comerciais que vão ao cliente, e quem os aprovou do lado do consultor	Decisão registrada (D-nnn) com quem aprovou e a data
+autorizacao-de-citacoes	Autorização para citar casos, clientes e pessoas	quando a proposta cita um caso, outro cliente, um resultado ou o currículo de alguém	envio	O que pode ser citado, com que nível de identificação, e quem autorizou	Decisão registrada (D-nnn) com quem autorizou cada citação
 ~~~

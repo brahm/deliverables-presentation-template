@@ -172,7 +172,10 @@ que você abre quando a tarefa pede.
     não vale como aceite. Um pacote ativo pode trazer controles de
     governança do tipo de projeto, que saem com `governanca.py
     --controles`. Um controle fecha com a evidência e com quem
-    confirmou, e a dispensa é do consultor.
+    confirmou, e a dispensa é do consultor. Um pacote também pode pedir
+    informações que só o consultor fornece, que saem com `governanca.py
+    --insumos`: peça cada uma e não escreva no lugar dele. Uma proposta
+    não é um projeto e usa o nível proposta, que não emite material.
 
 22. O que o projeto aprende vai para o segundo cérebro, em
     `entregaveis/_cerebro/`. Cada ação que grava um registro, uma ata,

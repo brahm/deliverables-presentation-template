@@ -17,11 +17,12 @@ soma os termos dele ao glossário do projeto e cita o nome no campo
 | `midia` | Auditoria de mídia, estratégia e plano, alocação de orçamento, medição, modelo de operação com agências |
 | `retail-media` | Rede de mídia de um varejista, ou o investimento de uma marca nas redes dos varejistas |
 | `processos-agenticos` | Desenho de processos com agentes de IA e automação de marketing, do mapa de oportunidades ao piloto |
-| `proposta` | Proposta comercial, resposta a concorrência, apresentação oral, escopo de trabalho |
+| `proposta` | Proposta comercial, resposta a concorrência, apresentação oral. Traz dois controles e as informações a pedir ao consultor, sem método |
 | `treinamento` | Cursos, workshops, material didático, exercícios e exames |
 
 Os pacotes se somam. Uma proposta de assessment de martech ativa
-`proposta` e `martech-adtech`. Um projeto de transformação com
+`proposta` e `martech-adtech`, e os controles do segundo esperam a
+venda. Um projeto de transformação com
 capacitação das equipes ativa `transformacao-marketing` e `treinamento`.
 
 ## O que um pacote traz
@@ -34,6 +35,7 @@ Cada pacote é uma pasta com:
 | `pedido-de-dados.tsv` | A lista padrão de dados a pedir ao cliente, com a análise que usa cada item e a prioridade |
 | `entrevistas.md` | Roteiro de entrevista por tipo de interlocutor |
 | `glossario.tsv` | Termos do domínio, para somar ao glossário do projeto |
+| `insumos.tsv` | As informações que só o consultor fornece para este tipo de projeto: o que perguntar, antes de que etapa e onde a resposta fica |
 | `controles.tsv` | Os controles de governança do tipo de projeto: o que precisa ficar registrado e aprovado, antes de que etapa e com que evidência |
 | `skill/SKILL.md` | A skill `pacote-NOME`, que diz que parte do pacote abrir em cada momento |
 
@@ -41,6 +43,16 @@ Cada pacote é uma pasta com:
 opcionais. Um pacote pode trazer só os controles de governança, e nesse
 caso o método, os dados a pedir e os roteiros vêm do consultor durante o
 projeto.
+
+## As informações que o consultor fornece
+
+Há trabalho em que o método e o conteúdo são do consultor e não podem
+estar em um template público. O pacote então diz só o que pedir.
+`governanca.py --insumos` mostra as informações dos pacotes ativos, com
+a pergunta de cada uma. O estado e a lista do dia dizem o que falta. Um
+entregável que chega à etapa sem a informação é acusado como erro, e o
+agente não a escreve no lugar do consultor. A resposta fica no projeto,
+com quem forneceu e onde ficou.
 
 ## Os controles de governança
 

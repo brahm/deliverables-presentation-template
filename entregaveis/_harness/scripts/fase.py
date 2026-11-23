@@ -93,6 +93,7 @@ def brief_da_fase(texto: str, numero: int, tipo: str) -> str:
     topo, resto = (partes[0], "\n---" + partes[1]) if len(partes) == 2 else (texto, "")
     topo = re.sub(r"^tipo:.*$", f"tipo: {limpo(tipo)}", topo, count=1, flags=re.MULTILINE)
     topo = re.sub(r"^pacotes:.*$", "pacotes:", topo, count=1, flags=re.MULTILINE)
+    topo = re.sub(r"^governanca:[ \t]*proposta[ \t]*$", "governanca:", topo, count=1, flags=re.MULTILINE)  # o trabalho vendido pede um nível de projeto
     if re.search(r"^fase:.*$", topo, flags=re.MULTILINE):
         topo = re.sub(r"^fase:.*$", f"fase: {numero}", topo, count=1, flags=re.MULTILINE)
     else:

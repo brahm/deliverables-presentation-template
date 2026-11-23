@@ -1,6 +1,6 @@
 # Modelos
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.12.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.13.0. Gerado por empacotar.py: não edite à mão.
 
 Cada modelo é a forma de uma seção do registro do projeto ou de uma parte de um entregável. PREENCHER marca o que ainda precisa ser escrito.
 
@@ -627,6 +627,15 @@ data	pessoa	frente	entregavel	horas	observacao
 # O controle sem linha aqui está pendente, e o condicional, a confirmar. situacao: pendente, a confirmar, cumprido ou nao se aplica.
 # evidencia: o id do registro (D-nnn, E-nnn, A-nnn) ou o arquivo que comprova. confirmado_em: AAAA-MM-DD.
 codigo	situacao	evidencia	confirmado_por	confirmado_em	observacao
+~~~
+
+### insumos.tsv
+
+~~~text
+# As informações que os pacotes ativos pedem ao consultor e o que o projeto já recebeu. Quem grava é o governanca.py --insumo.
+# A informação sem linha aqui está pendente, e a condicional, a confirmar. situacao: pendente, a confirmar, recebido ou nao se aplica.
+# onde: o id do registro (D-nnn, M-nnn, A-nnn) ou o arquivo em que a informação ficou. fornecido_em: AAAA-MM-DD.
+codigo	situacao	onde	fornecido_por	fornecido_em	observacao
 ~~~
 
 ## Fase
