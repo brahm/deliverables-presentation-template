@@ -18,7 +18,8 @@
 | `scripts/validar.py` | As checagens em script | A cada gravação (hook), antes da revisão e no pull request |
 | `scripts/rotina.py` | A rotina do dia: acha atas e arquivos novos, compara a data de hoje com os prazos do cronograma, guarda o histórico de cada data mudada, monta a lista do dia, registra o follow-up com o cliente e grava o diário | No início e no fim do dia, e quando um prazo muda |
 | `scripts/afazeres.py` | O que a lista do dia usa: os itens abertos, quem trava quem, a exposição dos riscos, as cobranças e as perguntas de cada frequência | Chamado pelo `rotina.py --lista` |
-| `scripts/governanca.py` | Sugere o nível de governança pelo porte, grava a escolha e os materiais, e mantém a linha de base, os desvios, as versões e o aceite | Depois do brief, quando o porte muda e a cada envio |
+| `scripts/governanca.py` | Sugere o nível de governança pelo porte, grava a escolha e os materiais, e mantém a linha de base, os desvios, as versões e o aceite. Conduz o ciclo de aprovação, que o envio abre e o aceite fecha, e o ciclo de mudança: pedido, impacto e decisão | Depois do brief, quando o porte muda, a cada envio e a cada pedido fora do combinado |
+| `scripts/emitir.py` | Monta dos registros o status semanal, o status executivo, a pauta, a nota de entrega, o aceite, o quadro de aprovações e a solicitação de mudança, com o semáforo pela regra | No dia do status e quando o consultor pede um material |
 | `scripts/cerebro.py` | O segundo cérebro: busca nas notas e nos registros, mostra o que falta absorver, marca o que cada nota absorveu, refaz o índice e confere as notas | A cada ação do projeto e antes de escrever |
 | `governanca/catalogo.tsv` | O catálogo dos materiais de governança, com o nível em que cada um entra, a cadência, o destinatário e os registros de onde sai | Lido pelo `governanca.py` |
 | `scripts/ambiente.py` | Confere se a máquina tem o Python, o Git e os programas do gerador, e diz como instalar o que falta em cada sistema | Antes de instalar e no início do projeto |
@@ -119,11 +120,12 @@ que o consultor diz. O consultor corrige no resumo do dia.
 | `versoes.tsv` | Cada versão enviada de um entregável, com o que mudou, quem recebeu e o aceite |
 | `cobrancas.tsv` | Cada follow-up feito com o cliente e a resposta |
 | `esforco.tsv` | As horas, quando o consultor quer registrar. Não gera pergunta nem aviso |
+| `emitidos.tsv` | Cada material montado pelo `emitir.py`, com a data e o arquivo. Os rascunhos ficam em `emitidos/` |
 | `governanca.tsv` | O nível escolhido, material por material, com o que foi tirado, incluído ou feito sob medida |
 | `perguntas.tsv` | A frequência de cada pergunta da lista do dia |
 | `afazeres.md` | A lista do dia gravada, com uma caixa por item |
 | `prazos.tsv` | O histórico de cada data mudada: a original, a anterior, a nova, quem mudou e o motivo |
-| `cadencias.tsv` | Os limites dos avisos, o dia do status, a tolerância de prazo e a pausa do projeto |
+| `cadencias.tsv` | Os limites dos avisos, o dia do status, a tolerância de prazo, o prazo de resposta do aprovador e a pausa do projeto |
 | `alertas.tsv` | Os avisos já mostrados, para o aviso leve não se repetir |
 | `diario.md` | O fechamento de cada dia |
 

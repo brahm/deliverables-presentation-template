@@ -13,4 +13,5 @@ projeto_sem_evento	3	Dias úteis sem nenhum registro antes de a rotina perguntar
 cobrar_depois_de	2	Dias úteis sem follow-up antes de a lista do dia perguntar se o cliente foi cobrado
 dia_do_status	5	Dia da semana do status, de 1 (segunda) a 5 (sexta). As perguntas semanais aparecem na véspera
 tolerancia_de_prazo	5	Dias úteis de desvio da linha de base que o consultor resolve sozinho. Acima disso, o desvio sobe
+prazo_de_aprovacao	5	Dias úteis que o aprovador tem para responder a um envio, quando papeis.tsv não traz o prazo combinado
 pausa_ate		Data até a qual os avisos ficam em silêncio. Quem grava é o rotina.py --pausar

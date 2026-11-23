@@ -51,16 +51,14 @@ comando é `python3 entregaveis/_harness/scripts/governanca.py`.
    `governanca.py --linha-de-base --aprovada-por "NOME"`. Ela fotografa
    os prazos dos entregáveis, dos marcos e das ações com `base: sim`.
    `governanca.py --desvios` compara a fotografia com hoje.
-8. Pedido fora do combinado entra em `_projeto/mudancas.tsv` como
-   `proposta`, com o impacto em prazo, esforço e escopo. A decisão é do
-   consultor com o cliente. Mudança aprovada que move data pede
-   `rotina.py --remarcar` e uma versão nova da linha de base, com
-   `--motivo "MU-nnn"`.
-9. A cada envio, rode `governanca.py --versao ID --mudou "..."
-   --enviada-a "..."`. Quando o cliente aceitar, rode
-   `governanca.py --aceite ID --quem "..." --ressalvas "..."`. O aceite
+8. Pedido fora do combinado, envio e aceite seguem a skill
+   `emitir-material`: o ciclo de mudança, com impacto e decisão, e o
+   ciclo de aprovação, com o prazo de resposta do aprovador. O aceite
    vem do cliente, nunca do agente.
-10. Para emitir um material, leia a linha dele em
+9. Status semanal, status executivo, pauta, nota de entrega, aceite,
+   quadro de aprovações e solicitação de mudança saem prontos de
+   `python3 entregaveis/_harness/scripts/emitir.py`, pela mesma skill.
+10. Para os outros materiais, leia a linha de cada um em
     `_projeto/governanca.tsv`: o que traz e de quais registros sai.
     Monte a partir dos registros, sem digitar de novo o que já está
     neles, e passe o texto por `humanizar-texto`. Quem envia é o

@@ -15,7 +15,11 @@ Uso:
     governanca.py --linha-de-base [--motivo TXT] [--aprovada-por NOME]
     governanca.py --desvios                as datas de hoje contra a linha de base
     governanca.py --versao ENTREGAVEL --mudou TXT [--enviada-a NOME]
+                                           a versão enviada abre a aprovação, com o prazo de resposta
     governanca.py --aceite ENTREGAVEL --quem NOME [--ressalvas TXT]
+    governanca.py --mudanca "PEDIDO" --solicitante NOME [--origem TXT]
+    governanca.py --analisar MU-nnn [--impacto-prazo TXT] [--impacto-esforco TXT] [--impacto-escopo TXT]
+    governanca.py --decidir MU-nnn --decisao aprovada|rejeitada --quem NOME [--motivo TXT]
     --hoje AAAA-MM-DD                      calcula como se fosse este dia
 
 O nível só escolhe o que é emitido para pessoas lerem. Os registros de
@@ -332,6 +336,11 @@ def linha_de_base(motivo: str, por: str, hoje: datetime.date) -> int:
         print("Nada a fotografar: nenhum entregável tem prazo no briefing e nenhuma ação é marco ou tem base: sim.")
         return 1
     versao, anterior = ultima_base()
+    estados = {l.get("id", ""): comum.normalizar(l.get("estado", "")) for l in comum.ler_tsv(comum.PROJETO / "mudancas.tsv")}
+    sem_sim = [m for m in re.findall(r"MU-\d+", motivo) if estados.get(m) != "aprovada"]
+    if sem_sim:
+        print(f"A linha de base só muda por mudança aprovada, e {', '.join(sem_sim)} não está aprovada. Registre a decisão com governanca.py --decidir.")
+        return 1
     if anterior and {l["item"]: l.get("data_base", "") for l in anterior} == {i["item"]: i["data"] for i in itens}:
         print(f"A linha de base versão {versao} já traz estas datas. Nada foi gravado.")
         return 0
@@ -409,6 +418,43 @@ def pasta_do_entregavel(ident: str) -> Path:
     return pasta
 
 
+def somar_uteis(inicio: datetime.date, dias: int) -> datetime.date:
+    """O dia que fica `dias` úteis depois de `inicio`."""
+    dia = inicio
+    while dias > 0:
+        dia += datetime.timedelta(days=1)
+        dias -= dia.weekday() < 5
+    return dia
+
+
+def prazo_de_resposta(ident: str) -> int:
+    """Os dias úteis que o aprovador do entregável tem para responder: o combinado em papeis.tsv ou o padrão do projeto."""
+    combinado = next((l.get("prazo_de_resposta", "") for l in comum.ler_tsv(comum.PROJETO / "papeis.tsv") if l.get("item", "") == ident), "")
+    return int(combinado) if combinado.strip().isdigit() else int(rotina.parametros()["prazo_de_aprovacao"])
+
+
+def aprovacao_aberta(ident: str) -> dict:
+    """A ação de aprovação aberta pelo último envio do entregável."""
+    return next((l for l in comum.ler_tsv(comum.PROJETO / "acoes.tsv") if comum.normalizar(l.get("tipo", "")) == "aprovacao" and comum.normalizar(l.get("estado", "")) == "aberta"
+                 and l.get("entregavel", "") == ident and comum.normalizar(l.get("origem", "")) == "envio"), {})
+
+
+def abrir_aprovacao(ident: str, versao: str, enviada_a: str, hoje: datetime.date) -> str:
+    """O envio liga o relógio: uma aprovação do cliente, com dono e prazo, que a lista do dia cobra."""
+    caminho = rotina.garantir("acoes.tsv")
+    anterior = aprovacao_aberta(ident)
+    if anterior:
+        rotina.mudar_linha(caminho, anterior["id"], {"estado": "cancelada", "movida_em": str(hoje)}, f"Trocada pelo envio da {versao} em {hoje}.")
+    comentarios, colunas, linhas = rotina.abrir_tsv(caminho)
+    aprovador = next((l.get("aprova", "") for l in comum.ler_tsv(comum.PROJETO / "papeis.tsv") if l.get("item", "") == ident), "") or enviada_a
+    dias = prazo_de_resposta(ident)
+    novo = rotina.proximo_id(linhas, "T")
+    linhas.append({"id": novo, "tipo": "aprovacao", "item": f"Aprovar {ident} {versao}", "dono": aprovador, "lado": "cliente", "inicio": str(hoje), "prazo": str(somar_uteis(hoje, dias)),
+                   "base": "nao", "estado": "aberta", "origem": "envio", "movida_em": str(hoje), "observacao": "Aberta pelo envio da versão. O silêncio não vale como aceite.", "entregavel": ident})
+    rotina.gravar_tsv(caminho, comentarios, colunas, linhas)
+    return f"Aprovação {novo} aberta para {aprovador}, com resposta até {somar_uteis(hoje, dias)} ({dias} dia(s) útil(eis)). O silêncio não vale como aceite."
+
+
 def registrar_versao(ident: str, mudou: str, enviada_a: str, hoje: datetime.date) -> int:
     pasta = pasta_do_entregavel(ident)
     if not mudou:
@@ -420,6 +466,8 @@ def registrar_versao(ident: str, mudou: str, enviada_a: str, hoje: datetime.date
     linhas.append({"entregavel": ident, "versao": f"v{numero}", "data": str(hoje), "marca": comum.carimbo(pasta), "o_que_mudou": mudou, "enviada_a": enviada_a})
     rotina.gravar_tsv(caminho, comentarios, colunas, linhas)
     print(f"{ident} v{numero} registrada em {hoje}" + (f", enviada a {enviada_a}" if enviada_a else "") + ".")
+    if enviada_a:
+        print(abrir_aprovacao(ident, f"v{numero}", enviada_a, hoje))
     return 0
 
 
@@ -437,6 +485,91 @@ def registrar_aceite(ident: str, quem: str, ressalvas: str, hoje: datetime.date)
     do_item[-1]["aceite"] = f"{quem}, {hoje}; " + (f"ressalvas: {ressalvas}" if ressalvas else "sem ressalvas")
     rotina.gravar_tsv(caminho, comentarios, colunas, linhas)
     print(f"Aceite de {ident} {do_item[-1].get('versao', '')} registrado: {quem}, {hoje}. Guarde a mensagem ou a ata em que o cliente aceitou.")
+    aberta = aprovacao_aberta(ident)
+    if aberta:
+        rotina.mudar_linha(comum.PROJETO / "acoes.tsv", aberta["id"], {"estado": "concluida", "movida_em": str(hoje)}, f"Aceite de {quem} em {hoje}.")
+        print(f"A aprovação {aberta['id']} foi fechada.")
+    print(f"A confirmação para o cliente sai com emitir.py aceite {ident}.")
+    return 0
+
+
+# --- Mudanças ---------------------------------------------------------------
+
+
+def abrir_mudanca(pedido: str, solicitante: str, origem: str, hoje: datetime.date) -> int:
+    if not solicitante:
+        print("Diga quem pediu a mudança (--solicitante).")
+        return 2
+    caminho = rotina.garantir("mudancas.tsv")
+    comentarios, colunas, linhas = rotina.abrir_tsv(caminho)
+    novo = rotina.proximo_id(linhas, "MU")
+    linhas.append({"id": novo, "pedido": pedido, "solicitante": solicitante, "pedido_em": str(hoje), "estado": "proposta", "origem": origem or "consultor"})
+    rotina.gravar_tsv(caminho, comentarios, colunas, linhas)
+    print(f"{novo} registrada como proposta: {pedido}. Nenhum trabalho deste pedido começa antes da decisão.")
+    print(f"Próximo passo: meça o impacto contra a linha de base e grave com governanca.py --analisar {novo}.")
+    return 0
+
+
+def linha_da_mudanca(ident: str) -> tuple[Path, dict]:
+    caminho = comum.PROJETO / "mudancas.tsv"
+    linha = next((l for l in comum.ler_tsv(caminho) if l.get("id", "") == ident), None)
+    if linha is None:
+        raise SystemExit(f"Não achei a mudança '{ident}' em {comum.relativo(caminho)}.")
+    return caminho, linha
+
+
+def analisar_mudanca(ident: str, prazo: str, esforco: str, escopo: str) -> int:
+    caminho, linha = linha_da_mudanca(ident)
+    if comum.normalizar(linha.get("estado", "")) in ("aprovada", "rejeitada"):
+        print(f"{ident} já foi decidida ({linha.get('estado', '')}). Um pedido novo pede uma mudança nova.")
+        return 1
+    if not (prazo or esforco or escopo):
+        print("Diga o impacto: --impacto-prazo, --impacto-esforco e --impacto-escopo. Onde não há impacto, escreva \"nenhum\".")
+        return 2
+    campos = {"impacto_prazo": prazo or linha.get("impacto_prazo", ""), "impacto_esforco": esforco or linha.get("impacto_esforco", ""),
+              "impacto_escopo": escopo or linha.get("impacto_escopo", ""), "estado": "em analise"}
+    rotina.mudar_linha(caminho, ident, campos)
+    faltam = [nome for campo, nome in (("impacto_prazo", "prazo"), ("impacto_esforco", "esforço"), ("impacto_escopo", "escopo")) if not campos[campo]]
+    print(f"{ident} em análise. Prazo: {campos['impacto_prazo'] or 'a medir'}. Esforço: {campos['impacto_esforco'] or 'a medir'}. Escopo: {campos['impacto_escopo'] or 'a medir'}.")
+    if faltam:
+        print(f"Falta medir o impacto em {', '.join(faltam)}. A decisão pede os três.")
+    else:
+        print(f"A solicitação para quem decide sai com emitir.py mudanca {ident}. Grave a resposta com governanca.py --decidir {ident}.")
+    return 0
+
+
+def decidir_mudanca(ident: str, decisao: str, quem: str, motivo: str, hoje: datetime.date) -> int:
+    caminho, linha = linha_da_mudanca(ident)
+    decisao = comum.normalizar(decisao)
+    if decisao not in ("aprovada", "rejeitada"):
+        print("A decisão é aprovada ou rejeitada (--decisao).")
+        return 2
+    if not quem:
+        print("Diga quem decidiu (--quem). A mudança de escopo, prazo ou preço é decidida com o cliente, e não pelo agente.")
+        return 2
+    estado = comum.normalizar(linha.get("estado", ""))
+    if estado in ("aprovada", "rejeitada"):
+        print(f"{ident} já foi decidida: {linha.get('estado', '')} em {linha.get('decidido_em', '')}. Nada foi gravado.")
+        return 1
+    if decisao == "aprovada" and not all(linha.get(c, "") for c in ("impacto_prazo", "impacto_esforco", "impacto_escopo")):
+        print(f"{ident} ainda não tem o impacto em prazo, esforço e escopo. Grave com governanca.py --analisar {ident} antes de aprovar.")
+        return 1
+    if decisao == "rejeitada" and not motivo:
+        print("Diga em uma linha por que a mudança foi rejeitada (--motivo). O pedido fica guardado nos adiados.")
+        return 2
+    rotina.mudar_linha(caminho, ident, {"estado": decisao, "decisao": f"{quem}" + (f": {motivo}" if motivo else ""), "decidido_em": str(hoje)})
+    print(f"{ident} {decisao} por {quem} em {hoje}. Registre a decisão com a skill registrar-decisao.")
+    if decisao == "aprovada":
+        print(f"Agora leve a mudança ao plano: mude cada data com rotina.py --remarcar ID DATA --motivo \"{ident}\" e grave a versão nova com governanca.py --linha-de-base --motivo \"{ident}\" --aprovada-por \"{quem}\".")
+        if any(l.get("codigo", "") == "aditivos" for l in mantidos()):
+            print("O projeto mantém o registro de aditivos: anote o efeito em escopo, prazo e preço e o documento que formaliza.")
+        return 0
+    adiados = rotina.garantir("adiados.tsv")
+    comentarios, colunas, linhas = rotina.abrir_tsv(adiados)
+    novo = rotina.proximo_id(linhas, "B")
+    linhas.append({"id": novo, "item": linha.get("pedido", ""), "motivo": f"Mudança {ident} rejeitada em {hoje}: {motivo}", "para_quando": "Escopo futuro, se o cliente retomar o pedido", "estado": "aberto"})
+    rotina.gravar_tsv(adiados, comentarios, colunas, linhas)
+    print(f"O pedido ficou guardado em adiados como {novo}, para não sumir.")
     return 0
 
 
@@ -477,6 +610,15 @@ def main() -> int:
     analisador.add_argument("--aceite", metavar="ENTREGAVEL")
     analisador.add_argument("--quem", default="")
     analisador.add_argument("--ressalvas", default="")
+    analisador.add_argument("--mudanca", metavar="PEDIDO")
+    analisador.add_argument("--solicitante", default="")
+    analisador.add_argument("--origem", default="")
+    analisador.add_argument("--analisar", metavar="MU")
+    analisador.add_argument("--impacto-prazo", dest="impacto_prazo", default="")
+    analisador.add_argument("--impacto-esforco", dest="impacto_esforco", default="")
+    analisador.add_argument("--impacto-escopo", dest="impacto_escopo", default="")
+    analisador.add_argument("--decidir", metavar="MU")
+    analisador.add_argument("--decisao", default="")
     analisador.add_argument("--hoje", default="", help="calcula como se fosse este dia")
     args = analisador.parse_args()
     hoje = rotina.data(args.hoje) or datetime.date.today()
@@ -498,6 +640,12 @@ def main() -> int:
         return registrar_versao(args.versao, args.mudou, args.enviada_a, hoje)
     if args.aceite:
         return registrar_aceite(args.aceite, args.quem, args.ressalvas, hoje)
+    if args.mudanca:
+        return abrir_mudanca(args.mudanca, args.solicitante, args.origem, hoje)
+    if args.analisar:
+        return analisar_mudanca(args.analisar, args.impacto_prazo, args.impacto_esforco, args.impacto_escopo)
+    if args.decidir:
+        return decidir_mudanca(args.decidir, args.decisao, args.quem, args.motivo, hoje)
     return listar()
 
 

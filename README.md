@@ -113,7 +113,9 @@ espera o cliente há mais tempo sem cobrança. O que depende de aprovação
 do cliente só segue com a confirmação, que você informa ou o agente
 pergunta pelo follow-up. O agente também sugere o nível de governança
 pelo porte do projeto, enxuto, padrão ou completo, e você escolhe os
-materiais que serão emitidos.
+materiais que serão emitidos. O status, a pauta e o aceite saem dos
+registros como rascunho, e você revisa e envia. Um envio abre o prazo de
+resposta do aprovador, e um pedido fora do combinado espera a decisão.
 
 O que o projeto aprende vai para o segundo cérebro, em notas de Markdown
 dentro de `entregaveis/_cerebro/`. O agente atualiza a nota do assunto a
@@ -140,6 +142,7 @@ python3 entregaveis/_harness/scripts/repositorio.py   # o remoto é local, priva
 python3 entregaveis/_harness/scripts/rotina.py        # o resumo do dia: atas novas, prazos e o que espera o seu sim
 python3 entregaveis/_harness/scripts/rotina.py --lista  # a lista do dia, com o que pede atenção primeiro
 python3 entregaveis/_harness/scripts/governanca.py    # o nível de governança e os materiais emitidos
+python3 entregaveis/_harness/scripts/emitir.py status-semanal  # o rascunho do status, montado dos registros
 python3 entregaveis/_harness/scripts/cerebro.py --buscar TERMO  # o que o projeto sabe sobre um assunto
 python3 entregaveis/_harness/scripts/ambiente.py      # o que a máquina tem e como instalar o que falta
 ```
