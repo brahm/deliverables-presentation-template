@@ -1,0 +1,20 @@
+# Lista padrão de pedido de dados para um projeto de transformação de marketing.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que alguma análise da storyline usa.
+# prioridade: essencial (sem ele não há diagnóstico), importante (melhora um achado) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Estratégia de negócio e plano de marketing do ano	Árvore de valor	Apresentação	Diretoria de marketing	essencial
+Organograma de marketing, com cargos, quantidade de pessoas e localização	Modelo operacional e competências	PDF ou planilha	Recursos humanos	essencial
+Descrições de cargo e metas das áreas de marketing	Direitos de decisão e indicadores	Documento	Recursos humanos	importante
+Orçamento e realizado de marketing dos últimos dois ou três anos, por objetivo e por canal	Análise de orçamento	Planilha	Financeiro	essencial
+Calendário de campanhas dos últimos 12 meses, com datas de pedido, aprovação e veiculação	Processo de ponta a ponta	Planilha ou exportação da ferramenta de fluxo de trabalho	Operações de marketing	essencial
+Mapas de processo e fluxos de aprovação existentes	Processo de ponta a ponta	Qualquer formato	Operações de marketing	importante
+Contratos, escopos e remuneração das agências e dos parceiros	Modelo de parceiros	PDF	Compras ou marketing	essencial
+Lista de fóruns e comitês de marketing, com participantes e frequência	Governança	Planilha	Diretoria de marketing	importante
+Painéis e relatórios de resultado usados pela diretoria	Árvore de indicadores	Apresentação ou acesso de leitura	Marketing ou dados	essencial
+Pesquisas de clima ou de engajamento das áreas de marketing	Gestão da mudança	Relatório agregado	Recursos humanos	complementar
+Lista de plataformas de marketing em uso, com dono	Capacidade de tecnologia	Planilha	Tecnologia ou marketing	importante
+Projetos em andamento que afetam o marketing	Dependências do roadmap	Apresentação	Escritório de projetos	importante
+Materiais de transformações anteriores e o balanço delas	Lições e resistências	Apresentação	Diretoria ou recursos humanos	complementar
+Avaliações de competência ou planos de capacitação existentes, por grupo	Pessoas e competências	Planilha agregada	Recursos humanos	importante
+Estudos de mercado e comparações que o cliente já comprou	Comparação com fonte citável	PDF	Diretoria de marketing	complementar
+Lista de partes interessadas, com papel e posição conhecida	Gestão da mudança	Planilha	Patrocinador	essencial

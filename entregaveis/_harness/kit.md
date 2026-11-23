@@ -78,5 +78,10 @@ criado a partir do template, apague-os ao iniciar:
   (<https://github.com/blader/humanizer>, licença MIT, copyright 2025
   Siqi Chen) e da página "Signs of AI writing" da Wikipédia. Só entraram
   as práticas que não conflitam com as técnicas de apresentação acima.
+- Nos pacotes: a taxonomia de objetivos de aprendizagem de Benjamin
+  Bloom, na revisão de Anderson e Krathwohl, e os quatro níveis de
+  avaliação de treinamento de Donald Kirkpatrick, no pacote de
+  treinamento. O conteúdo de domínio dos pacotes é prática corrente de
+  mercado, escrita com palavras próprias e sem material de terceiros.
 - Processo de trabalho com agentes adaptado de
   <https://github.com/brahm/project-template> (licença MIT).

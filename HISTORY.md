@@ -3,6 +3,19 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.3.0
+
+- Seis pacotes novos, no mesmo formato do primeiro:
+  `transformacao-marketing`, `midia`, `retail-media`,
+  `processos-agenticos`, `proposta` e `treinamento`. O de treinamento
+  cobre cursos, workshops, material didático, exercícios e exames.
+- Os pacotes se somam: um projeto pode ativar mais de um.
+
+O que o projeto precisa fazer: ative com `preparar.py --pacote NOME` os
+pacotes do seu tipo de trabalho. Se o projeto montou um pacote próprio
+em `_projeto/pacote/` para um desses tipos, compare os dois e leve ao
+dono o que mudar.
+
 ## 0.2.0
 
 - Primeiro pacote por tipo de projeto: `martech-adtech`, para assessment

@@ -1,0 +1,20 @@
+# Lista padrão de pedido de dados para um projeto de processos agênticos e automação de marketing.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que alguma análise da storyline usa.
+# prioridade: essencial (sem ele não há desenho), importante (melhora um achado) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Lista dos processos de marketing candidatos, com volume mensal e pessoas envolvidas	Seleção de processos	Planilha	Operações de marketing	essencial
+Mapas de processo, procedimentos e modelos de pedido existentes	Mapa do processo atual	Qualquer formato	Dono do processo	importante
+Registros do fluxo de trabalho dos últimos 6 a 12 meses, com datas por etapa	Tempo de ciclo, esperas e exceções	Exportação da ferramenta de fluxo de trabalho	Operações de marketing	essencial
+Exemplos reais de entradas e saídas do processo, bons e ruins	Critérios de qualidade e casos de teste	Arquivos	Dono do processo	essencial
+Critérios de aprovação e motivos de reprovação mais comuns	Pontos de controle e avaliação	Documento ou planilha	Quem aprova	essencial
+Guia de marca, de tom e lista de afirmações permitidas e proibidas	Instruções e guardas do agente	Documento	Marca e jurídico	essencial
+Política da empresa para uso de IA e plataformas aprovadas	Limites do desenho	Documento	Tecnologia, risco ou jurídico	essencial
+Lista dos sistemas do processo, com integrações disponíveis e forma de acesso	Dados e integrações	Planilha	Tecnologia	essencial
+Dados que o processo usa, com classificação de sigilo e base legal	Riscos e guardas	Planilha	Dados e privacidade	importante
+Custo atual do processo: pessoas, agências e ferramentas	Caso de negócio	Planilha	Financeiro ou dono do processo	importante
+Preços e limites das plataformas de IA e de automação em uso	Custo por execução	Contrato ou tabela	Tecnologia ou compras	importante
+Automações e testes de IA já feitos, com resultados	Ponto de partida e lições	Apresentação	Marketing ou tecnologia	importante
+Descrições de cargo e distribuição de tempo das equipes do processo	Pessoas e mudança	Documento ou planilha agregada	Recursos humanos	complementar
+Requisitos de registro e de auditoria aplicáveis	Guardas e modelo de operação	Documento	Risco ou jurídico	importante
+Indicadores de resultado do processo: volume, prazo, qualidade, retrabalho	Linha de base para o piloto	Painel ou planilha	Dono do processo	essencial
+Ambiente e acessos para o piloto, quando o projeto inclui rodá-lo	Plano de piloto	Acesso nominal	Tecnologia	complementar

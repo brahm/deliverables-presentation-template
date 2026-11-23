@@ -1,0 +1,21 @@
+# Termos de mídia. Ao ativar o pacote, as linhas entram no glossário do projeto.
+# A coluna evitar fica vazia: o projeto decide que variantes proibir, conforme o vocabulário do cliente.
+termo	definicao	evitar	idioma
+alcance	O número de pessoas diferentes que viram a campanha ao menos uma vez		pt
+frequência	O número médio de vezes que cada pessoa alcançada viu a campanha		pt
+CPM	Custo por mil impressões		pt
+CPC	Custo por clique		pt
+CPA	Custo por aquisição: o valor investido dividido pelas conversões		pt
+ROAS	Retorno sobre o investimento em mídia: a receita atribuída dividida pelo valor investido		pt
+visibilidade	A parcela das impressões que teve chance real de ser vista, conforme o padrão adotado		pt
+tráfego inválido	Impressões e cliques que não vêm de pessoas reais com interesse legítimo		pt
+segurança de marca	O cuidado para que o anúncio não apareça ao lado de conteúdo que prejudica a marca		pt
+incrementalidade	O resultado que só aconteceu por causa da campanha, medido com grupo de controle		pt
+MMM	Modelo de mix de marketing: estima a contribuição de cada canal com dados agregados		pt
+atribuição	A regra que divide o crédito de uma conversão entre os contatos de mídia		pt
+curva de resposta	A relação entre o investimento em um canal e o resultado adicional que ele traz		pt
+mídia programática	Compra de espaço publicitário automatizada, impressão a impressão		pt
+dados próprios	Dados que a empresa coleta diretamente de clientes e visitantes, com consentimento		pt
+internalização	Trazer para o time interno uma atividade antes feita por agência		pt
+padrão de nomes	A regra para nomear campanhas, grupos e peças, que permite classificar os dados		pt
+agenda de testes	A lista ordenada das perguntas que serão respondidas com experimentos		pt

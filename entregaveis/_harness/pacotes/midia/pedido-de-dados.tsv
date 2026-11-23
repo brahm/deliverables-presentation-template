@@ -1,0 +1,20 @@
+# Lista padrão de pedido de dados para um projeto de mídia.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que alguma análise da storyline usa.
+# prioridade: essencial (sem ele não há análise), importante (melhora um achado) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Investimento de mídia dos últimos 12 a 24 meses, por canal, marca, mercado, objetivo e mês	Retrato do investimento	Planilha	Mídia ou agência	essencial
+Planos de mídia aprovados e realizados	Retrato do investimento e alocação	Planilha	Agência ou mídia	essencial
+Exportações das plataformas de mídia: impressões, cliques, custos, alcance e frequência por campanha	Qualidade e eficiência da compra	Exportação ou acesso de leitura	Agência ou mídia	essencial
+Contratos e modelo de remuneração das agências e das plataformas	Modelo de operação e taxas	PDF	Compras	essencial
+Relatórios de verificação: visibilidade, tráfego inválido e segurança de marca	Qualidade da compra	Exportação da ferramenta	Agência ou mídia	importante
+Resultados de negócio por semana: vendas, cadastros e visitas, por marca e mercado	Medição e curvas de resposta	Planilha	Dados ou comercial	essencial
+Estudos de mix de marketing, de atribuição e de experimentos já feitos	Hierarquia de evidência	Apresentação e base	Dados ou agência	importante
+Padrão de nomes de campanhas e dicionário de dimensões	Governança e classificação da base	Documento	Mídia ou agência	importante
+Objetivos e indicadores de marketing e de mídia do ano	Papel de cada canal	Apresentação	Diretoria de marketing	essencial
+Peças veiculadas por campanha e por formato	Avaliação de criativo	Pasta de arquivos ou biblioteca das plataformas	Agência criativa ou marca	importante
+Definição das audiências usadas e das listas de exclusão	Audiências, alcance e frequência	Documento ou exportação	Mídia ou CRM	importante
+Calendário promocional e de lançamentos	Leitura dos resultados no tempo	Planilha	Comercial ou marca	importante
+Relatórios periódicos que a agência entrega	Governança e medição	Apresentação	Mídia	complementar
+Preços, promoções e distribuição no período analisado	Separar o efeito da mídia de outros fatores	Planilha	Comercial	complementar
+Investimento e presença dos concorrentes, quando o cliente compra esse dado	Contexto competitivo com fonte citável	Relatório	Mídia ou agência	complementar
+Estudos de mercado e comparações que o cliente já comprou	Comparação com fonte citável	PDF	Mídia	complementar

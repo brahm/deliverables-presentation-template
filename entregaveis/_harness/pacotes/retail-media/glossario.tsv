@@ -1,0 +1,20 @@
+# Termos de retail media. Ao ativar o pacote, as linhas entram no glossário do projeto.
+# A coluna evitar fica vazia: o projeto decide que variantes proibir, conforme o vocabulário do cliente.
+termo	definicao	evitar	idioma
+retail media	Mídia vendida por um varejista nos seus canais e com os seus dados de compra		pt
+rede de mídia de varejo	A operação do varejista que vende, entrega e mede essa mídia		pt
+produto patrocinado	Anúncio de um produto nos resultados de busca e nas listas do varejista		pt
+mídia fora do site	Anúncios em outros veículos, comprados com audiências dos dados do varejista		pt
+mídia em loja	Anúncios em telas, áudio e espaços da loja física		pt
+verba comercial	O que o fornecedor paga ao varejista dentro da negociação de compra e venda		pt
+verba de marketing	O orçamento de marca e de mídia do fornecedor, decidido fora da negociação comercial		pt
+plano anual conjunto	O acordo anual entre varejista e fornecedor, com metas, verbas e ações		pt
+medição de ciclo fechado	A ligação entre a exposição ao anúncio e a venda registrada pelo varejista		pt
+novo comprador	Quem comprou a marca pela primeira vez em um período definido		pt
+incrementalidade	O resultado que só aconteceu por causa da campanha, medido com grupo de controle		pt
+ROAS	Retorno sobre o investimento em mídia: a receita atribuída dividida pelo valor investido		pt
+janela de atribuição	O período depois do anúncio em que uma venda é creditada a ele		pt
+carga de anúncios	A parcela dos espaços de uma página ocupada por anúncios		pt
+autosserviço	Plataforma em que o anunciante cria e gerencia as próprias campanhas		pt
+sala limpa de dados	Ambiente em que duas empresas cruzam dados sem que uma veja os dados individuais da outra		pt
+servidor de anúncios de varejo	Sistema que escolhe e entrega os anúncios nos canais do varejista		pt

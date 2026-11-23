@@ -1,0 +1,20 @@
+# Lista padrão de pedido de materiais para um projeto de treinamento.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que o plano do curso usa.
+# prioridade: essencial (sem ele não há desenho), importante (melhora o material) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Perfil dos participantes: quantidade, cargos, experiência, idioma e local	Análise de necessidade e formato	Planilha	Recursos humanos ou patrocinador	essencial
+O que os participantes precisam passar a fazer, descrito pelo patrocinador	Objetivos de aprendizagem	Documento ou conversa registrada	Patrocinador	essencial
+Exemplos reais de trabalho bom e de trabalho fraco no assunto	Lacuna, casos e exercícios	Arquivos sem dados pessoais	Gestores	essencial
+Materiais existentes sobre o assunto: cursos, manuais, apresentações	Conteúdo e ponto de partida	Qualquer formato	Capacitação ou área técnica	importante
+Documentação oficial das ferramentas e dos processos ensinados	Conteúdo técnico com fonte	Links ou PDF	Área técnica	essencial
+Dados para exercícios, reais e autorizados ou a descrição para criar fictícios	Exercícios	Planilha	Área técnica ou dados	importante
+Ambiente de prática: acessos às ferramentas para os participantes	Exercícios práticos	Acesso de treinamento	Tecnologia	importante
+Tempo disponível, número de sessões, datas e formato	Mapa do curso e agenda	Documento	Patrocinador	essencial
+Regras de exame e de certificação: nota mínima, tentativas, registro	Exames	Documento	Recursos humanos	importante
+Modelos de apresentação e de documento, e o guia de marca	Formato dos materiais	Arquivos de modelo	Comunicação ou capacitação	essencial
+Plataforma em que o material será publicado e os formatos que ela aceita	Formato de saída	Documento	Capacitação	importante
+Quem facilita e a experiência de cada pessoa	Guia de quem facilita	Lista	Patrocinador	essencial
+Resultados de avaliações ou de treinamentos anteriores	Lacuna e lições	Relatório agregado	Recursos humanos	complementar
+Glossário e vocabulário interno do cliente	Termos do material	Documento	Área técnica	importante
+Requisitos de acessibilidade e de idioma	Formato e versões	Documento	Recursos humanos	complementar
+Indicadores de trabalho que o treinamento deve mover	Avaliação do treinamento	Painel ou planilha	Gestores	importante
