@@ -11,13 +11,58 @@ git local ou em repositório privado.
 
 ## Instalar
 
-Projeto novo:
+Você precisa de uma conta no GitHub, do Git e de um agente que leia a
+pasta do projeto, como o Claude Code. O harness pede Python 3.9 ou mais
+novo, sem pacotes extras. Só o gerador de arquivos pede `python-pptx`,
+`python-docx` e `openpyxl`, e o LibreOffice para o PDF.
 
-1. Clique em "Use this template" no GitHub e crie o repositório como
-   **Private**. O harness não inicia projeto em repositório público.
-2. Clone o repositório e abra o agente na pasta.
+### Projeto novo, pelo site do GitHub
 
-Projeto que já está em andamento: cole no agente, dentro do projeto.
+1. Entre na sua conta do GitHub e abra o formulário
+   [Criar um repositório a partir deste template](https://github.com/brahm/deliverables-presentation-template/generate).
+   O mesmo formulário abre pela
+   [página do repositório](https://github.com/brahm/deliverables-presentation-template):
+   botão verde **Use this template**, no alto à direita, e depois
+   **Create a new repository**.
+2. Em **Repository name**, escreva o nome do projeto. Se o nome do
+   cliente é sigiloso, use um codinome.
+3. Na visibilidade, marque **Private**. O harness não inicia projeto em
+   repositório público.
+4. Clique em **Create repository from template**. O GitHub abre o
+   repositório novo, que é só seu.
+5. Traga o repositório para o computador. No repositório novo, clique
+   no botão verde **Code**, copie o endereço e rode, no terminal:
+
+   ```sh
+   git clone ENDEREÇO-COPIADO
+   ```
+
+   Quem prefere não usar o terminal escolhe **Open with GitHub Desktop**
+   no mesmo botão.
+6. Abra o agente na pasta que o passo 5 criou e diga do que é o projeto.
+   No Claude Code, entre na pasta pelo terminal e rode `claude`.
+
+### Projeto novo, pelo terminal
+
+Com o [GitHub CLI](https://cli.github.com) instalado, um comando cria o
+repositório privado e baixa a pasta:
+
+```sh
+gh repo create NOME-DO-PROJETO --template brahm/deliverables-presentation-template --private --clone
+cd NOME-DO-PROJETO
+```
+
+Depois abra o agente na pasta e diga do que é o projeto.
+
+### Projeto novo, sem GitHub
+
+Crie uma pasta vazia no computador, abra o agente nela e cole o prompt
+da próxima seção. O projeto fica só na sua máquina, o que o harness
+aceita.
+
+### Projeto que já está em andamento
+
+Cole no agente, dentro da pasta do projeto:
 
 ```text
 Instale neste projeto o harness de entregáveis que está em
@@ -27,10 +72,8 @@ Não mova, renomeie nem apague nada do que existe, e me mostre a
 simulação antes de instalar.
 ```
 
-O prompt completo e a instalação sem Python estão em
-[INSTALL.md](INSTALL.md). Requisito: Python 3.9 ou mais novo, sem
-pacotes extras. Só o gerador de arquivos pede `python-pptx`,
-`python-docx` e `openpyxl`, e o LibreOffice para o PDF.
+O prompt completo, o que o instalador muda e a instalação sem Python
+estão em [INSTALL.md](INSTALL.md).
 
 ## Usar
 

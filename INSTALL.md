@@ -5,9 +5,10 @@ só com apresentações, com ou sem git, com ou sem regras de agente
 próprias. Ele não supõe como o projeto foi organizado e nunca
 sobrescreve um arquivo do projeto.
 
-Para um projeto novo, use o botão "Use this template" do GitHub, crie o
-repositório como privado e abra o agente. Esta página é para o projeto
-que já está em andamento.
+Para um projeto novo, o passo a passo está na seção "Instalar" do
+[README](README.md): pelo site do GitHub, pelo terminal ou sem GitHub.
+Esta página é para o projeto que já está em andamento, e serve também
+para a pasta vazia de um projeto novo que vai ficar só no computador.
 
 Um projeto de cliente só fica em pasta sem git, em git local ou em
 repositório privado. O instalador roda em qualquer lugar, mas o harness
