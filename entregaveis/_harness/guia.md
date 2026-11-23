@@ -76,6 +76,7 @@ As frases abaixo são exemplos. Use as suas palavras.
 | Contar um envio | "Mandei a versão 2 do diagnóstico para a diretora de marketing." |
 | Contar um aceite | "A diretora de marketing aceitou o diagnóstico, com uma ressalva sobre o anexo." |
 | Fechar um controle | "A diretora aprovou os critérios de avaliação na reunião de ontem." |
+| Fornecer uma informação da proposta | "O ponto de vista da proposta é este. A equipe e o cronograma estão na planilha da pasta de entrada." |
 | Trazer um pedido fora do combinado | "O cliente pediu o custo por loja, que não estava no escopo." |
 | Trazer algo feito à mão | "Montei esta planilha de custos no fim de semana. Está na pasta de entrada." |
 | Encerrar o dia | "Por hoje é isso." |
@@ -143,7 +144,7 @@ e nunca volta ao template.
 Oito pacotes adaptam o harness ao tipo de trabalho: transformação de
 marketing, martech e adtech, mídia, processos de mídia digital, retail
 media, processos agênticos, proposta e treinamento. Um pacote pode
-trazer perguntas a fazer, entregáveis típicos, esqueletos de storyline,
+trazer perguntas a fazer, informações a pedir a você, entregáveis típicos, esqueletos de storyline,
 lista de pedido de dados, roteiro de entrevista e glossário. O agente
 ativa os que servem quando você diz do que é o projeto. Os pacotes se
 somam. A lista está em [pacotes/LEIA-ME.md](pacotes/LEIA-ME.md).
@@ -163,6 +164,34 @@ se cada controle condicional vale e cobra o que chegou à etapa sem
 evidência. O registro de um envio avisa quando algum ficou para trás.
 Você fecha um controle dizendo a evidência, ou dispensa com o motivo. O
 pacote de processos de mídia digital traz só os controles.
+
+### Proposta
+
+Uma proposta não é um projeto. Com o pacote de proposta ativo, o agente
+sugere o nível proposta, que fica abaixo do enxuto: nenhum material de
+governança é emitido, e não há status, linha de base nem aceite. Ficam
+dois controles, os dois antes do envio: a aprovação do preço, do escopo
+e dos termos, e a autorização para citar casos, clientes e pessoas.
+
+O pacote não traz método de construção de proposta, roteiro de seções
+nem argumento. Ele pede a você as informações de que a proposta é feita,
+e você fornece cada uma em texto, em arquivo ou em conversa, na ordem
+que preferir.
+
+| Informação | Precisa chegar antes de |
+| --- | --- |
+| Objetivo, ponto de vista e abordagem | Storyline |
+| Tarefas, cronograma e equipe recomendada | Redação |
+| Preço | Revisão |
+| Método e modelo de proposta da casa, quando houver | Storyline |
+| Pedido formal do cliente, quando houver | Storyline |
+
+O estado e a lista do dia mostram o que falta. O agente não escreve
+nenhuma dessas informações no seu lugar: um entregável que chega à etapa
+sem ela é acusado pelas checagens, e a página fica com a lacuna à vista.
+O método e o modelo da casa ficam só no projeto. Quando a proposta é
+vendida, a fase nova escolhe o nível de governança de novo, e os
+controles do pacote do trabalho vendido passam a valer.
 
 ### Checagens automáticas
 
@@ -539,6 +568,7 @@ Rode na raiz do projeto.
 | `python3 entregaveis/_harness/scripts/rotina.py --lista` | A lista do dia, com os três itens que pedem atenção primeiro |
 | `python3 entregaveis/_harness/scripts/governanca.py` | O nível de governança e os materiais que o projeto emite |
 | `python3 entregaveis/_harness/scripts/governanca.py --controles` | Os controles de governança do tipo de projeto e a situação de cada um |
+| `python3 entregaveis/_harness/scripts/governanca.py --insumos` | As informações que o pacote pede a você, com o que já chegou e o que falta |
 | `python3 entregaveis/_harness/scripts/governanca.py --desvios` | O desvio de cada data contra a linha de base |
 | `python3 entregaveis/_harness/scripts/emitir.py` | Os materiais que saem prontos dos registros e a última emissão de cada um |
 | `python3 entregaveis/_harness/scripts/emitir.py status-semanal` | O rascunho do status da semana |

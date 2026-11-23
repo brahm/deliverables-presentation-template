@@ -21,6 +21,10 @@ Uso:
     governanca.py --controle CODIGO --cumprido --evidencia TXT --quem NOME
     governanca.py --controle CODIGO --nao-se-aplica --motivo TXT
     governanca.py --controle CODIGO --pendente
+    governanca.py --insumos                as informações que os pacotes ativos pedem ao consultor
+    governanca.py --insumo CODIGO --recebido --onde TXT --quem NOME
+    governanca.py --insumo CODIGO --nao-se-aplica --motivo TXT
+    governanca.py --insumo CODIGO --pendente
     governanca.py --mudanca "PEDIDO" --solicitante NOME [--origem TXT]
     governanca.py --analisar MU-nnn [--impacto-prazo TXT] [--impacto-esforco TXT] [--impacto-escopo TXT]
     governanca.py --decidir MU-nnn --decisao aprovada|rejeitada --quem NOME [--motivo TXT]
@@ -46,7 +50,9 @@ import rotina  # noqa: E402
 
 CATALOGO = comum.HARNESS / "governanca" / "catalogo.tsv"
 NIVEIS = ["enxuto", "padrao", "completo"]
-NOMES = {"enxuto": "enxuto", "padrao": "padrão", "completo": "completo", "personalizado": "personalizado"}
+SO_PROPOSTA = "proposta"  # abaixo do enxuto: uma proposta não é um projeto e não emite material de governança
+ACEITOS = NIVEIS + ["personalizado", SO_PROPOSTA]
+NOMES = {"enxuto": "enxuto", "padrao": "padrão", "completo": "completo", "personalizado": "personalizado", SO_PROPOSTA: "proposta"}
 MOMENTOS = [("inicio", "Início"), ("rotina", "Rotina"), ("entregaveis", "Entregáveis"), ("controle", "Controle compartilhado"), ("encerramento", "Encerramento")]
 SEMPRE = "ações, riscos, issues, premissas, dependências, decisões, mudanças, versões, evidências, linha de base e lições"
 
@@ -66,6 +72,8 @@ def nivel_atual() -> str:
 
 def materiais_do_nivel(nivel: str) -> list[dict]:
     """Os materiais do nível, somados aos dos níveis abaixo, sem os que um material mais completo substitui."""
+    if nivel == SO_PROPOSTA:
+        return []
     ate = NIVEIS.index(nivel)
     dentro = [m for m in catalogo() if m.get("nivel", "") in NIVEIS[: ate + 1]]
     trocados = {m.get("substitui", "") for m in dentro if m.get("substitui", "")}
@@ -100,8 +108,8 @@ def linha_do_material(m: dict, origem: str) -> dict:
 
 def definir(nivel: str) -> int:
     nivel = comum.normalizar(nivel)
-    if nivel not in NIVEIS + ["personalizado"]:
-        print("O nível é enxuto, padrao, completo ou personalizado.")
+    if nivel not in ACEITOS:
+        print("O nível é enxuto, padrao, completo ou personalizado. Um projeto que é só uma proposta usa o nível proposta.")
         return 2
     caminho = rotina.garantir("governanca.tsv")
     comentarios, colunas, linhas = rotina.abrir_tsv(caminho)
@@ -127,6 +135,12 @@ def listar() -> int:
         print("Nível de governança não definido. Rode governanca.py --sugerir e leve a sugestão ao consultor.")
         return 0
     print(f"Nível de governança: {NOMES.get(nivel, nivel)}.\n")
+    if nivel == SO_PROPOSTA and not mantidos():
+        print("Uma proposta não é um projeto: nenhum material de governança é emitido, e não há status, linha de base nem aceite.")
+        print("Valem os controles e as informações do pacote de proposta: governanca.py --controles e governanca.py --insumos.")
+        print(f"\nMantidos como registro, quando houver o que registrar: {SEMPRE}.")
+        print("Quando a proposta for vendida, a fase nova pede um nível de projeto. Para emitir um material mesmo assim: --incluir ou --sob-medida.")
+        return 0
     linhas = comum.ler_tsv(comum.PROJETO / "governanca.tsv")
     ativos = [l for l in linhas if comum.normalizar(l.get("situacao", "")) != "tirado"]
     print("Materiais que o projeto emite:")
@@ -269,6 +283,11 @@ def sugerir(args, hoje: datetime.date) -> int:
             s[campo] = getattr(args, campo)
     if args.beneficio:
         s["beneficio"] = True
+    if SO_PROPOSTA in pacotes_ativos():
+        print("Nível sugerido: proposta. O pacote de proposta está ativo, e uma proposta não é um projeto: fica abaixo do nível enxuto.")
+        print("Nenhum material de governança é emitido. Valem os controles do pacote (governanca.py --controles) e as informações que o consultor fornece (governanca.py --insumos).")
+        print("Pergunte ao consultor se ele confirma e grave com --nivel proposta. Se ele quiser acompanhar a proposta como um projeto, vale enxuto, padrão ou completo.")
+        return 0
     nivel, motivos = nivel_pelos_sinais(s)
     lidos = []
     if s["semanas"]:
@@ -297,6 +316,8 @@ def sugerir(args, hoje: datetime.date) -> int:
 def revisao(hoje: datetime.date) -> str:
     """Uma frase quando os sinais dos registros passam do nível atual. Vazio quando o nível serve."""
     atual = nivel_atual()
+    if atual == SO_PROPOSTA and SO_PROPOSTA not in pacotes_ativos():
+        return "O nível de governança ainda é o de proposta, e a fase atual não é uma proposta: os sinais pedem um nível de projeto."
     if atual not in NIVEIS:
         return ""
     pedido, motivos = nivel_pelos_sinais(sinais_do_projeto(hoje))
@@ -599,7 +620,9 @@ def controles() -> list[dict]:
     """Os controles dos pacotes ativos, com a situação que o projeto registrou. Sem registro, o controle está pendente; o condicional, a confirmar."""
     respostas = {l.get("codigo", ""): l for l in comum.ler_tsv(comum.PROJETO / "controles.tsv")}
     saida = []
-    for nome in pacotes_ativos():
+    ativos = pacotes_ativos()
+    # Uma proposta de um trabalho ativa também o pacote desse trabalho, e os controles dele só valem quando o trabalho for vendido.
+    for nome in ([SO_PROPOSTA] if SO_PROPOSTA in ativos else ativos):
         for c in controles_do_pacote(nome):
             resposta = respostas.get(c["codigo"], {})
             padrao = "pendente" if comum.normalizar(c.get("condicao", "")) == "sempre" else "a confirmar"
@@ -688,6 +711,96 @@ def responder_controle(args, hoje: datetime.date) -> int:
     return 0
 
 
+# --- Informações que o consultor fornece para o tipo de projeto -------------
+
+SITUACOES_DE_INSUMO = ("pendente", "a confirmar", "recebido", "nao se aplica")
+
+
+def insumos_do_pacote(nome: str) -> list[dict]:
+    return [dict(l, pacote=nome) for l in comum.ler_tsv(comum.HARNESS / "pacotes" / nome / "insumos.tsv") if l.get("codigo", "")]
+
+
+def insumos() -> list[dict]:
+    """As informações que os pacotes ativos pedem ao consultor, com a situação que o projeto registrou."""
+    respostas = {l.get("codigo", ""): l for l in comum.ler_tsv(comum.PROJETO / "insumos.tsv")}
+    saida = []
+    for nome in pacotes_ativos():
+        for i in insumos_do_pacote(nome):
+            resposta = respostas.get(i["codigo"], {})
+            padrao = "pendente" if comum.normalizar(i.get("condicao", "")) == "sempre" else "a confirmar"
+            saida.append(dict(i, situacao=comum.normalizar(resposta.get("situacao", "")) or padrao, onde=resposta.get("onde", ""),
+                              fornecido_por=resposta.get("fornecido_por", ""), fornecido_em=resposta.get("fornecido_em", ""), observacao=resposta.get("observacao", "")))
+    return saida
+
+
+def insumos_em_falta() -> list[dict]:
+    """Os insumos sem resposta, cada um com 'travam': os entregáveis que já chegaram à etapa que depende dele."""
+    return [dict(i, travam=no_portao(i) if i["situacao"] == "pendente" else []) for i in insumos() if i["situacao"] in ("pendente", "a confirmar")]
+
+
+def pedido_de_insumos() -> str:
+    """Uma frase para a lista do dia, com o que falta pedir ao consultor. Vazio quando nada falta."""
+    faltam = insumos_em_falta()
+    if not faltam:
+        return ""
+    travam = [i for i in faltam if i["travam"]]
+    nomes = ", ".join(f"{i.get('insumo', '')} [{i['codigo']}]" for i in faltam)
+    frase = f"Informações que o consultor fornece e ainda faltam ({len(faltam)}): {nomes}. As perguntas saem com governanca.py --insumos"
+    if travam:
+        frase += ". Já travam o trabalho: " + "; ".join(f"{i['codigo']} (antes da etapa {i.get('antes_de', '')}, em {', '.join(i['travam'])})" for i in travam)
+    return frase
+
+
+def listar_insumos() -> int:
+    lista = insumos()
+    if not lista:
+        print("Nenhum pacote ativo pede informações ao consultor. Os pacotes do projeto: " + (", ".join(pacotes_ativos()) or "nenhum") + ".")
+        return 0
+    faltam = [i for i in lista if i["situacao"] in ("pendente", "a confirmar")]
+    print(f"Informações que o consultor fornece para este tipo de projeto: {len(lista)}, faltam {len(faltam)}.")
+    for i in lista:
+        situacao = i["situacao"] + (f", por {i['fornecido_por']} em {i['fornecido_em']}" if i["fornecido_por"] else "")
+        print(f"- {i['codigo']} ({i['pacote']}): {i.get('insumo', '')}. Situação: {situacao}.")
+        print(f"    Vale {i.get('condicao', '')}, antes da etapa {i.get('antes_de', '')}. Pergunte: {i.get('pergunta', '')}")
+        print(f"    Fica em: {i['onde'] or i.get('guarda', '')}." + (f" {i['observacao']}" if i["observacao"] else ""))
+    print("O pacote diz o que pedir. O conteúdo, o método e o contexto vêm do consultor e ficam no projeto. O que falta é pedido, e não escrito pelo agente.")
+    print("Para responder: --insumo CODIGO com --recebido --onde ONDE --quem NOME, --nao-se-aplica --motivo TXT ou --pendente.")
+    return 0
+
+
+def responder_insumo(args, hoje: datetime.date) -> int:
+    insumo = next((i for i in insumos() if i["codigo"] == args.insumo), None)
+    if insumo is None:
+        print(f"Os pacotes ativos não pedem a informação '{args.insumo}'. Veja a lista com governanca.py --insumos.")
+        return 1
+    if sum(bool(x) for x in (args.recebido, args.nao_se_aplica, args.pendente)) != 1:
+        print("Diga uma resposta: --recebido, --nao-se-aplica ou --pendente.")
+        return 2
+    if args.recebido and not (args.onde and args.quem):
+        print("A informação recebida pede onde ela ficou (--onde, com o id do registro ou o arquivo) e quem forneceu (--quem).")
+        return 2
+    if args.nao_se_aplica and not args.motivo:
+        print("Diga em uma linha por que a informação não se aplica (--motivo). A dispensa é do consultor.")
+        return 2
+    caminho = rotina.garantir("insumos.tsv")
+    comentarios, colunas, linhas = rotina.abrir_tsv(caminho)
+    linha = next((l for l in linhas if l.get("codigo", "") == args.insumo), None)
+    if linha is None:
+        linha = {"codigo": args.insumo}
+        linhas.append(linha)
+    if args.recebido:
+        linha.update({"situacao": "recebido", "onde": args.onde, "fornecido_por": args.quem, "fornecido_em": str(hoje)})
+        print(f"{args.insumo} recebido em {hoje}, de {args.quem}. Fica em: {args.onde}. Se o consultor mudar a informação, grave de novo com a data nova.")
+    elif args.nao_se_aplica:
+        linha.update({"situacao": "nao se aplica", "onde": "", "fornecido_por": "", "fornecido_em": str(hoje), "observacao": (linha.get("observacao", "") + f" Não se aplica ({hoje}): {args.motivo}").strip()})
+        print(f"{args.insumo} não se aplica a este projeto: {args.motivo}. Registre a dispensa com a skill registrar-dispensa.")
+    else:
+        linha.update({"situacao": "pendente", "onde": "", "fornecido_por": "", "fornecido_em": ""})
+        print(f"{args.insumo} está pendente. Vale antes da etapa {insumo.get('antes_de', '')}. Pergunte: {insumo.get('pergunta', '')}")
+    rotina.gravar_tsv(caminho, comentarios, colunas, linhas)
+    return 0
+
+
 def linha_de_estado() -> list[str]:
     """As linhas de governança do estado do projeto."""
     nivel = nivel_atual()
@@ -695,10 +808,16 @@ def linha_de_estado() -> list[str]:
         linhas = ["Nível de governança não definido: aplique a skill definir-governanca."]
     else:
         linhas = [f"Governança: nível {NOMES.get(nivel, nivel)}, {len(mantidos())} material(is) emitido(s). A lista sai com scripts/governanca.py."]
+        if nivel == SO_PROPOSTA and SO_PROPOSTA not in pacotes_ativos():
+            linhas.append(revisao(datetime.date.today()) + " Aplique a skill definir-governanca.")
     lista = controles()
     if lista:
         conta = {s: sum(1 for c in lista if c["situacao"] == s) for s in SITUACOES}
         linhas.append(f"Controles do tipo de projeto: {len(lista)}, com {conta['pendente']} pendente(s) e {conta['a confirmar']} a confirmar. A lista sai com scripts/governanca.py --controles.")
+    pedidos = insumos()
+    if pedidos:
+        faltam = [i["codigo"] for i in pedidos if i["situacao"] in ("pendente", "a confirmar")]
+        linhas.append(f"Informações que o consultor fornece: {len(pedidos)}, " + (f"faltam {len(faltam)} ({', '.join(faltam)})" if faltam else "todas recebidas") + ". A lista sai com scripts/governanca.py --insumos.")
     return linhas
 
 
@@ -733,6 +852,10 @@ def main() -> int:
     analisador.add_argument("--ressalvas", default="")
     analisador.add_argument("--controles", action="store_true")
     analisador.add_argument("--controle", metavar="CODIGO")
+    analisador.add_argument("--insumos", action="store_true", help="as informações que os pacotes ativos pedem ao consultor")
+    analisador.add_argument("--insumo", metavar="CODIGO")
+    analisador.add_argument("--recebido", action="store_true")
+    analisador.add_argument("--onde", default="", help="onde a informação ficou: o id do registro ou o arquivo")
     analisador.add_argument("--cumprido", action="store_true")
     analisador.add_argument("--nao-se-aplica", dest="nao_se_aplica", action="store_true")
     analisador.add_argument("--pendente", action="store_true")
@@ -767,6 +890,10 @@ def main() -> int:
         return registrar_versao(args.versao, args.mudou, args.enviada_a, hoje)
     if args.aceite:
         return registrar_aceite(args.aceite, args.quem, args.ressalvas, hoje)
+    if args.insumos:
+        return listar_insumos()
+    if args.insumo:
+        return responder_insumo(args, hoje)
     if args.controles:
         return listar_controles()
     if args.controle:

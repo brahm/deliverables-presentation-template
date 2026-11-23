@@ -115,6 +115,9 @@ No dia a dia, você só conta o que aconteceu. O agente cuida do resto:
   combinado espera o impacto e a decisão.
 - **Controles do tipo de projeto.** Cada pacote traz o que precisa ficar
   registrado e aprovado, e um controle só fecha com evidência.
+- **Proposta.** Uma proposta não é um projeto: fica abaixo do nível
+  enxuto, com dois controles. O agente pede a você o objetivo, o ponto
+  de vista, a abordagem, as tarefas, o cronograma, a equipe e o preço.
 - **Segundo cérebro.** O que o projeto aprende vira nota em
   `entregaveis/_cerebro/`, com a fonte de cada afirmação, e o agente
   busca nas notas antes de escrever.

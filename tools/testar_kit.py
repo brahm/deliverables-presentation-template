@@ -1325,6 +1325,14 @@ def testar_pacotes(tmp: Path) -> None:
             guia = (pacote / "PACOTE.md").read_text(encoding="utf-8")
             confere(f"{nome}: PACOTE.md apresenta cada controle pelo nome", "## Controles de governança" in guia and all(f"| {l[1]} |" in guia for l in linhas), str([l[1] for l in linhas if f"| {l[1]} |" not in guia]))
             confere(f"{nome}: a skill do pacote manda conferir os controles", "--controles" in skill and "--cumprido" in skill)
+        if (pacote / "insumos.tsv").is_file():
+            linhas = [l.split("\t") for l in (pacote / "insumos.tsv").read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")][1:]
+            confere(f"{nome}: insumos.tsv tem 6 colunas em toda linha", bool(linhas) and all(len(l) == 6 for l in linhas))
+            confere(f"{nome}: toda informação vale sempre ou em uma condição escrita, antes de uma etapa que existe", all((l[2] == "sempre" or l[2].startswith("quando ")) and l[3] in ("storyline", "storyboard", "redacao", "revisao", "envio") for l in linhas), str([l[:4] for l in linhas]))
+            confere(f"{nome}: toda informação traz a pergunta ao consultor e onde a resposta fica", all(l[1] and l[4].endswith("?") and l[5] for l in linhas))
+            guia = (pacote / "PACOTE.md").read_text(encoding="utf-8")
+            confere(f"{nome}: PACOTE.md apresenta cada informação pelo nome", "## Informações que o consultor fornece" in guia and all(f"| {l[1]} |" in guia for l in linhas), str([l[1] for l in linhas if f"| {l[1]} |" not in guia]))
+            confere(f"{nome}: a skill do pacote manda pedir e gravar as informações", "--insumos" in skill and "--recebido" in skill)
 
     todos_os_codigos = [l.split("\t")[0] for a in sorted((HARNESS / "pacotes").glob("*/controles.tsv")) for l in a.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")][0:]
     todos_os_codigos = [c for c in todos_os_codigos if c != "codigo"]
@@ -1364,6 +1372,7 @@ def testar_pacotes(tmp: Path) -> None:
     chaves = [tuple(l.split("\t")[i] for i in (0, 3)) for l in (todos / "entregaveis/_projeto/glossario.tsv").read_text(encoding="utf-8").splitlines() if "\t" in l and not l.startswith("#")]
     confere("pacotes somados não repetem termos no glossário", len(chaves) == len({(t.lower(), i) for t, i in chaves}), str([c for c in chaves if chaves.count(c) > 1][:5]))
     testar_controles(tmp)
+    testar_proposta(tmp)
     sem_pacote = tmp / "sem-pacote"
     sem_pacote.mkdir()
     instalar(sem_pacote)
@@ -1475,6 +1484,126 @@ def testar_controles(tmp: Path) -> None:
     pacote = rodar([PY, "entregaveis/_harness/scripts/empacotar.py", "--projeto"], projeto)
     ambiente = base / "_ambiente"
     confere("o pacote para outros ambientes leva os controles e as respostas do projeto", pacote.returncode == 0 and "## Controles de governança" in (ambiente / "pacote-processos-midia.txt").read_text(encoding="utf-8") and "alcadas-de-autorizacao\tAlçadas" in (ambiente / "pacote-processos-midia.txt").read_text(encoding="utf-8") and "### controles.tsv" in (ambiente / "5-projeto.txt").read_text(encoding="utf-8") and "taxonomia-e-metricas\tcumprido\tD-004" in (ambiente / "5-projeto.txt").read_text(encoding="utf-8"), pacote.stdout + pacote.stderr)
+
+
+def testar_proposta(tmp: Path) -> None:
+    """O pacote de proposta: governança abaixo do enxuto, dois controles e as informações que o consultor fornece."""
+    pasta = HARNESS / "pacotes" / "proposta"
+    guia = (pasta / "PACOTE.md").read_text(encoding="utf-8")
+    confere("o pacote de proposta não traz método, roteiro nem lista de dados", not any((pasta / a).exists() for a in ("pedido-de-dados.tsv", "entrevistas.md", "glossario.tsv")) and "## Frameworks" not in guia and "## Esqueletos" not in guia and "## O que este pacote não traz" in guia)
+    codigos = [l.split("\t")[0] for l in (pasta / "insumos.tsv").read_text(encoding="utf-8").splitlines() if "\t" in l and not l.startswith("#")][1:]
+    confere("as informações da proposta são as sete pedidas e duas condicionais", codigos == ["objetivo", "ponto-de-vista", "abordagem", "tarefas", "cronograma", "equipe-recomendada", "preco", "metodo-da-casa", "pedido-do-cliente"], str(codigos))
+    controles = [l for l in (pasta / "controles.tsv").read_text(encoding="utf-8").splitlines() if "\t" in l and not l.startswith("#")][1:]
+    confere("a proposta tem só dois controles, menos do que qualquer outro pacote", len(controles) == 2 and all(len([l for l in a.read_text(encoding="utf-8").splitlines() if "\t" in l and not l.startswith("#")]) - 1 > 2 for a in (HARNESS / "pacotes").glob("*/controles.tsv") if a.parent.name != "proposta"))
+
+    projeto = tmp / "proposta"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    reg = base / "_projeto"
+    montar_exemplo(projeto)
+    hoje = "2026-03-02"
+
+    def gov(*args) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/governanca.py", *args, "--hoje", hoje], projeto)
+
+    def lista() -> str:
+        return rodar([PY, "entregaveis/_harness/scripts/rotina.py", "--lista", "--hoje", hoje], projeto).stdout
+
+    def estado() -> str:
+        return rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout
+
+    def etapa(nome: str) -> None:
+        briefing = base / "diag/briefing.md"
+        briefing.write_text(re.sub(r"^estado: .*$", f"estado: {nome}", briefing.read_text(encoding="utf-8"), flags=re.MULTILINE), encoding="utf-8")
+
+    def linha_de(ident: str) -> str:
+        return next((l for l in (reg / "insumos.tsv").read_text(encoding="utf-8").splitlines() if l.startswith(ident + "\t")), "")
+
+    def checagem() -> subprocess.CompletedProcess:
+        return validar(projeto, "--so", "governanca")
+
+    etapa("briefing")
+    confere("sem o pacote, nenhuma informação é pedida", "Nenhum pacote ativo pede informações" in gov("--insumos").stdout and "Informações que o consultor fornece" not in estado() + lista())
+    confere("sem o pacote, a sugestão de nível é a de um projeto", "Nível sugerido: proposta" not in gov("--sugerir").stdout and "Nível sugerido:" in gov("--sugerir").stdout)
+    rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--pacote", "martech-adtech"], projeto)
+    ativado = rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--pacote", "proposta"], projeto)
+    confere("ativar o pacote avisa dos dois controles e das nove informações e cria o registro", ativado.returncode == 0 and "2 controle(s) de governança" in ativado.stdout and "9 informação(ões) a pedir ao consultor" in ativado.stdout and (reg / "insumos.tsv").is_file() and "termos do pacote" not in ativado.stdout, ativado.stdout + ativado.stderr)
+
+    # Governança abaixo do enxuto.
+    sugestao = gov("--sugerir")
+    confere("com o pacote ativo, a sugestão é o nível proposta, sem lista de materiais", "Nível sugerido: proposta" in sugestao.stdout and "abaixo do nível enxuto" in sugestao.stdout and "status-semanal" not in sugestao.stdout, sugestao.stdout)
+    gov("--nivel", "enxuto")
+    confere("o nível enxuto emite materiais", "status-semanal" in (reg / "governanca.tsv").read_text(encoding="utf-8"))
+    gravado = gov("--nivel", "proposta")
+    confere("o nível proposta não emite material nenhum", gravado.returncode == 0 and "governanca: proposta\n" in (reg / "brief.md").read_text(encoding="utf-8") and "status-semanal" not in (reg / "governanca.tsv").read_text(encoding="utf-8") and "nenhum material de governança é emitido" in gravado.stdout and "Governança: nível proposta, 0 material(is)" in estado(), gravado.stdout + estado())
+    confere("no nível proposta, a checagem aceita o nível e não cobra quem aprova o entregável", checagem().returncode == 0 and "não existe" not in checagem().stdout and "não tem quem aprova" not in checagem().stdout, checagem().stdout)
+    confere("nível que não existe continua recusado", gov("--nivel", "minimo").returncode == 2 and "governanca: proposta\n" in (reg / "brief.md").read_text(encoding="utf-8"))
+    so_dois = gov("--controles").stdout
+    confere("enquanto é proposta, só valem os controles da proposta, e os do trabalho proposto esperam", so_dois.count("Situação:") == 2 and "aprovacao-de-preco-e-termos (proposta)" in so_dois and "criterios-de-avaliacao" not in so_dois and "Controles do tipo de projeto: 2, com 1 pendente(s) e 1 a confirmar" in estado(), so_dois)
+
+    # As informações que o consultor fornece.
+    todas = gov("--insumos").stdout
+    confere("a lista mostra as nove informações, sete pendentes e duas a confirmar, com a pergunta de cada uma", "9, faltam 9" in todas and todas.count("Situação: pendente.") == 7 and todas.count("Situação: a confirmar.") == 2 and "Pergunte: Qual é o preço" in todas and "Fica em: Decisão registrada (D-nnn), com quem aprovou." in todas, todas)
+    confere("o estado conta o que falta, pelo código", "Informações que o consultor fornece: 9, faltam 9 (objetivo, ponto-de-vista, abordagem, tarefas, cronograma, equipe-recomendada, preco, metodo-da-casa, pedido-do-cliente)" in estado(), estado())
+    no_briefing = lista()
+    confere("a lista do dia pede todas desde o primeiro dia, em um item só", no_briefing.count("Informações que o consultor fornece e ainda faltam (9)") == 1 and "Preço [preco]" in no_briefing and "Já travam o trabalho" not in no_briefing, no_briefing)
+    confere("antes da etapa, a falta não é erro", checagem().returncode == 0 and "que o consultor fornece" not in checagem().stdout, checagem().stdout)
+    etapa("storyline")
+    travado = checagem()
+    confere("checagem: storyline sem objetivo, ponto de vista e abordagem é erro, e o que vale depois ainda não", travado.returncode != 0 and all(f"[{c}]" in travado.stdout for c in ("objetivo", "ponto-de-vista", "abordagem")) and not any(f"[{c}]" in travado.stdout for c in ("tarefas", "preco", "metodo-da-casa")) and "Peça a ele e não escreva no lugar dele" in travado.stdout, travado.stdout)
+    confere("a lista do dia diz o que já trava o trabalho", "Já travam o trabalho: objetivo (antes da etapa storyline, em diag); ponto-de-vista" in lista() and "tarefas (antes" not in lista(), lista())
+
+    confere("informação que os pacotes não pedem é recusada", gov("--insumo", "orcamento", "--pendente").returncode == 1 and "não pedem a informação 'orcamento'" in gov("--insumo", "orcamento", "--pendente").stdout)
+    confere("a resposta é uma só", gov("--insumo", "objetivo").returncode == 2 and gov("--insumo", "objetivo", "--pendente", "--nao-se-aplica", "--motivo", "x").returncode == 2)
+    confere("recebido pede onde ficou e quem forneceu", gov("--insumo", "objetivo", "--recebido", "--quem", "Consultora").returncode == 2 and gov("--insumo", "objetivo", "--recebido", "--onde", "D-001").returncode == 2 and not linha_de("objetivo"))
+    recebido = gov("--insumo", "objetivo", "--recebido", "--onde", "D-001", "--quem", "Consultora")
+    confere("a informação recebida guarda onde ficou, quem forneceu e a data", recebido.returncode == 0 and linha_de("objetivo") == f"objetivo\trecebido\tD-001\tConsultora\t{hoje}\t", linha_de("objetivo"))
+    confere("a informação recebida sai da lista, do estado e da checagem", "[objetivo]" not in lista() and "faltam 8 (ponto-de-vista" in estado() and "[objetivo]" not in checagem().stdout and "[abordagem]" in checagem().stdout)
+    confere("não se aplica pede o motivo", gov("--insumo", "pedido-do-cliente", "--nao-se-aplica").returncode == 2 and not linha_de("pedido-do-cliente"))
+    dispensada = gov("--insumo", "pedido-do-cliente", "--nao-se-aplica", "--motivo", "Não há concorrência")
+    confere("a informação que não se aplica sai da lista, com o motivo guardado", dispensada.returncode == 0 and "pedido-do-cliente\tnao se aplica\t" in linha_de("pedido-do-cliente") and "Não há concorrência" in linha_de("pedido-do-cliente") and "pedido-do-cliente" not in lista())
+    gov("--insumo", "metodo-da-casa", "--pendente")
+    confere("a condicional que vale passa a pendente e trava a etapa dela", "metodo-da-casa\tpendente\t" in linha_de("metodo-da-casa") and "[metodo-da-casa]" in checagem().stdout)
+    gov("--insumo", "objetivo", "--pendente")
+    confere("reabrir uma informação apaga o registro antigo", linha_de("objetivo") == "objetivo\tpendente\t\t\t\t" and "[objetivo]" in checagem().stdout, linha_de("objetivo"))
+    for codigo in ("objetivo", "ponto-de-vista", "abordagem", "metodo-da-casa"):
+        gov("--insumo", codigo, "--recebido", "--onde", "D-001", "--quem", "Consultora")
+    confere("com as informações da storyline recebidas, a checagem passa", checagem().returncode == 0 and "que o consultor fornece" not in checagem().stdout, checagem().stdout)
+    etapa("redacao")
+    na_redacao = checagem()
+    confere("checagem: redação sem tarefas, cronograma e equipe é erro, e o preço ainda não", na_redacao.returncode != 0 and all(f"[{c}]" in na_redacao.stdout for c in ("tarefas", "cronograma", "equipe-recomendada")) and "[preco]" not in na_redacao.stdout, na_redacao.stdout)
+    for codigo in ("tarefas", "cronograma", "equipe-recomendada"):
+        gov("--insumo", codigo, "--recebido", "--onde", "M-002", "--quem", "Consultora")
+    etapa("revisao")
+    confere("checagem: revisão sem o preço é erro", checagem().returncode != 0 and "[preco]" in checagem().stdout)
+    gov("--insumo", "preco", "--recebido", "--onde", "D-002", "--quem", "Sócia responsável")
+    confere("com tudo recebido, nada é pedido e o estado diz que está completo", checagem().returncode == 0 and "Informações que o consultor fornece e ainda faltam" not in lista() and "Informações que o consultor fornece: 9, todas recebidas" in estado() and "9, faltam 0" in gov("--insumos").stdout, estado())
+
+    # A checagem do registro.
+    original = (reg / "insumos.tsv").read_text(encoding="utf-8")
+    for linha, espera, nome in (("inventada\tpendente\t\t\t\t", "A informação 'inventada' não é pedida por nenhum pacote", "informação fora dos pacotes é erro"),
+                                ("preco\tok\t\t\t\t", "preco: a situação 'ok' não existe", "situação fora da lista é erro"),
+                                ("preco\trecebido\t\t\t\t", "preco: informação recebida sem dizer onde ficou", "recebida sem lugar é erro")):
+        (reg / "insumos.tsv").write_text(original.replace("preco\trecebido\tD-002\tSócia responsável\t" + hoje + "\t\n", "") + linha + "\n", encoding="utf-8")
+        saida = checagem()
+        confere(f"checagem: {nome}", saida.returncode != 0 and espera in saida.stdout, saida.stdout)
+    (reg / "insumos.tsv").write_text(original, encoding="utf-8")
+
+    # O envio, o pacote para outros ambientes e a venda.
+    envio = gov("--versao", "diag", "--mudou", "Proposta para o cliente", "--enviada-a", "Diretora de marketing")
+    confere("o envio sem a aprovação do preço sai com o aviso do controle", envio.returncode == 0 and "ATENÇÃO" in envio.stdout and "[aprovacao-de-preco-e-termos]" in envio.stdout and "criterios-de-avaliacao" not in envio.stdout, envio.stdout)
+    pacote = rodar([PY, "entregaveis/_harness/scripts/empacotar.py", "--projeto"], projeto)
+    ambiente = base / "_ambiente"
+    confere("o pacote para outros ambientes leva as informações a pedir e as respostas do projeto", pacote.returncode == 0 and "## Informações que o consultor fornece" in (ambiente / "pacote-proposta.txt").read_text(encoding="utf-8") and "equipe-recomendada\tEquipe recomendada" in (ambiente / "pacote-proposta.txt").read_text(encoding="utf-8") and "### insumos.tsv" in (ambiente / "5-projeto.txt").read_text(encoding="utf-8") and "preco\trecebido\tD-002" in (ambiente / "5-projeto.txt").read_text(encoding="utf-8"), pacote.stdout + pacote.stderr)
+    vendida = rodar([PY, "entregaveis/_harness/scripts/fase.py", "--nova", "--tipo", "assessment de martech e adtech", "--pacotes", "martech-adtech", "--origem", "proposta vendida", "--data", "2026-03-10"], projeto)
+    brief = (reg / "brief.md").read_text(encoding="utf-8")
+    confere("vendida a proposta, a fase nova fica sem nível e pede a escolha de novo", vendida.returncode == 0 and "\ngovernanca:\n" in brief and "pacotes: martech-adtech\n" in brief and "Nível de governança não definido" in estado(), vendida.stdout + vendida.stderr + brief[:400])
+    depois = gov("--controles").stdout
+    confere("na fase do trabalho, valem os controles do pacote dele e nenhuma informação de proposta é pedida", "criterios-de-avaliacao (martech-adtech)" in depois and "aprovacao-de-preco-e-termos" not in depois and "Nenhum pacote ativo pede informações" in gov("--insumos").stdout and "Informações que o consultor fornece" not in estado() + lista(), depois)
+    (reg / "brief.md").write_text(brief.replace("\ngovernanca:\n", "\ngovernanca: proposta\n"), encoding="utf-8")
+    confere("nível proposta fora de uma proposta é apontado no estado", "a fase atual não é uma proposta" in estado() and "definir-governanca" in estado(), estado())
 
 
 def testar_levantamento(tmp: Path) -> None:

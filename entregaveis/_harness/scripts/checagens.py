@@ -563,8 +563,8 @@ def governanca_do_projeto() -> list[Achado]:
 
     achados: list[Achado] = []
     nivel = governanca.nivel_atual()
-    if nivel and nivel not in governanca.NIVEIS + ["personalizado"]:
-        achados.append(Achado("erro", "governanca", comum.relativo(comum.PROJETO / "brief.md"), 0, f"O nível de governança '{nivel}' não existe. Vale enxuto, padrao, completo ou personalizado. Grave com governanca.py --nivel."))
+    if nivel and nivel not in governanca.ACEITOS:
+        achados.append(Achado("erro", "governanca", comum.relativo(comum.PROJETO / "brief.md"), 0, f"O nível de governança '{nivel}' não existe. Vale enxuto, padrao, completo, personalizado ou proposta. Grave com governanca.py --nivel."))
     for nome, validos in _ESTADOS_DE_GOVERNANCA.items():
         for linha in comum.ler_tsv(comum.PROJETO / nome):
             if comum.normalizar(linha.get("estado", "")) not in validos:
@@ -592,6 +592,20 @@ def governanca_do_projeto() -> list[Achado]:
     for codigo, texto in governanca.controles_em_aberto():
         if "sem evidência" in texto:
             achados.append(Achado("aviso", "governanca", registro, 0, texto))
+    pedidos_do_kit = {i["codigo"] for pacote in sorted((comum.HARNESS / "pacotes").glob("*/insumos.tsv")) for i in governanca.insumos_do_pacote(pacote.parent.name)}
+    registro = comum.relativo(comum.PROJETO / "insumos.tsv")
+    for linha in comum.ler_tsv(comum.PROJETO / "insumos.tsv"):
+        codigo = linha.get("codigo", "")
+        if codigo not in pedidos_do_kit:
+            achados.append(Achado("erro", "governanca", registro, 0, f"A informação '{codigo}' não é pedida por nenhum pacote. Veja os códigos com governanca.py --insumos."))
+        if comum.normalizar(linha.get("situacao", "")) not in governanca.SITUACOES_DE_INSUMO:
+            achados.append(Achado("erro", "governanca", registro, 0, f"{codigo}: a situação '{linha.get('situacao', '')}' não existe. Vale pendente, a confirmar, recebido ou nao se aplica."))
+        if comum.normalizar(linha.get("situacao", "")) == "recebido" and not (linha.get("onde", "") and linha.get("fornecido_por", "")):
+            achados.append(Achado("erro", "governanca", registro, 0, f"{codigo}: informação recebida sem dizer onde ficou ou quem forneceu. Grave com governanca.py --insumo {codigo} --recebido."))
+    for insumo in governanca.insumos_em_falta():
+        if insumo["travam"]:
+            achados.append(Achado("erro", "governanca", registro, 0, f"{', '.join(insumo['travam'])} chegou à etapa {insumo.get('antes_de', '')} sem a informação '{insumo.get('insumo', '')}' [{insumo['codigo']}], "
+                                  f"que o consultor fornece. Peça a ele e não escreva no lugar dele. Pergunte: {insumo.get('pergunta', '')}"))
     # Quem depende de quem: um id que não existe quebra a lista do dia em silêncio.
     acoes = comum.ler_tsv(comum.PROJETO / "acoes.tsv")
     conhecidos = {l.get("id", "") for l in acoes} | {l.get("id", "") for l in comum.ler_tsv(comum.INTAKE / "registro.tsv")}
@@ -610,7 +624,7 @@ def governanca_do_projeto() -> list[Achado]:
         for alvo in afazeres.ids(linha.get("depende_de", "")):
             if alvo in abertos and abertos[alvo].lado != "consultoria":
                 achados.append(Achado("aviso", "governanca", comum.relativo(comum.PROJETO / "acoes.tsv"), 0, f"{linha.get('id', '?')} foi concluída, mas dependia de {alvo}, que ainda espera o cliente. Confirme com rotina.py --cobrado {alvo}."))
-    if nivel:
+    if nivel and nivel != governanca.SO_PROPOSTA:
         aprova = {l.get("item", ""): l.get("aprova", "") for l in comum.ler_tsv(comum.PROJETO / "papeis.tsv")}
         for pasta in comum.entregaveis():
             aberto = comum.ETAPAS[comum.etapa(_meta(pasta))] != "entregue"

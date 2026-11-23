@@ -3,6 +3,39 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.13.0
+
+- Pacote `proposta` refeito. Uma proposta não é um projeto, e o pacote
+  deixa de trazer frameworks, esqueletos de storyline, lista de dados,
+  roteiro de entrevista e glossário. O método de construção de proposta
+  é do consultor e fica só no projeto.
+- Informações que o consultor fornece. Um pacote pode trazer
+  `insumos.tsv`: o que perguntar, antes de que etapa do entregável e
+  onde a resposta fica. O de proposta pede objetivo, ponto de vista,
+  abordagem, tarefas, cronograma, equipe recomendada e preço, e duas
+  condicionais: o método da casa e o pedido formal do cliente.
+- `governanca.py --insumos` mostra as informações dos pacotes ativos.
+  `--insumo CODIGO` responde com `--recebido` (pede onde ficou e quem
+  forneceu), `--nao-se-aplica` (pede o motivo) ou `--pendente`. As
+  respostas ficam em `_projeto/insumos.tsv`. O estado e a lista do dia
+  dizem o que falta, e o entregável que chega à etapa sem a informação
+  é erro na checagem de governança.
+- Nível de governança `proposta`, abaixo do enxuto: nenhum material é
+  emitido. `governanca.py --sugerir` o propõe quando o pacote de
+  proposta está ativo.
+- A proposta tem dois controles, os dois antes do envio: aprovação do
+  preço, do escopo e dos termos, e autorização para citar casos,
+  clientes e pessoas. Enquanto o pacote de proposta está ativo, os
+  controles dos outros pacotes esperam a venda.
+- `fase.py --nova` limpa o nível `proposta`, e a fase do trabalho
+  vendido escolhe o nível de novo.
+
+O que o projeto precisa fazer: atualize com `--atualizar`. Um projeto
+com o pacote `proposta` ativo passa a ver nove informações a pedir e
+dois controles. Registre as que o consultor já forneceu com
+`governanca.py --insumo CODIGO --recebido`. Os termos que o pacote
+antigo somou ao glossário do projeto continuam lá.
+
 ## 0.12.0
 
 - Controles de governança por tipo de projeto. Um pacote pode trazer

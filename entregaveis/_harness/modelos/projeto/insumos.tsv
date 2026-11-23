@@ -1,0 +1,4 @@
+# As informações que os pacotes ativos pedem ao consultor e o que o projeto já recebeu. Quem grava é o governanca.py --insumo.
+# A informação sem linha aqui está pendente, e a condicional, a confirmar. situacao: pendente, a confirmar, recebido ou nao se aplica.
+# onde: o id do registro (D-nnn, M-nnn, A-nnn) ou o arquivo em que a informação ficou. fornecido_em: AAAA-MM-DD.
+codigo	situacao	onde	fornecido_por	fornecido_em	observacao

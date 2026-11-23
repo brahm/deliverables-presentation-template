@@ -315,6 +315,8 @@ def montar(hoje: datetime.date) -> dict:
     lista["confirmar"] += [(chave, texto + ". Está andando, travou ou não é mais necessário?") for chave, texto in resumo["parado"] if chave not in cobrados]
     import governanca
     lista["confirmar"] += [(f"controle:{codigo}", texto) for codigo, texto in governanca.controles_em_aberto()]
+    if governanca.pedido_de_insumos():
+        lista["confirmar"].append(("insumos", governanca.pedido_de_insumos()))
     lista["confirmar"] += list(resumo["cadencia"])
     lista["confirmar"] += [(f"pergunta:{chave}", texto) for chave, texto in perguntas_do_dia(hoje, p)]
     lista["algum_dia"] = [(l.get("id", "?"), l.get("item", "")) for l in comum.ler_tsv(comum.PROJETO / "adiados.tsv") if comum.normalizar(l.get("estado", "")) == "aberto"]

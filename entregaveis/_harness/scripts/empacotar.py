@@ -133,7 +133,7 @@ def formatos_e_visual() -> str:
 
 # Os registros de governança, nos modelos e no pacote de um projeto.
 DE_GOVERNANCA = ("governanca.tsv", "papeis.tsv", "premissas.tsv", "issues.tsv", "dependencias.tsv", "mudancas.tsv", "linha-de-base.tsv", "versoes.tsv",
-                 "cobrancas.tsv", "perguntas.tsv", "esforco.tsv", "controles.tsv")
+                 "cobrancas.tsv", "perguntas.tsv", "esforco.tsv", "controles.tsv", "insumos.tsv")
 
 
 def modelos() -> str:
@@ -170,7 +170,7 @@ def pacote(nome: str) -> str:
         partes.append(rebaixar(comum.ler(pasta / "entrevistas.md")))
     if (pasta / "skill" / "SKILL.md").is_file():
         partes.append(procedimento(pasta / "skill" / "SKILL.md", f"Procedimento do pacote {nome}"))
-    for titulo, arquivo in (("Controles de governança", "controles.tsv"), ("Termos do pacote", "glossario.tsv"), ("Pedido de dados", "pedido-de-dados.tsv")):
+    for titulo, arquivo in (("Informações que o consultor fornece", "insumos.tsv"), ("Controles de governança", "controles.tsv"), ("Termos do pacote", "glossario.tsv"), ("Pedido de dados", "pedido-de-dados.tsv")):
         if (pasta / arquivo).is_file():
             partes.append(f"## {titulo}\n\n" + cercado(comum.ler(pasta / arquivo)))
     return "\n".join(partes)

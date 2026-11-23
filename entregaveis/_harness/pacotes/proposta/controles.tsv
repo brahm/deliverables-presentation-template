@@ -1,0 +1,6 @@
+# Controles de governança deste tipo de projeto. Uma proposta não é um projeto, e por isso são só dois.
+# condicao: sempre, ou a situação em que o controle vale (começa por quando). antes_de: a etapa do entregável antes da qual o controle precisa estar cumprido: storyline, storyboard, redacao, revisao ou envio.
+# registra: o que fica registrado. comprova: a evidência que fecha o controle.
+codigo	controle	condicao	antes_de	registra	comprova
+aprovacao-de-preco-e-termos	Aprovação do preço, do escopo e dos termos	sempre	envio	O preço, o escopo, as premissas e as condições comerciais que vão ao cliente, e quem os aprovou do lado do consultor	Decisão registrada (D-nnn) com quem aprovou e a data
+autorizacao-de-citacoes	Autorização para citar casos, clientes e pessoas	quando a proposta cita um caso, outro cliente, um resultado ou o currículo de alguém	envio	O que pode ser citado, com que nível de identificação, e quem autorizou	Decisão registrada (D-nnn) com quem autorizou cada citação

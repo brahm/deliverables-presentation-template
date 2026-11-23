@@ -73,6 +73,9 @@ comando é `python3 entregaveis/_harness/scripts/governanca.py`.
     cada controle condicional vale e responda com `--controle CODIGO` e
     `--pendente`, `--cumprido` ou `--nao-se-aplica`. O controle fecha
     com a evidência e com quem confirmou, nunca por suposição.
+    Com o pacote de proposta ativo, a sugestão é o nível proposta, que
+    não emite material: grave `--nivel proposta` e siga a skill do
+    pacote. Vendida a proposta, defina o nível da fase nova.
 13. O esforço fica em `_projeto/esforco.tsv` quando o consultor informa.
     Não pergunte por horas e não avise que falta lançamento.
 

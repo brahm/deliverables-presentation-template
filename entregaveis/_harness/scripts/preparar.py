@@ -202,6 +202,12 @@ def ativar_pacote(nome: str) -> list[str]:
             shutil.copyfile(rotina_do_registro, registro)
         quantos = len([l for l in comum.ler_tsv(pasta / "controles.tsv") if l.get("codigo", "")])
         feitos.append(f"{quantos} controle(s) de governança do tipo de projeto (governanca.py --controles)")
+    if (pasta / "insumos.tsv").is_file():
+        registro = comum.PROJETO / "insumos.tsv"
+        if not registro.exists() and (comum.MODELOS / "projeto" / "insumos.tsv").is_file() and comum.PROJETO.is_dir():
+            shutil.copyfile(comum.MODELOS / "projeto" / "insumos.tsv", registro)
+        quantos = len([l for l in comum.ler_tsv(pasta / "insumos.tsv") if l.get("codigo", "")])
+        feitos.append(f"{quantos} informação(ões) a pedir ao consultor (governanca.py --insumos)")
     brief = comum.PROJETO / "brief.md"
     texto = comum.ler(brief)
     campo = re.search(r"^pacotes:[ \t]*(.*)$", texto, flags=re.MULTILINE)

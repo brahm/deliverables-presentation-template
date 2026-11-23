@@ -1,0 +1,13 @@
+# As informações que o consultor fornece durante a construção da proposta. O pacote diz o que pedir, e nunca o conteúdo.
+# condicao: sempre, ou a situação em que a informação vale (começa por quando). antes_de: a etapa do entregável que não começa sem ela: storyline, storyboard, redacao, revisao ou envio.
+# pergunta: o que perguntar ao consultor. guarda: onde a resposta fica no projeto.
+codigo	insumo	condicao	antes_de	pergunta	guarda
+objetivo	Objetivo da proposta	sempre	storyline	O que o cliente quer alcançar, que decisão a proposta precisa provocar, de quem e até quando?	Brief do projeto e briefing do entregável
+ponto-de-vista	Ponto de vista	sempre	storyline	Qual é a leitura do consultor sobre o problema do cliente e a tese que a proposta defende?	Briefing do entregável, na grande ideia, e decisão registrada (D-nnn)
+abordagem	Abordagem	sempre	storyline	Como o trabalho será feito, em que fases, com que entregas, e por que deste jeito?	Domínio do projeto, com calibrar-dominio, e decisão registrada (D-nnn)
+tarefas	Tarefas	sempre	redacao	Quais são as tarefas de cada fase, o que está dentro, o que está fora e o que depende do cliente?	Material recebido (M-nnn) ou domínio do projeto, e premissas em premissas.tsv
+cronograma	Cronograma	sempre	redacao	Qual é a duração de cada fase, quais são os marcos e que datas o cliente já fixou?	Material recebido (M-nnn) ou decisão registrada (D-nnn)
+equipe-recomendada	Equipe recomendada	sempre	redacao	Quem compõe a equipe, com que papel e dedicação, e quais currículos podem ser usados?	Material recebido (M-nnn)
+preco	Preço	sempre	revisao	Qual é o preço, como ele se divide, que premissas o sustentam, que condições comerciais valem e quem aprovou?	Decisão registrada (D-nnn), com quem aprovou
+metodo-da-casa	Método e modelo de proposta da casa	quando a organização do consultor tem método, roteiro ou modelo próprio de proposta	storyline	Que método, roteiro de seções e modelo de documento a proposta precisa seguir?	Domínio do projeto e marca.md. Nunca volta ao template
+pedido-do-cliente	Pedido formal do cliente	quando o cliente enviou pedido de proposta, requisitos ou critérios de avaliação	storyline	Qual é o pedido do cliente, com os requisitos, o formato obrigatório, os critérios e o prazo de resposta?	Material recebido (M-nnn), fora do git
