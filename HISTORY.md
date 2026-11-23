@@ -10,6 +10,10 @@ no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
   páginas, a revisão, a entrega, o fechamento e o arquivo final. Tudo
   nele é inventado, e o guia `exemplo/LEIA-ME.md` conta o que a
   consultora disse em cada etapa.
+- Um guia de uso. `_harness/guia.md` apresenta todos os recursos do
+  harness, o que dizer ao agente em cada momento, as três travas com a
+  saída de cada uma e os ajustes para quem já tem prática. Ele é
+  instalado com o harness em todo projeto.
 - `tools/abrir_exemplo.py DESTINO` abre o exemplo em uma pasta nova, com
   o harness instalado. Os testes do kit abrem o exemplo a cada mudança e
   conferem se ele passa nas checagens de hoje.
@@ -20,8 +24,9 @@ no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 - Nos modelos do domínio, o exemplo de regra passou a usar o id `R-001`,
   para não se confundir com as decisões, que usam `D-nnn`.
 
-O que o projeto precisa fazer: nada. O exemplo e o comando que o abre
-ficam só no repositório do template.
+O que o projeto precisa fazer: atualize com `--atualizar` para receber o
+guia. O exemplo e o comando que o abre ficam só no repositório do
+template.
 
 ## 0.7.0
 

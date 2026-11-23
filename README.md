@@ -97,6 +97,9 @@ Quando o projeto muda de natureza, diga o que aconteceu: a proposta foi
 vendida, uma extensão foi contratada. O agente abre uma fase nova, que
 herda as decisões, as evidências e tudo o que foi produzido.
 
+O [guia de uso](entregaveis/_harness/guia.md) apresenta todos os
+recursos, o que dizer em cada momento e o que fazer quando algo trava.
+
 Você não precisa citar skill nem comando. Os que ajudam a acompanhar:
 
 ```sh
@@ -148,6 +151,7 @@ em [ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md).
 | Para saber | Leia |
 | --- | --- |
 | As regras e o momento de cada skill | [REGRAS.md](entregaveis/_harness/REGRAS.md) |
+| Todos os recursos e como usar cada um | [guia.md](entregaveis/_harness/guia.md) |
 | Um projeto fictício, do brief à entrega | [exemplo/LEIA-ME.md](exemplo/LEIA-ME.md) |
 | O método, etapa por etapa | [metodo.md](entregaveis/_harness/metodo/metodo.md) |
 | As práticas de texto | [texto.md](entregaveis/_harness/metodo/texto.md) |
