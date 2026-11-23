@@ -1,0 +1,26 @@
+# Lista padrão de pedido de dados para um assessment de martech e adtech.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que alguma análise da storyline usa.
+# prioridade: essencial (sem ele não há assessment), importante (melhora um achado) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Lista de plataformas de marketing e mídia contratadas ou construídas	Inventário de plataformas	Planilha	Arquitetura ou compras	essencial
+Contratos e aditivos das plataformas, com datas de início, fim e aviso de renovação	Custo total e janela de decisão	PDF ou planilha de contratos	Compras ou jurídico	essencial
+Custo anual por plataforma: licença, serviços e operação	Custo total e uso	Planilha	Financeiro ou compras	essencial
+Relatórios de uso das plataformas: usuários ativos, volumes e recursos habilitados	Subuso e custo por capacidade usada	Exportação da plataforma	Administrador de cada plataforma	essencial
+Diagrama de arquitetura e de integrações atual	Mapa de capacidades e fluxo do dado	Qualquer formato	Arquitetura	essencial
+Organograma de marketing, mídia, dados e tecnologia, com os donos das plataformas	Dono por plataforma e dimensão de pessoas	PDF ou planilha	Recursos humanos ou diretoria	essencial
+Plano de marketing e objetivos de negócio do ano	Ligação entre capacidades e resultado	Apresentação	Diretoria de marketing	essencial
+Lista de casos de uso em produção e em fila	Priorização de casos de uso	Planilha	CRM, mídia e dados	importante
+Calendário de campanhas dos últimos 12 meses, com prazos de produção	Tempo do pedido ao envio	Planilha	CRM e mídia	importante
+Tamanho da base de clientes, com identificados e com consentimento por finalidade	Identidade e sinais	Planilha	Dados ou CRM	essencial
+Política de privacidade, registro de consentimento e fluxo de pedidos de titulares	Governança e consentimento	Documento	Privacidade ou jurídico	importante
+Dicionário de dados e modelo do perfil de cliente	Dados e identidade	Documento ou planilha	Dados	importante
+Investimento de mídia por canal e por plataforma, nos últimos 12 meses	Cadeia de mídia e taxas	Planilha	Mídia ou agência	essencial
+Contratos e escopo das agências e dos parceiros de mídia	De quem são contas, dados e audiências	PDF	Compras ou mídia	importante
+Taxas de tecnologia e de serviço na compra de mídia	Cascata do valor investido à impressão	Planilha ou relatório	Agência e plataformas	importante
+Relatórios de atribuição, de mix de marketing e de testes de incrementalidade	Dimensão de medição	Apresentação ou painel	Dados ou mídia	importante
+Indicadores de CRM: entregabilidade, abertura, conversão e descadastro por canal	Dimensão de ativação	Exportação da plataforma	CRM	complementar
+Lista de integrações, com frequência, volume e falhas	Fluxo do dado e riscos	Planilha	Tecnologia	importante
+Projetos de tecnologia e de dados em andamento ou aprovados	Dependências do roadmap	Apresentação	Tecnologia e dados	importante
+Apontamentos de auditoria e incidentes de segurança ou privacidade	Riscos	Documento	Segurança ou jurídico	complementar
+Estudos de mercado e avaliações de fornecedores que o cliente já comprou	Comparação com fonte citável	PDF	Diretoria ou compras	complementar
+Acesso de leitura às plataformas principais, quando o cliente autorizar	Conferir uso e configuração	Acesso nominal	Administrador de cada plataforma	complementar

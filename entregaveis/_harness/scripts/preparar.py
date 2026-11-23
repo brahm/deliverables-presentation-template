@@ -4,6 +4,7 @@
 Uso:
     preparar.py                          cria _projeto/ e _intake/ se faltarem
     preparar.py --entregavel ID [opções] cria a pasta de um entregável
+    preparar.py --pacote NOME            ativa um pacote de tipo de projeto
 
 Nunca sobrescreve um arquivo que já existe.
 """
@@ -75,6 +76,50 @@ def preparar_entregavel(ident: str, campos: dict) -> list[str]:
     return criados
 
 
+def pacotes_disponiveis() -> list[str]:
+    pasta = comum.HARNESS / "pacotes"
+    return sorted(p.name for p in pasta.iterdir() if (p / "PACOTE.md").is_file()) if pasta.is_dir() else []
+
+
+def ativar_pacote(nome: str) -> list[str]:
+    """Liga um pacote ao projeto: a skill, os termos e o campo do brief."""
+    pasta = comum.HARNESS / "pacotes" / nome
+    if not (pasta / "PACOTE.md").is_file():
+        disponiveis = ", ".join(pacotes_disponiveis()) or "nenhum"
+        raise SystemExit(f"Não existe o pacote '{nome}'. Disponíveis: {disponiveis}.")
+    feitos = []
+    origem = pasta / "skill" / "SKILL.md"
+    alvo = comum.RAIZ / ".claude" / "skills" / f"pacote-{nome}" / "SKILL.md"
+    if origem.is_file() and not alvo.exists():
+        alvo.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(origem, alvo)
+        feitos.append(comum.relativo(alvo))
+    # Os termos do pacote entram no glossário do projeto, sem repetir os que já estão lá.
+    glossario = comum.PROJETO / "glossario.tsv"
+    presentes = {(l.get("termo", "").lower(), l.get("idioma", "")) for l in comum.ler_tsv(glossario)}
+    novos = []
+    for linha in comum.ler(pasta / "glossario.tsv").splitlines():
+        partes = linha.split("\t")
+        if not linha.strip() or linha.startswith("#") or partes[0] == "termo":
+            continue
+        if (partes[0].lower(), partes[3] if len(partes) > 3 else "") not in presentes:
+            novos.append(linha)
+    if novos and glossario.is_file():
+        texto = glossario.read_text(encoding="utf-8")
+        glossario.write_text(texto + ("" if texto.endswith("\n") else "\n") + "\n".join(novos) + "\n", encoding="utf-8")
+        feitos.append(f"{comum.relativo(glossario)} ({len(novos)} termos do pacote)")
+    brief = comum.PROJETO / "brief.md"
+    texto = comum.ler(brief)
+    campo = re.search(r"^pacotes:[ \t]*(.*)$", texto, flags=re.MULTILINE)
+    if campo is not None:
+        ativos = [a.strip() for a in campo.group(1).split(",") if a.strip()]
+        if nome not in ativos:
+            ativos.append(nome)
+            brief.write_text(texto[:campo.start()] + "pacotes: " + ", ".join(ativos) + texto[campo.end():], encoding="utf-8")
+            feitos.append(f"{comum.relativo(brief)} (campo pacotes)")
+    return feitos
+
+
 def main() -> int:
     analisador = argparse.ArgumentParser(description="Cria registros e pastas a partir dos modelos.")
     analisador.add_argument("--entregavel", metavar="ID")
@@ -83,6 +128,7 @@ def main() -> int:
     analisador.add_argument("--veiculo", default="", help="projetado, leitura, documento, planilha ou workshop")
     analisador.add_argument("--formato", default="", help="pptx, docx, pdf ou xlsx")
     analisador.add_argument("--idiomas", default="", help="por exemplo: pt-BR, es")
+    analisador.add_argument("--pacote", metavar="NOME", help="ativa um pacote de tipo de projeto")
     args = analisador.parse_args()
 
     criados = preparar_projeto()
@@ -91,8 +137,11 @@ def main() -> int:
             "titulo": args.titulo, "tipo": args.tipo, "veiculo": args.veiculo,
             "formato": args.formato, "idiomas": args.idiomas,
         })
+    if args.pacote:
+        criados += ativar_pacote(args.pacote)
+        print(f"Pacote '{args.pacote}' ativo. Leia {comum.relativo(comum.HARNESS / 'pacotes' / args.pacote / 'PACOTE.md')}.")
     if criados:
-        print("Criados:")
+        print("Criados ou alterados:")
         for nome in criados:
             print(f"  {nome}")
     else:

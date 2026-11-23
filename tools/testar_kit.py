@@ -504,6 +504,60 @@ def testar_hooks(tmp: Path) -> None:
     confere("fim do turno: volta a cobrar quando o conteúdo muda depois da revisão", hook("fim_do_turno.py", {"session_id": "s3"}).returncode == 2)
 
 
+def testar_pacotes(tmp: Path) -> None:
+    print("Pacotes")
+    pacotes = sorted(p for p in (HARNESS / "pacotes").iterdir() if p.is_dir())
+    confere("há ao menos um pacote", bool(pacotes))
+    leia_me = (HARNESS / "pacotes" / "LEIA-ME.md").read_text(encoding="utf-8")
+    for pacote in pacotes:
+        nome = pacote.name
+        for arquivo in ("PACOTE.md", "pedido-de-dados.tsv", "entrevistas.md", "glossario.tsv", "skill/SKILL.md"):
+            confere(f"{nome}: tem {arquivo}", (pacote / arquivo).is_file())
+        confere(f"{nome}: está na lista de pacotes disponíveis", f"`{nome}`" in leia_me)
+        skill = (pacote / "skill/SKILL.md").read_text(encoding="utf-8")
+        cabecalho = skill.split("---\n")[1]
+        campos = dict(re.findall(r"^(\w+): (.*)$", cabecalho, flags=re.MULTILINE))
+        descricao = campos.get("description", "")
+        confere(f"{nome}: a skill se chama pacote-{nome}", campos.get("name") == f"pacote-{nome}")
+        confere(f"{nome}: a descrição da skill começa por 'Use' e é um valor YAML simples", descricao.startswith("Use ") and ": " not in descricao and " #" not in descricao and len(descricao) <= 1024)
+        confere(f"{nome}: a skill traz a marca de origem do kit", "origem: harness-de-entregaveis" in cabecalho)
+        titulos = set(re.findall(r"^#{2,3} (.+)$", (pacote / "PACOTE.md").read_text(encoding="utf-8"), flags=re.MULTILINE))
+        for secao in re.findall(r'"([^"]+)"', " ".join(skill.split())):
+            confere(f"{nome}: a seção '{secao}' citada na skill existe em PACOTE.md", secao in titulos)
+        for arquivo, colunas in (("pedido-de-dados.tsv", 5), ("glossario.tsv", 4)):
+            linhas = [l for l in (pacote / arquivo).read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
+            tortas = [l for l in linhas if len(l.split("\t")) != colunas]
+            confere(f"{nome}: {arquivo} tem {colunas} colunas em toda linha", len(linhas) > 5 and not tortas, "\n".join(tortas[:3]))
+        prioridades = {l.split("\t")[4] for l in (pacote / "pedido-de-dados.tsv").read_text(encoding="utf-8").splitlines()[4:] if "\t" in l}
+        confere(f"{nome}: as prioridades do pedido de dados são as três previstas", prioridades <= {"essencial", "importante", "complementar"}, str(prioridades))
+
+    projeto = tmp / "pacotes"
+    projeto.mkdir()
+    instalar(projeto, "--pasta", "consultoria")
+    preparar = [PY, "consultoria/_harness/scripts/preparar.py"]
+    inexistente = rodar(preparar + ["--pacote", "nao-existe"], projeto)
+    confere("ativar pacote que não existe falha e lista os disponíveis", inexistente.returncode != 0 and "martech-adtech" in inexistente.stdout + inexistente.stderr, inexistente.stdout + inexistente.stderr)
+    ativacao = rodar(preparar + ["--pacote", "martech-adtech"], projeto)
+    skill = projeto / ".claude/skills/pacote-martech-adtech/SKILL.md"
+    confere("ativar o pacote copia a skill", ativacao.returncode == 0 and skill.is_file(), ativacao.stdout + ativacao.stderr)
+    confere("a skill ativada aponta para a pasta deste projeto", skill.is_file() and "consultoria/_harness/pacotes/martech-adtech/" in skill.read_text(encoding="utf-8") and "entregaveis/" not in skill.read_text(encoding="utf-8"))
+    glossario = (projeto / "consultoria/_projeto/glossario.tsv").read_text(encoding="utf-8")
+    confere("ativar o pacote soma os termos ao glossário", "\nCDP\t" in glossario and "\nDSP\t" in glossario)
+    confere("ativar o pacote preenche o campo do brief", "pacotes: martech-adtech\n" in (projeto / "consultoria/_projeto/brief.md").read_text(encoding="utf-8"))
+    rodar(preparar + ["--pacote", "martech-adtech"], projeto)
+    depois = (projeto / "consultoria/_projeto/glossario.tsv").read_text(encoding="utf-8")
+    confere("ativar de novo não repete termos nem o nome no brief", depois == glossario and "pacotes: martech-adtech\n" in (projeto / "consultoria/_projeto/brief.md").read_text(encoding="utf-8"))
+    estado = rodar([PY, "consultoria/_harness/scripts/validar.py"], projeto)
+    confere("as checagens rodam com o pacote ativo", estado.returncode == 0, estado.stdout + estado.stderr)
+    skill.write_text(skill.read_text(encoding="utf-8") + "\nlinha de versão antiga\n", encoding="utf-8")
+    instalar(projeto, "--pasta", "consultoria", "--atualizar")
+    confere("--atualizar renova a skill do pacote ativado", "linha de versão antiga" not in skill.read_text(encoding="utf-8"))
+    sem_pacote = tmp / "sem-pacote"
+    sem_pacote.mkdir()
+    instalar(sem_pacote)
+    confere("a skill de pacote não é instalada em projeto que não o ativou", not (sem_pacote / ".claude/skills/pacote-martech-adtech").exists())
+
+
 def testar_levantamento(tmp: Path) -> None:
     print("Levantamento de projeto existente")
     projeto = tmp / "levantar"
@@ -525,6 +579,7 @@ def main() -> int:
         testar_instalador(tmp)
         testar_checagens(tmp)
         testar_hooks(tmp)
+        testar_pacotes(tmp)
         testar_levantamento(tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
