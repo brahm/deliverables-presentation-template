@@ -1,0 +1,3 @@
+# Um termo por conceito. A coluna 'evitar' lista as variantes que não devem aparecer, separadas por ponto e vírgula.
+# A checagem de termos reprova uma variante da coluna 'evitar' e avisa de sigla que não está aqui.
+termo	definicao	evitar	idioma

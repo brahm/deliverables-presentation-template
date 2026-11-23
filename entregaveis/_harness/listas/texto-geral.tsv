@@ -1,0 +1,8 @@
+# Padrões que valem para qualquer idioma.
+# nivel<TAB>expressão regular (sem diferenciar maiúsculas)<TAB>orientação
+# Trechos entre aspas, código e links não são examinados.
+erro	[—–]	Travessão. Use vírgula, ponto, dois-pontos ou parênteses. Em intervalos, escreva 'de 2024 a 2026'.
+erro	\s--\s	Dois hifens usados como travessão. Use vírgula, ponto ou dois-pontos.
+erro	[🌀-🫿]	Emoji em entregável. Tire.
+aviso	→|⇒|=>|->	Seta no texto. Escreva a frase. No diagrama, a seta fica no desenho.
+aviso	!{2,}|\?!	Pontuação de ênfase. Uma frase com um fato novo dá mais peso.

@@ -1,0 +1,18 @@
+# Vícios de texto gerado por IA em português.
+# nivel<TAB>expressão regular (sem diferenciar maiúsculas)<TAB>orientação
+# Trechos entre aspas, código e links não são examinados.
+erro	\bn[ãa]o (?:é|são|era|foi|se trata)(?: de)? (?:apenas|só|somente|meramente|simplesmente)\b	Contraste vazio: a metade negativa nega o que ninguém disse. Diga o ponto direto. Se o contraste é real e planejado, declare 'recurso: contraste' na página.
+erro	\b(?:espero que (?:isso|isto) ajude|[óo]tima pergunta|fique [àa] vontade para|se precisar de mais alguma coisa|posso detalhar mais|gostaria que eu)\b	Resto de conversa com assistente. Tire: o material fala com a audiência.
+erro	\b(?:vamos mergulhar|vamos explorar|vamos destrinchar|sem mais delongas|aqui est[áa] o que voc[êe] precisa saber|a seguir,? vamos)\b	Anúncio do que vem. Comece pelo ponto.
+erro	\b(?:vale (?:ressaltar|destacar|lembrar|notar|mencionar|frisar|salientar)|[ée] importante (?:ressaltar|destacar|notar|frisar|mencionar|salientar)|cabe (?:ressaltar|destacar|salientar)|conv[ée]m (?:ressaltar|destacar))\b	Aviso de importância. Tire a expressão e deixe a afirmação.
+erro	\b(?:como (?:um )?modelo de linguagem|at[ée] (?:a )?minha [úu]ltima atualiza[çc][ãa]o|com base nas informa[çc][õo]es dispon[íi]veis)\b	Fala de assistente sobre o próprio conhecimento. Diga o que a fonte mostra ou corte.
+erro	\b(?:especialistas (?:afirmam|apontam|acreditam|dizem)|estudos (?:mostram|indicam|apontam|comprovam)|pesquisas (?:mostram|indicam|apontam)|segundo especialistas|[ée] sabido que|[ée] amplamente reconhecido)\b	Autoridade sem nome. Cite a fonte (E-nnn) ou corte a afirmação.
+aviso	\b(?:no cen[áa]rio atual|no mundo (?:atual|de hoje)|em um mundo cada vez mais|num mundo cada vez mais|na era (?:digital|da informa[çc][ãa]o|dos dados))\b	Abertura genérica. Comece pela situação desta audiência.
+aviso	\b(?:a verdadeira quest[ãa]o [ée]|o que realmente importa|em sua ess[êe]ncia|no cerne d[aeo]s?|no fundo, o que)\b	Frase que promete profundidade. Escreva a afirmação específica.
+aviso	\b(?:robust[oa]s?|alavanc\w+|potencializ\w+|impulsion\w+|foment\w+|sinergias?|hol[íi]stic[oa]s?|disruptiv[oa]s?|revolucion\w+|transformador(?:a|es|as)?|de classe mundial|incompar[áa]ve(?:l|is))\b	Palavra de vitrine. Diga o que a coisa faz, com número ou exemplo.
+aviso	\b(?:papel (?:fundamental|crucial|vital|central)|pe[çc]a[- ]chave|divisor de [áa]guas|marco (?:importante|hist[óo]rico)|verdadeiro testemunho|crucial|cruciais)\b	Importância inflada. Fique com o fato e mostre a consequência.
+aviso	\b(?:ademais|outrossim|em [úu]ltima an[áa]lise|em suma|no fim das contas|dito isso)\b	Conector de enchimento. Veja se a frase se sustenta sem ele.
+aviso	\b(?:serve como|destaca-se como|posiciona-se como|se posiciona como|se destaca como)\b	Use 'é' ou 'tem'.
+aviso	, (?:garantindo|destacando|refor[çc]ando|refletindo|evidenciando|ressaltando|demonstrando|consolidando)\b	Gerúndio pendurado no fim da frase. Diga a consequência em outra frase, se a fonte a sustenta.
+aviso	\b(?:pode potencialmente|poderia eventualmente|talvez possa|de certa forma|em certa medida)\b	Ressalva empilhada. Fique com uma, e só se a fonte pede.
+aviso	\b(?:mergulh\w+ (?:em|n[oa]s?)|desvend\w+|navegar (?:pel[oa]s?|n[oa]s?) (?:complexidades?|desafios?|cen[áa]rios?))\b	Metáfora de enchimento. Escreva o verbo simples.

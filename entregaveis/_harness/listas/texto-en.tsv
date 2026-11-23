@@ -1,0 +1,16 @@
+# Vícios de texto gerado por IA em inglês.
+# nivel<TAB>expressão regular (sem diferenciar maiúsculas)<TAB>orientação
+# Trechos entre aspas, código e links não são examinados.
+erro	\b(?:it'?s|it is|this is|that'?s|they'?re|is|are|was) not (?:just|only|merely|simply)\b|\bnot (?:just|only|merely) (?:about )?[\w ]{1,40}, but\b	Empty contrast: the negative half denies what nobody claimed. State the point. If the contrast is real and planned, declare 'recurso: contraste' on the page.
+erro	\b(?:i hope this helps|great question|let me know if|feel free to|would you like me to|want me to)\b	Chat residue. Remove it: the material speaks to the audience.
+erro	\b(?:let'?s dive in|let'?s explore|let'?s break (?:this|it) down|here'?s what you need to know|without further ado|here'?s the thing)\b	Announcement of what comes next. Start with the point.
+erro	\b(?:it'?s worth noting|it is worth noting|it'?s important to note|it is important to note|it should be noted)\b	Importance signal. Drop the phrase and keep the claim.
+erro	\b(?:as an ai|as a language model|as of my last (?:training )?update|based on (?:the )?available information)\b	Assistant talking about its own knowledge. Say what the source shows or cut.
+erro	\b(?:experts (?:argue|believe|say|agree)|studies show|research shows|industry reports (?:show|suggest)|observers have)\b	Unnamed authority. Cite the source (E-nnn) or cut the claim.
+aviso	\b(?:in today'?s (?:world|landscape|fast-paced|digital)|in an ever-(?:changing|evolving)|in the (?:digital|modern) (?:age|era))\b	Generic opening. Start from this audience's situation.
+aviso	\b(?:the real question is|at its core|what really matters|the heart of the matter)\b	Phrase that promises depth. Write the specific claim.
+aviso	\b(?:delve|tapestry|testament|pivotal|crucial|robust|seamless(?:ly)?|leverag\w+|synerg\w+|holistic|groundbreaking|game[- ]chang\w+|world[- ]class|cutting[- ]edge|best[- ]in[- ]class|vibrant|meticulous(?:ly)?|intricate|showcas\w+|underscor\w+|bolster\w*|garner\w*|foster\w*)\b	Showcase word. Say what the thing does, with a number or an example.
+aviso	\b(?:plays a (?:key|crucial|vital|pivotal) role|stands as|serves as|setting the stage for|evolving landscape|marks a (?:pivotal|significant))\b	Inflated significance. Keep the fact and show the consequence.
+aviso	\b(?:additionally|furthermore|moreover|ultimately|in conclusion|that said),	Filler connector. Check whether the sentence stands without it.
+aviso	, (?:highlighting|underscoring|emphasizing|ensuring|reflecting|showcasing|fostering|demonstrating)\b	Trailing -ing phrase. State the consequence in its own sentence if the source supports it.
+aviso	\b(?:could potentially|might arguably|may possibly|to some extent)\b	Stacked hedge. Keep one, and only if the source calls for it.

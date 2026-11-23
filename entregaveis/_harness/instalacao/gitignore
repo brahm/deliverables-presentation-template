@@ -1,0 +1,6 @@
+# harness-de-entregaveis: inicio
+entregaveis/_intake/materiais/*
+!entregaveis/_intake/materiais/.gitkeep
+entregaveis/_harness/.estado/
+__pycache__/
+# harness-de-entregaveis: fim

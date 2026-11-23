@@ -1,0 +1,17 @@
+# Vícios de texto gerado por IA em espanhol.
+# nivel<TAB>expressão regular (sem diferenciar maiúsculas)<TAB>orientação
+# Trechos entre aspas, código e links não são examinados.
+erro	\bno (?:es|son|era|fue|se trata)(?: de)? (?:solo|sólo|solamente|únicamente|simplemente|meramente)\b	Contraste vacío: la mitad negativa niega lo que nadie dijo. Diga el punto directamente. Si el contraste es real y planeado, declare 'recurso: contraste' en la página.
+erro	\b(?:espero que (?:esto|te|le) (?:ayude|sirva)|excelente pregunta|no dudes en|no dude en|si necesitas? algo m[áa]s)\b	Resto de conversación con asistente. Quítelo.
+erro	\b(?:vamos a sumergirnos|sin m[áa]s pre[áa]mbulos|esto es lo que necesitas saber|a continuaci[óo]n,? veremos|profundicemos en)\b	Anuncio de lo que viene. Empiece por el punto.
+erro	\b(?:cabe (?:destacar|se[ñn]alar|resaltar|mencionar)|es importante (?:destacar|se[ñn]alar|resaltar|mencionar|tener en cuenta)|vale la pena (?:destacar|se[ñn]alar|mencionar))\b	Aviso de importancia. Quite la expresión y deje la afirmación.
+erro	\b(?:como modelo de lenguaje|hasta mi [úu]ltima actualizaci[óo]n|seg[úu]n la informaci[óo]n disponible)\b	Habla de asistente sobre su propio conocimiento. Diga lo que muestra la fuente o corte.
+erro	\b(?:los expertos (?:afirman|se[ñn]alan|coinciden|creen)|(?:los )?estudios (?:muestran|indican|demuestran)|las investigaciones (?:muestran|indican)|seg[úu]n expertos|es bien sabido que)\b	Autoridad sin nombre. Cite la fuente (E-nnn) o corte la afirmación.
+aviso	\b(?:en el (?:panorama|escenario|contexto) actual|en el mundo (?:actual|de hoy)|en un mundo cada vez m[áa]s|en la era (?:digital|de los datos))\b	Apertura genérica. Empiece por la situación de esta audiencia.
+aviso	\b(?:la verdadera pregunta es|lo que realmente importa|en su esencia|en el fondo, lo que)\b	Frase que promete profundidad. Escriba la afirmación específica.
+aviso	\b(?:robust[oa]s?|apalanc\w+|potenciar|impulsar|foment\w+|sinergias?|hol[íi]stic[oa]s?|disruptiv[oa]s?|revolucion\w+|transformador(?:a|es|as)?|de clase mundial|de vanguardia|sin precedentes)\b	Palabra de vitrina. Diga qué hace la cosa, con número o ejemplo.
+aviso	\b(?:papel (?:fundamental|crucial|clave|vital)|pieza clave|punto de inflexi[óo]n|hito (?:importante|hist[óo]rico)|crucial(?:es)?)\b	Importancia inflada. Quédese con el hecho y muestre la consecuencia.
+aviso	\b(?:asimismo|en [úu]ltima instancia|en definitiva|dicho esto)\b	Conector de relleno. Vea si la frase se sostiene sin él.
+aviso	\b(?:sirve como|se posiciona como|se destaca como|funge como)\b	Use 'es' o 'tiene'.
+aviso	, (?:garantizando|destacando|reforzando|reflejando|evidenciando|resaltando|demostrando|consolidando)\b	Gerundio colgado al final. Diga la consecuencia en otra frase, si la fuente la sostiene.
+aviso	\b(?:podr[íi]a potencialmente|quiz[áa]s? pueda|de cierta forma|en cierta medida)\b	Reserva apilada. Deje una, y solo si la fuente la pide.

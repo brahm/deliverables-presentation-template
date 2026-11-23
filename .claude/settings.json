@@ -1,0 +1,68 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 entregaveis/_harness/scripts/estado.py)",
+      "Bash(python3 entregaveis/_harness/scripts/estado.py *)",
+      "Bash(python3 entregaveis/_harness/scripts/validar.py)",
+      "Bash(python3 entregaveis/_harness/scripts/validar.py *)",
+      "Bash(python3 entregaveis/_harness/scripts/preparar.py)",
+      "Bash(python3 entregaveis/_harness/scripts/preparar.py *)",
+      "Bash(python3 entregaveis/_harness/scripts/levantar.py)",
+      "Bash(python3 entregaveis/_harness/scripts/levantar.py *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-.}/entregaveis/_harness/hooks/sessao.py\" 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-.}/entregaveis/_harness/hooks/mensagem.py\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-.}/entregaveis/_harness/hooks/antes_de_gravar.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-.}/entregaveis/_harness/hooks/depois_de_gravar.py\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-.}/entregaveis/_harness/hooks/fim_do_turno.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
