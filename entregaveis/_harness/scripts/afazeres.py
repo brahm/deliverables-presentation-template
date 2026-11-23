@@ -301,6 +301,9 @@ def montar(hoje: datetime.date) -> dict:
             lista["proximas"].append((item.ident, linha(item)))
         if item.prazo == hoje:
             lista["agenda"].append((item.ident, f"Vence hoje: {item.ident} ({item.tipo}), {item.texto}"))
+    import emitir
+    if emitir.status_do_dia(hoje):
+        lista["agenda"].insert(0, ("status", emitir.status_do_dia(hoje)))
     lista["agenda"] = [(r["rito"], f"Reunião: {r['rito']}" + (f", com {r['participantes']}" if r.get("participantes", "") else "")) for r in rotina.ritos() if ocorre_hoje(r, hoje)] + lista["agenda"]
 
     lista["confirmar"] += [(chave, texto + ". Concluído, nova data ou não é mais necessário?") for chave, texto in resumo["vencido"]]
@@ -387,6 +390,8 @@ def cobrado(ident: str, resposta: str, nota: str, motivo: str, quem: str, hoje: 
     if resposta == "aprovou":
         rotina.mudar_linha(registro, ident, {"estado": "atendida" if item.tipo == "dependência" else "concluida", "movida_em": str(hoje)})
         print(f"{ident}: o cliente respondeu em {hoje}. O item está fechado.")
+        if item.tipo == "aprovação" and (alvo := next((l.get("entregavel", "") for l in comum.ler_tsv(registro) if l.get("id", "") == ident), "")):
+            print(f"Se a resposta foi o aceite de {alvo}, registre com governanca.py --aceite {alvo} --quem \"NOME\".")
     depois = itens_abertos()
     livres = [i for i in item.trava if i in depois and not depois[i].espera]
     if livres:

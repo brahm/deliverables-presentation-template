@@ -58,7 +58,7 @@ DIAS = ["segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-
 PADROES = {
     "parado_fracao": 0.33, "parado_minimo": 2, "proximo_fracao": 0.2, "proximo_minimo": 1, "proximo_maximo": 5,
     "ata_depois_da_reuniao": 1, "propostas_sem_resposta": 3, "entrada_sem_classificar": 1, "projeto_sem_evento": 3,
-    "cobrar_depois_de": 2, "dia_do_status": 5, "tolerancia_de_prazo": 5,
+    "cobrar_depois_de": 2, "dia_do_status": 5, "tolerancia_de_prazo": 5, "prazo_de_aprovacao": 5,
 }
 CICLOS = {"semanal": 7, "quinzenal": 14}
 

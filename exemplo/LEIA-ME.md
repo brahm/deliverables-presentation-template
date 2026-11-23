@@ -48,6 +48,7 @@ nunca citou uma skill: o agente aplicou cada uma no momento certo.
 | 6 de novembro | Confirmou o nível de governança que o agente sugeriu | Leu oito semanas, uma frente e nenhum comitê, sugeriu o nível enxuto e gravou os sete materiais, quem aprova, a linha de base, o risco do aviso e a premissa da migração | D-010, [governanca.tsv](entregaveis/_projeto/governanca.tsv), [papeis.tsv](entregaveis/_projeto/papeis.tsv), [linha-de-base.tsv](entregaveis/_projeto/linha-de-base.tsv), [riscos.tsv](entregaveis/_projeto/riscos.tsv), [premissas.tsv](entregaveis/_projeto/premissas.tsv) |
 | 12 de outubro a 6 de novembro | Não pediu nada | Levou o que o projeto aprendeu a seis notas, cada afirmação com o id do registro. A decisão de governança ficou só no registro, sem nota | [indice.md](entregaveis/_cerebro/indice.md), [registro.md](entregaveis/_cerebro/registro.md) |
 | 20 de novembro | Disse que cobrou os relatórios de uso da diretora de marketing | Registrou a cobrança, que passa a aparecer na lista do dia | [cobrancas.tsv](entregaveis/_projeto/cobrancas.tsv) |
+| 20 de novembro | Pediu o status da semana | Montou o rascunho a partir dos registros: semáforo amarelo pelo risco do aviso de não renovação, as pendências do cliente com a cobrança feita e o envio de 5 de novembro, que segue sem aceite | [status semanal](entregaveis/_projeto/emitidos/2026-11-20-status-semanal.md), [emitidos.tsv](entregaveis/_projeto/emitidos.tsv) |
 
 ## Se você tem cinco minutos
 

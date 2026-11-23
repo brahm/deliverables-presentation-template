@@ -71,6 +71,10 @@ As frases abaixo são exemplos. Use as suas palavras.
 | Contar um follow-up | "Cobrei a diretora financeira hoje. Ela responde até sexta." |
 | Confirmar uma aprovação | "A diretora de marketing aprovou o plano de migração." |
 | Escolher a governança | "Fique no nível enxuto e inclua a pauta da reunião semanal." |
+| Pedir o status | "Monte o status da semana." |
+| Pedir a pauta | "Prepare a pauta do comitê de quinta." |
+| Contar um envio | "Mandei a versão 2 do diagnóstico para a diretora de marketing." |
+| Contar um aceite | "A diretora de marketing aceitou o diagnóstico, com uma ressalva sobre o anexo." |
 | Trazer um pedido fora do combinado | "O cliente pediu o custo por loja, que não estava no escopo." |
 | Trazer algo feito à mão | "Montei esta planilha de custos no fim de semana. Está na pasta de entrada." |
 | Encerrar o dia | "Por hoje é isso." |
@@ -344,6 +348,38 @@ ela. Cada envio de um entregável ganha uma versão em
 `_projeto/versoes.tsv`, com o que mudou e quem recebeu. O aceite é
 registrado com o nome de quem aceitou, e esse nome vem do cliente.
 
+### Status, pauta e aceite a partir dos registros
+
+O agente monta os materiais de rotina com o `emitir.py`, sem digitar de
+novo o que já está nos registros. O resultado é um rascunho em
+`_projeto/emitidos/`. Você revisa e envia.
+
+| Material | O que traz |
+| --- | --- |
+| Status semanal | Semáforo com o motivo, feito no período, a fazer, marcos contra a linha de base, até três riscos ou issues, decisões pedidas, pendências do cliente com as cobranças e datas deslocadas |
+| Status executivo | Cinco perguntas: o projeto está no compromisso, o que foi entregue, o prognóstico, os riscos e o que precisa ser decidido |
+| Pauta | Decisões esperadas e cinco blocos com tempo, já preenchidos com os itens abertos |
+| Nota de entrega | A versão enviada, as pendências conhecidas e o que se espera do cliente, com a data |
+| Aceite | O pedido de aceite e, depois da resposta, a confirmação. No nível padrão, o termo formal |
+| Ciclo de aprovação | Quem aprova cada entregável, o prazo de resposta e como está cada envio |
+| Solicitação de mudança | O pedido, o impacto em prazo, esforço e escopo e a decisão |
+
+O semáforo segue uma regra. Fica vermelho com desvio da linha de base
+acima da tolerância ou com issue escalada. Fica amarelo com desvio
+dentro da tolerância, item vencido sem data nova ou risco de exposição
+alta. Você pode trocar a cor com uma justificativa, e o material mostra
+as duas. O que os registros não trazem, como a recomendação de uma
+decisão, sai marcado para você completar.
+
+Cada envio abre uma aprovação para quem aprova o entregável, com o
+prazo de resposta combinado. O silêncio não vale como aceite: sem
+resposta, o item entra na lista do dia, é cobrado pelo follow-up e
+aparece no status como pendência do cliente. Um pedido fora do
+combinado passa por três passos, pedido, impacto e decisão, e nenhum
+trabalho começa antes da decisão. A mudança aprovada leva a uma versão
+nova da linha de base, e a rejeitada fica guardada nos adiados. No dia
+do status, a agenda da lista do dia lembra o status semanal.
+
 ### Prazos pelo cronograma
 
 Os avisos acompanham o cronograma e têm três fases.
@@ -486,6 +522,8 @@ Rode na raiz do projeto.
 | `python3 entregaveis/_harness/scripts/rotina.py --lista` | A lista do dia, com os três itens que pedem atenção primeiro |
 | `python3 entregaveis/_harness/scripts/governanca.py` | O nível de governança e os materiais que o projeto emite |
 | `python3 entregaveis/_harness/scripts/governanca.py --desvios` | O desvio de cada data contra a linha de base |
+| `python3 entregaveis/_harness/scripts/emitir.py` | Os materiais que saem prontos dos registros e a última emissão de cada um |
+| `python3 entregaveis/_harness/scripts/emitir.py status-semanal` | O rascunho do status da semana |
 | `python3 entregaveis/_harness/scripts/cerebro.py --buscar TERMOS` | As notas e as linhas dos registros que falam dos termos |
 | `python3 entregaveis/_harness/scripts/cerebro.py --pendentes` | O que o projeto registrou e nenhuma nota guarda ainda |
 | `python3 entregaveis/_harness/scripts/ambiente.py` | O que a máquina tem e o que falta, com o comando de cada falta |

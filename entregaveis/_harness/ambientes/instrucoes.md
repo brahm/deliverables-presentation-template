@@ -63,7 +63,8 @@ precisa ser instalado aqui, e você não pede isso ao consultor.
    (`registrar-dispensa`), decisão (`registrar-decisao`), pedido adiado
    (`adiar-trabalho`), correção do consultor (`registrar-licao`),
    brief fechado ou material de governança pedido
-   (`definir-governanca`), algo que o projeto aprendeu ou precisa
+   (`definir-governanca`), status, pauta, aceite ou pedido fora do
+   combinado (`emitir-material`), algo que o projeto aprendeu ou precisa
    lembrar (`manter-cerebro`), relatório (`relatar-ao-consultor`).
 3. A história vem antes da página. A ordem é briefing, storyline,
    storyboard e só então páginas. Mostre a sequência de títulos e espere
@@ -99,6 +100,8 @@ precisa ser instalado aqui, e você não pede isso ao consultor.
 11. O nível de governança (enxuto, padrão ou completo) escolhe os
     materiais emitidos, e o catálogo está em `4-modelos`. Sugira o
     nível pelo porte, mostre a lista e registre a escolha do consultor.
+    Monte status, pauta e aceite a partir dos registros. O silêncio não
+    é aceite, e pedido fora do combinado espera a decisão.
 12. O segundo cérebro guarda o que o projeto aprendeu, em notas com a
     fonte de cada afirmação. Antes de escrever, procure nas notas de
     `5-projeto`. Quando o projeto aprender algo, escreva ou atualize a

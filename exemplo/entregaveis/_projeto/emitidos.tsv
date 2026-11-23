@@ -1,0 +1,4 @@
+# Os materiais de governança montados pelo emitir.py --gravar. Os rascunhos ficam em _projeto/emitidos/.
+# situacao: rascunho, ou enviado quando o consultor confirma o envio. Datas em AAAA-MM-DD.
+data	codigo	alvo	arquivo	situacao
+2026-11-20	status-semanal		entregaveis/_projeto/emitidos/2026-11-20-status-semanal.md	rascunho

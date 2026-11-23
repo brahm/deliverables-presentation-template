@@ -45,6 +45,7 @@ que você abre quando a tarefa pede.
    | Qualquer relatório ao consultor | `relatar-ao-consultor` |
    | O consultor leva o trabalho ao Claude desktop, ao ChatGPT ou ao Copilot, ou traz de lá o que foi feito | `usar-outro-ambiente` |
    | O brief foi fechado, o projeto foi adotado, o porte mudou ou o consultor pede, tira ou muda um material de governança | `definir-governanca` |
+   | Chega o dia do status, o consultor pede um status, uma pauta ou um aceite, um entregável é enviado ou aceito, ou surge um pedido fora do combinado | `emitir-material` |
    | Um registro, uma ata, um material ou um entregável mudou, ou é preciso saber o que o projeto já sabe | `manter-cerebro` |
    | O harness tem uma versão nova | `atualizar-harness` |
 
@@ -163,9 +164,12 @@ que você abre quando a tarefa pede.
     existem em qualquer nível. Premissas, issues, dependências,
     mudanças, papéis, linha de base e versões são mantidos por você a
     cada evento. O nível é do consultor: sugira pelo porte, mostre a
-    lista de materiais e grave a escolha. Pedido fora do combinado
-    passa por `entregaveis/_projeto/mudancas.tsv`. O aceite vem do
-    cliente.
+    lista de materiais e grave a escolha. Os materiais são montados dos
+    registros com `python3 entregaveis/_harness/scripts/emitir.py`, e o
+    consultor revisa e envia. Pedido fora do combinado passa por
+    `entregaveis/_projeto/mudancas.tsv`, com o impacto e a decisão,
+    antes de qualquer trabalho. O aceite vem do cliente, e o silêncio
+    não vale como aceite.
 
 22. O que o projeto aprende vai para o segundo cérebro, em
     `entregaveis/_cerebro/`. Cada ação que grava um registro, uma ata,

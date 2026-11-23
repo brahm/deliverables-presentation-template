@@ -3,6 +3,41 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.11.0
+
+- Materiais montados dos registros. `scripts/emitir.py` monta o status
+  semanal, o status executivo, a pauta, a nota de entrega, o pedido e a
+  confirmação de aceite, o quadro de aprovações e a solicitação de
+  mudança. O rascunho fica em `_projeto/emitidos/`, a emissão em
+  `_projeto/emitidos.tsv`, e o consultor revisa e envia. O que os
+  registros não trazem sai marcado para completar.
+- Semáforo por regra. Vermelho com desvio da linha de base acima da
+  tolerância ou issue escalada. Amarelo com desvio dentro da
+  tolerância, item vencido sem data nova ou risco de exposição alta. O
+  consultor troca a cor com `--cor` e `--motivo`, e o material mostra a
+  cor dele e a da regra.
+- Ciclo de aprovação. `governanca.py --versao` com `--enviada-a` abre
+  uma aprovação do cliente em `acoes.tsv`, para o aprovador de
+  `papeis.tsv`, com o prazo de resposta combinado ou o sinal novo
+  `prazo_de_aprovacao` de `cadencias.tsv`. `--aceite` fecha a
+  aprovação. O silêncio não vale como aceite: o item é cobrado pelo
+  follow-up e entra no status como pendência do cliente.
+- Ciclo de mudança. `governanca.py --mudanca` abre o pedido,
+  `--analisar` grava o impacto em prazo, esforço e escopo e `--decidir`
+  grava a decisão. A aprovação pede os três impactos. A linha de base
+  que cita uma mudança só é gravada com a mudança aprovada. A mudança
+  rejeitada vai para `adiados.tsv`.
+- No dia do status, a agenda da lista do dia lembra o status semanal
+  enquanto ele não foi montado.
+- Skill nova `emitir-material`. A regra 21 passa a dizer que os
+  materiais saem dos registros e que o silêncio não vale como aceite.
+
+O que o projeto precisa fazer: atualize com `--atualizar`. Ele cria
+`_projeto/emitidos.tsv` e acrescenta o sinal `prazo_de_aprovacao`. Os
+envios já registrados e sem aceite aparecem no status como pendência do
+cliente. Para ligar o relógio de um deles, registre o próximo envio com
+`--versao` e `--enviada-a`.
+
 ## 0.10.0
 
 - Segundo cérebro do projeto. O que o projeto aprende fica em notas de

@@ -1899,6 +1899,8 @@ def testar_governanca(tmp: Path) -> None:
     rotina("--remarcar", "diag", dia_util(a, 28), "--motivo", "Depende do marco", "--hoje", a)
     confere("dois desvios acima da tolerância viram a pergunta de subir o nível", "[nivel]" in lista(quinta) and "passou da tolerância de prazo em 2 itens" in lista(quinta), lista(quinta))
     confere("versão nova da linha de base pede o motivo", gov("--linha-de-base", "--hoje", a).returncode == 2 and "\n2\t" not in arquivo_base.read_text(encoding="utf-8"))
+    confere("linha de base que cita mudança sem aprovação é recusada", gov("--linha-de-base", "--motivo", "MU-001", "--hoje", a).returncode == 1 and "\n2\t" not in arquivo_base.read_text(encoding="utf-8"))
+    acrescentar(reg / "mudancas.tsv", "MU-001", "Mais uma semana para o diagnóstico", "Diretora de marketing", a, "6 dias úteis", "nenhum", "nenhum", "aprovada", "Diretora de marketing", a, "consultor", "")
     segunda = gov("--linha-de-base", "--motivo", "MU-001", "--aprovada-por", "Diretora de marketing", "--hoje", a)
     confere("versão nova guarda a anterior e zera os desvios", segunda.returncode == 0 and arquivo_base.read_text(encoding="utf-8").count("\n1\t") == 3 and arquivo_base.read_text(encoding="utf-8").count("\n2\t") == 3 and "Nenhum desvio" in gov("--desvios", "--hoje", a).stdout)
 
@@ -1951,6 +1953,278 @@ def testar_governanca(tmp: Path) -> None:
     instalar(antigo, "--atualizar")
     confere("atualizar de novo não duplica coluna nem sinal", (ant / "acoes.tsv").read_text(encoding="utf-8").count("depende_de") == 1 and (ant / "cadencias.tsv").read_text(encoding="utf-8").count("cobrar_depois_de") == 1)
     confere("a lista do dia lê o registro de versão anterior", "T-001 (ação): Item antigo" in rodar([PY, "entregaveis/_harness/scripts/rotina.py", "--lista"], antigo).stdout)
+
+
+# --- Materiais emitidos, ciclo de aprovação e ciclo de mudança ---------------
+
+
+def testar_emissao(tmp: Path) -> None:
+    print("Materiais emitidos, aprovação e mudança")
+    projeto = tmp / "emissao"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    reg = base / "_projeto"
+    montar_exemplo(projeto)
+    d0 = datetime.date(2026, 3, 2)  # uma segunda-feira
+
+    def d(n: int) -> datetime.date:
+        return dia_util(d0, n)
+
+    def gov(*args, hoje=d0) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/governanca.py", *args, "--hoje", hoje], projeto)
+
+    def rotina(*args, hoje=d0) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/rotina.py", *args, "--hoje", hoje], projeto)
+
+    def em(*args, hoje=d0) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/emitir.py", *args, "--hoje", hoje], projeto)
+
+    def status(*args, hoje=d0) -> str:
+        return em("status-semanal", *args, hoje=hoje).stdout
+
+    def secao(texto: str, titulo: str) -> str:
+        """O corpo de uma seção do material, até o próximo título."""
+        partes = re.split(r"^## ", texto, flags=re.MULTILINE)
+        return next((parte for parte in partes if parte.startswith(titulo)), "")
+
+    def acrescentar(arquivo: Path, *campos) -> None:
+        with arquivo.open("a", encoding="utf-8") as f:
+            f.write("\t".join(str(c) for c in campos) + "\n")
+
+    def linha_de(arquivo: Path, ident: str) -> str:
+        return next((l for l in arquivo.read_text(encoding="utf-8").splitlines() if l.startswith(ident + "\t")), "")
+
+    def trocar(arquivo: Path, antes: str, depois: str) -> None:
+        texto = arquivo.read_text(encoding="utf-8")
+        assert antes in texto, antes
+        arquivo.write_text(texto.replace(antes, depois, 1), encoding="utf-8")
+
+    def acao(ident, tipo, item, dono, lado, inicio, prazo, estado_="aberta", base_="nao", entregavel="", movida=None) -> None:
+        acrescentar(reg / "acoes.tsv", ident, tipo, item, dono, lado, d(inicio), d(prazo), base_, estado_, "consultor", d(inicio if movida is None else movida), "", "", entregavel)
+
+    def cor(*args, hoje=d0) -> str:
+        return (re.search(r"\*\*Semáforo: (\w+)\.\*\*", status(*args, hoje=hoje)) or [None, "?"])[1]
+
+    gov("--nivel", "enxuto")
+    confere("a instalação cria o registro dos materiais emitidos", (reg / "emitidos.tsv").is_file() and "prazo_de_aprovacao\t5" in (reg / "cadencias.tsv").read_text(encoding="utf-8"))
+    lista_de_materiais = em().stdout
+    confere("emitir.py sem argumento lista o que monta e o que está na lista do projeto", "status-semanal: Status semanal de uma página. Na lista do projeto" in lista_de_materiais and "pauta: Pauta e pré-leitura. Fora da lista do projeto" in lista_de_materiais, lista_de_materiais)
+
+    # O status de um projeto sem nada aberto.
+    vazio = em("status-semanal")
+    confere("status sem nada aberto: verde, com o aviso de que falta a linha de base", vazio.returncode == 0 and cor() == "verde" and "ainda não tem linha de base, e por isso o desvio de prazo não foi medido" in vazio.stdout and "Diagnóstico de martech, Varejista Exemplo" in vazio.stdout, vazio.stdout + vazio.stderr)
+    confere("status: seção sem dado diz que não há, e seção opcional não sai", "Nenhuma decisão pendente." in secao(vazio.stdout, "Decisões pedidas") and "## Datas deslocadas" not in vazio.stdout and "## Esforço" not in vazio.stdout)
+    confere("status: o rascunho diz quem envia e não é gravado sem --gravar", "Quem revisa e envia é o consultor" in vazio.stdout and not (reg / "emitidos").exists())
+
+    # O semáforo, com os dois lados de cada regra.
+    acrescentar(reg / "riscos.tsv", "RS-001", "A base de clientes atrasa", "", "", "Consultora", "proposto", "A-001", d0, "alta", "alta", "", "")
+    confere("semáforo: risco ainda proposto não muda a cor", cor() == "verde")
+    trocar(reg / "riscos.tsv", "\tproposto\t", "\taberto\t")
+    confere("semáforo: risco de exposição alta deixa amarelo, com o motivo", cor() == "amarelo" and "RS-001: risco de exposição alta" in status(), status())
+    trocar(reg / "riscos.tsv", "alta\talta", "media\tmedia")
+    confere("semáforo: risco de exposição média não muda a cor", cor() == "verde")
+    acao("T-001", "tarefa", "Mapear os contratos", "Consultora", "consultoria", -5, -1)
+    confere("semáforo: item vencido sem data nova deixa amarelo", cor() == "amarelo" and f"T-001 (ação): venceu em {d(-1)}" in status(), status())
+    confere("semáforo: o mesmo item, na véspera do prazo, não muda a cor", cor(hoje=d(-2)) == "verde")
+    rotina("--concluir", "T-001")
+    confere("semáforo: item concluído volta ao verde", cor() == "verde", status())
+    acrescentar(reg / "issues.tsv", "IS-001", "O acesso ao painel caiu", "Para a coleta", "TI do cliente", "Reabrir o acesso", d(3), "nao", "aberta", "consultor", "", "")
+    confere("semáforo: issue aberta sem escalada não deixa vermelho", cor() == "verde")
+    trocar(reg / "issues.tsv", "\tnao\taberta", "\tsim\taberta")
+    confere("semáforo: issue escalada deixa vermelho", cor() == "vermelho" and "IS-001: issue escalada" in status(), status())
+    trocar(reg / "issues.tsv", "\tsim\taberta", "\tsim\tresolvida")
+    confere("semáforo: issue resolvida não conta", cor() == "verde")
+    trocar(base / "diag/briefing.md", "prazo:", f"prazo: {d(20)}")
+    acao("T-002", "marco", "Apresentação à diretoria", "Consultora", "consultoria", 0, 30)
+    gov("--linha-de-base", "--aprovada-por", "Diretora de marketing")
+    confere("semáforo: com linha de base e sem desvio, verde sem ressalva", cor() == "verde" and "ainda não tem linha de base" not in status() and "Nenhum desvio contra a linha de base" in status(), status())
+    rotina("--remarcar", "T-002", d(35), "--motivo", "O cliente pediu uma semana")
+    dentro = status()
+    confere("semáforo: desvio dentro da tolerância deixa amarelo", cor() == "amarelo" and "T-002: linha de base" in dentro and "5 dia(s) útil(eis) depois" in dentro, dentro)
+    confere("status: a data mudada entra em datas deslocadas e na tabela de marcos", "T-002: original" in secao(dentro, "Datas deslocadas") and f"| T-002: Apresentação à diretoria | {d(30)} | {d(35)} | no prazo, 5 dia(s) útil(eis) depois |" in secao(dentro, "Marcos"), dentro)
+    rotina("--remarcar", "T-002", d(36), "--motivo", "Mais um dia")
+    confere("semáforo: desvio acima da tolerância deixa vermelho", cor() == "vermelho" and "ACIMA DA TOLERÂNCIA" in status(), status())
+
+    # A cor do consultor.
+    confere("a cor trocada pede a justificativa", em("status-semanal", "--cor", "amarelo").returncode == 2)
+    trocado = status("--cor", "amarelo", "--motivo", "O comitê já aprovou a data nova")
+    confere("a cor do consultor aparece com o motivo e com a cor da regra", "**Semáforo: amarelo.** Definido pelo consultor: O comitê já aprovou a data nova" in trocado and "Pela regra, a cor seria vermelho" in trocado and "ACIMA DA TOLERÂNCIA" in trocado, trocado)
+    confere("a cor igual à da regra não vira cor do consultor", "Definido pelo consultor" not in status("--cor", "vermelho", "--motivo", "Confirmo"))
+
+    # Feito, a fazer e o período entre uma emissão e a seguinte.
+    feito = secao(status(), "Feito no período")
+    confere("status: a ação concluída no período entra em feito", "T-001: Mapear os contratos, concluído em " + str(d0) in feito, feito)
+    confere("status: sem emissão anterior, o período é de sete dias", f"Período de {d0 - datetime.timedelta(days=6)} a {d0}" in status() and "T-001" not in secao(status(hoje=d(6)), "Feito no período"))
+    acao("T-003", "tarefa", "Entrevistar os donos das plataformas", "Consultora", "consultoria", 0, 4)
+    acao("T-004", "tarefa", "Montar o anexo de custos", "Consultora", "consultoria", 0, 18)
+    acao("T-005", "tarefa", "Enviar os relatórios de uso", "Gerente de marketing", "cliente", 0, 3)
+    afazer = secao(status(), "A fazer na próxima semana")
+    confere("status: a fazer traz o que vence em sete dias e o entregável aberto", "T-003 (ação)" in afazer and "diag (entregável)" in afazer and "T-004" not in afazer and "T-005" not in afazer, afazer)
+    rotina("--cobrado", "T-005", hoje=d(1))
+    pend = secao(status(hoje=d(4)), "Pendências do cliente")
+    confere("status: a pendência do cliente traz o dono, o atraso e as cobranças", "T-005 (ação): Enviar os relatórios de uso. Com: Gerente de marketing" in pend and "vencido há 1 dia(s) útil(eis)" in pend and f"Cobranças: 1, a última em {d(1)}" in pend and "T-003" not in pend, pend)
+    gravado = em("status-semanal", "--gravar", hoje=d(4))
+    arquivo = reg / "emitidos" / f"{d(4)}-status-semanal.md"
+    confere("--gravar grava o rascunho e registra a emissão", gravado.returncode == 0 and arquivo.is_file() and arquivo.read_text(encoding="utf-8") == gravado.stdout and f"{d(4)}\tstatus-semanal\t\tentregaveis/_projeto/emitidos/{d(4)}-status-semanal.md\trascunho" in (reg / "emitidos.tsv").read_text(encoding="utf-8"), gravado.stdout + gravado.stderr)
+    confere("--gravar: o rodapé fica fora do rascunho e manda humanizar", "Rascunho gravado em" in gravado.stderr and "humanizar-texto" in gravado.stderr and "Rascunho gravado em" not in gravado.stdout)
+    em("status-semanal", "--gravar", hoje=d(4))
+    confere("gravar de novo no mesmo dia não duplica a emissão", (reg / "emitidos.tsv").read_text(encoding="utf-8").count("\tstatus-semanal\t") == 1)
+    rotina("--concluir", "T-003", hoje=d(6))
+    seguinte = status(hoje=d(8))
+    confere("o status seguinte conta o período a partir da última emissão", f"Período de {d(4) + datetime.timedelta(days=1)} a {d(8)}" in seguinte and "T-003: Entrevistar" in secao(seguinte, "Feito no período") and "T-001" not in secao(seguinte, "Feito no período"), seguinte)
+    confere("a emissão do próprio dia não encurta o período", f"Período de {d0 - datetime.timedelta(days=2)} a {d(4)}" in status(hoje=d(4)), status(hoje=d(4)))
+
+    # Riscos, decisões, esforço.
+    trocar(reg / "riscos.tsv", "media\tmedia", "alta\talta")
+    acrescentar(reg / "riscos.tsv", "RS-002", "A diretora sai de férias", "", "", "Consultora", "aberto", "consultor", d0, "alta", "media", "", "Antecipar a aprovação")
+    acrescentar(reg / "riscos.tsv", "RS-003", "O contrato muda de dono", "", "", "Consultora", "aberto", "consultor", d0, "media", "media", "", "")
+    acrescentar(reg / "riscos.tsv", "RS-004", "O fornecedor demora", "", "", "Consultora", "aberto", "consultor", d0, "baixa", "baixa", "", "")
+    riscos = secao(status(), "Riscos e issues")
+    confere("status: só os três riscos de maior exposição, do maior para o menor", riscos.index("RS-001") < riscos.index("RS-002") < riscos.index("RS-003") and "RS-004" not in riscos and "Resposta: Antecipar a aprovação" in riscos, riscos)
+    confere("status: risco sem resposta sai marcado para completar", "RS-003 (risco, media/media): O contrato muda de dono. Resposta: PREENCHER" in riscos and "ponto(s) marcado(s) com PREENCHER" in em("status-semanal").stderr)
+    acao("T-006", "decisao", "Escolher entre renovar ou trocar a plataforma de e-mail", "Diretora de marketing", "cliente", 0, 8)
+    acao("T-007", "decisao", "Decisão ainda em proposta", "Diretora de marketing", "cliente", 0, 8, estado_="proposta")
+    pedidas = secao(status(), "Decisões pedidas")
+    confere("status: a decisão pedida aparece com quem decide e até quando", f"T-006: Escolher entre renovar ou trocar a plataforma de e-mail. Quem decide: Diretora de marketing. Até: {d(8)}" in pedidas and "T-007" not in pedidas, pedidas)
+    acrescentar(reg / "esforco.tsv", d0, "Consultora", "", "diag", "12,5", "")
+    confere("status: o esforço só aparece quando há lançamento", "Esforço lançado: 12.5 hora(s)" in secao(status(), "Esforço"), status())
+
+    # O status executivo e a pauta.
+    acrescentar(reg / "reunioes.tsv", "A-001", d0, "Reunião de acompanhamento", "", "Consultora", "anotação", "", "", "realizada", "2 ações", d0)
+    confere("status: a reunião realizada no período entra em feito", f"Reunião de {d0}: Reunião de acompanhamento, 2 ações" in secao(status(), "Feito no período"), status())
+    executivo = em("status-executivo")
+    confere("status executivo: responde às cinco perguntas", all(f"## {n}. " in executivo.stdout for n in range(1, 6)) and "**Semáforo: vermelho.**" in executivo.stdout and "| T-002: Apresentação à diretoria" in executivo.stdout, executivo.stdout)
+    confere("status executivo: opções, recomendação e prognóstico ficam para o consultor", "T-006: Escolher entre renovar" in secao(executivo.stdout, "5. O que precisa ser decidido") and "Opções e recomendação: PREENCHER" in executivo.stdout and "Leitura do consultor sobre a data final e o que a sustenta: PREENCHER" in executivo.stdout)
+    confere("material fora da lista do nível sai com o aviso de como incluir", "governanca.py --incluir status-executivo" in executivo.stderr and "--incluir" not in em("status-semanal").stderr)
+    confere("status executivo: reunião não é entrega", "Reunião de" not in secao(executivo.stdout, "2. O que foi entregue") and "T-001: Mapear os contratos" in secao(executivo.stdout, "2. O que foi entregue"))
+    acrescentar(reg / "ritos.tsv", "Comitê quinzenal", "quinzenal", d0, "", "Consultora, diretora de marketing", "")
+    sem_reuniao = em("pauta")
+    confere("pauta sem reunião é recusada e lista as reuniões que se repetem", sem_reuniao.returncode == 2 and "Comitê quinzenal" in sem_reuniao.stdout)
+    pauta = em("pauta", "--reuniao", "comite quinzenal", "--data", d(2))
+    confere("pauta: participantes do rito, data e decisões esperadas", pauta.returncode == 0 and "# Pauta: Comitê quinzenal" in pauta.stdout and f"Reunião de {d(2)}" in pauta.stdout and "Participantes: Consultora, diretora de marketing." in pauta.stdout and "T-006" in secao(pauta.stdout, "Decisões esperadas"), pauta.stdout)
+    confere("pauta: cinco blocos com tempo, preenchidos com os itens abertos", all(f"({m} min)" in pauta.stdout for m in (5, 10, 15)) and len(re.findall(r"^## .*\(\d+ min\)$", pauta.stdout, flags=re.MULTILINE)) == 5 and "RS-001" in secao(pauta.stdout, "Riscos, issues e dependências") and "T-004: Montar o anexo" in secao(pauta.stdout, "Ações e responsáveis"), pauta.stdout)
+    confere("pauta: o objetivo fica para o consultor e o último status é material de leitura", "Objetivo: PREENCHER" in pauta.stdout and f"Último status: entregaveis/_projeto/emitidos/{d(4)}-status-semanal.md" in secao(pauta.stdout, "Material de leitura"), pauta.stdout)
+    livre = em("pauta", "--reuniao", "Conversa com a diretora financeira")
+    confere("pauta de reunião fora dos ritos marca os participantes para completar", "# Pauta: Conversa com a diretora financeira" in livre.stdout and "Participantes: PREENCHER." in livre.stdout)
+    gov("--incluir", "pauta")
+    confere("material incluído na lista sai sem o aviso", "--incluir" not in em("pauta", "--reuniao", "Comitê quinzenal").stderr)
+    gravada = em("pauta", "--reuniao", "Comitê quinzenal", "--gravar")
+    confere("pauta gravada leva a reunião no nome do arquivo", (reg / "emitidos" / f"{d0}-pauta-comite-quinzenal.md").is_file() and "\tpauta\tComitê quinzenal\t" in (reg / "emitidos.tsv").read_text(encoding="utf-8"), gravada.stderr)
+
+    # O ciclo de aprovação: o envio abre, o silêncio não aceita e o aceite fecha.
+    confere("nota de entrega e aceite pedem o entregável", em("nota-de-entrega").returncode == 2 and em("aceite").returncode == 2)
+    sem_versao = em("aceite", "diag")
+    confere("aceite de entregável sem versão diz como registrar o envio", sem_versao.returncode != 0 and "--versao diag" in sem_versao.stderr, sem_versao.stdout + sem_versao.stderr)
+    acrescentar(reg / "versoes.tsv", "diag", "v1", d0, "abc", "Primeira versão", "Diretora de marketing", "")
+    antiga = secao(status(), "Pendências do cliente")
+    confere("status: envio antigo sem aceite e sem aprovação aberta entra nas pendências", f"diag v1: enviada a Diretora de marketing em {d0}, sem aceite registrado. Resposta esperada até {d(5)}" in antiga, antiga)
+    (reg / "versoes.tsv").write_text("\n".join((reg / "versoes.tsv").read_text(encoding="utf-8").splitlines()[:-1]) + "\n", encoding="utf-8")
+    interna = gov("--versao", "diag", "--mudou", "Rascunho interno")
+    confere("versão sem envio não abre aprovação", interna.returncode == 0 and "Aprovação" not in interna.stdout and "\taprovacao\tAprovar diag" not in (reg / "acoes.tsv").read_text(encoding="utf-8"))
+    envio = gov("--versao", "diag", "--mudou", "Versão para a diretoria", "--enviada-a", "Gerente de marketing")
+    primeira = linha_de(reg / "acoes.tsv", "T-008")
+    confere("o envio abre a aprovação do cliente, com o prazo padrão quando nada foi combinado", envio.returncode == 0 and f"T-008\taprovacao\tAprovar diag v2\tGerente de marketing\tcliente\t{d0}\t{d(5)}\tnao\taberta\tenvio" in primeira and primeira.endswith("\tdiag") and "silêncio não vale como aceite" in envio.stdout, envio.stdout + primeira)
+    acrescentar(reg / "papeis.tsv", "diag", "Consultora", "Diretora de marketing", "", "", "3", "")
+    reenvio = gov("--versao", "diag", "--mudou", "Ajustes pedidos", "--enviada-a", "Gerente de marketing", hoje=d(1))
+    segunda = linha_de(reg / "acoes.tsv", "T-009")
+    confere("o envio seguinte troca a aprovação e usa o aprovador e o prazo combinados", "\tcancelada\t" in linha_de(reg / "acoes.tsv", "T-008") and f"T-009\taprovacao\tAprovar diag v3\tDiretora de marketing\tcliente\t{d(1)}\t{d(4)}\t" in segunda and "\taberta\t" in segunda, reenvio.stdout + segunda)
+    trocar(reg / "cadencias.tsv", "prazo_de_aprovacao\t5", "prazo_de_aprovacao\t2")
+    trocar(reg / "papeis.tsv", "\t3\t", "\t\t")
+    confere("o prazo padrão de resposta é do projeto", f"Resposta até {d(3)}, 2 dia(s) útil(eis) depois do envio" in em("nota-de-entrega", "diag", hoje=d(1)).stdout)
+    trocar(reg / "papeis.tsv", "Diretora de marketing\t\t\t\t", "Diretora de marketing\t\t\t3\t")
+    nota = em("nota-de-entrega", "diag", hoje=d(1))
+    confere("nota de entrega: versão, o que mudou, aprovador e data de resposta", "diag, versão v3" in nota.stdout and "O que mudou nesta versão: Ajustes pedidos" in nota.stdout and "Quem aprova: Diretora de marketing." in nota.stdout and f"Resposta até {d(4)}, 3 dia(s) útil(eis) depois do envio" in nota.stdout and "silêncio não vale como aceite" in nota.stdout, nota.stdout)
+    aguardando = rotina("--lista", hoje=d(2)).stdout
+    confere("a aprovação aberta entra em aguardando o cliente na lista do dia", "T-009 (aprovação): Aprovar diag v3" in aguardando[aguardando.find("Aguardando o cliente"):], aguardando)
+    no_prazo = em("ciclo-de-aprovacao", hoje=d(3)).stdout
+    confere("ciclo de aprovação: dentro do prazo, aguardando", f"| diag | Diretora de marketing | 3 dia(s) útil(eis) | v3, {d(1)} | aguardando a resposta até {d(4)}. Cobranças: 0 (T-009) |" in no_prazo, no_prazo)
+    rotina("--cobrado", "T-009", hoje=d(5))
+    vencido = em("ciclo-de-aprovacao", hoje=d(6)).stdout
+    confere("ciclo de aprovação: depois do prazo, o silêncio não vale como aceite e a cobrança é contada", f"sem resposta, vencido em {d(4)}, há 2 dia(s) útil(eis). O silêncio não vale como aceite. Cobranças: 1 (T-009)" in vencido, vencido)
+    confere("a aprovação vencida entra no status como pendência do cliente", "T-009 (aprovação): Aprovar diag v3. Com: Diretora de marketing" in secao(status(hoje=d(6)), "Pendências do cliente") and "diag v3: enviada" not in status(hoje=d(6)))
+    pedido = em("aceite", "diag", hoje=d(2))
+    confere("antes do aceite, o material é o pedido, com a data de resposta", "# Pedido de aceite: Diagnóstico de martech" in pedido.stdout and f"Pedimos a confirmação até {d(4)}" in pedido.stdout and "O aceite ainda não foi registrado" in pedido.stdout and "Aceite registrado" not in pedido.stdout, pedido.stdout)
+    gov("--incluir", "termo-de-aceite")
+    termo = em("termo-de-aceite", "diag", hoje=d(2))
+    confere("com o termo de aceite na lista, o pedido vira termo formal", "# Termo de aceite: Diagnóstico de martech" in termo.stdout and "( ) Aceito com ressalvas" in termo.stdout and "Nome: Diretora de marketing" in termo.stdout and "Pedimos a confirmação" not in termo.stdout, termo.stdout)
+    gov("--tirar", "termo-de-aceite", "--motivo", "Uma mensagem basta")
+    aceite = gov("--aceite", "diag", "--quem", "Diretora de marketing", "--ressalvas", "Falta o anexo de custos", hoje=d(6))
+    confere("o aceite fecha a aprovação aberta", aceite.returncode == 0 and "A aprovação T-009 foi fechada" in aceite.stdout and "\tconcluida\t" in linha_de(reg / "acoes.tsv", "T-009") and f"Aceite de Diretora de marketing em {d(6)}" in linha_de(reg / "acoes.tsv", "T-009"), aceite.stdout)
+    confirmacao = em("aceite", "diag", hoje=d(6))
+    confere("depois do aceite, o material é a confirmação, com quem aceitou e as ressalvas", "# Confirmação de aceite: Diagnóstico de martech" in confirmacao.stdout and f"Aceite registrado: Diretora de marketing, {d(6)}; ressalvas: Falta o anexo de custos." in confirmacao.stdout and "Pedimos a confirmação" not in confirmacao.stdout, confirmacao.stdout)
+    confere("sem marco de pagamento ligado, a confirmação não fala de faturamento", "Aviso de faturamento" not in confirmacao.stdout)
+    acao("T-010", "marco", "Pagamento da segunda parcela", "Financeiro", "cliente", 0, 12, entregavel="outro")
+    confere("marco de pagamento de outro entregável não entra", "Aviso de faturamento" not in em("aceite", "diag", hoje=d(6)).stdout)
+    acao("T-011", "marco", "Pagamento da primeira parcela", "Financeiro", "cliente", 0, 12, entregavel="diag")
+    faturar = em("aceite", "diag", hoje=d(6)).stdout
+    confere("com marco de pagamento ligado, a confirmação leva o aviso de faturamento", "O aceite cumpre a condição do marco T-011: Pagamento da primeira parcela." in secao(faturar, "Aviso de faturamento"), faturar)
+    confere("ciclo de aprovação: o envio aceito aparece como aceito", "| aceito: Diretora de marketing" in em("ciclo-de-aprovacao", hoje=d(7)).stdout)
+    gov("--versao", "diag", "--mudou", "Com o anexo", "--enviada-a", "Diretora de marketing", hoje=d(7))
+    acao("T-013", "tarefa", "Enviar o logotipo para a capa", "Gerente de marketing", "cliente", 0, 12, entregavel="diag")
+    respondeu = rotina("--cobrado", "T-012", "--resposta", "aprovou", hoje=d(8))
+    confere("a resposta do cliente a uma aprovação lembra o registro do aceite", "governanca.py --aceite diag" in respondeu.stdout and "--aceite" not in rotina("--cobrado", "T-013", "--resposta", "aprovou", hoje=d(8)).stdout, respondeu.stdout)
+
+    # O ciclo de mudança: pedido, impacto e decisão.
+    mud = reg / "mudancas.tsv"
+    confere("mudança sem solicitante é recusada", gov("--mudanca", "Incluir o custo por loja").returncode == 2 and not linha_de(mud, "MU-001"))
+    aberta = gov("--mudanca", "Incluir o custo por loja", "--solicitante", "Diretora financeira", "--origem", "A-002")
+    confere("a mudança nasce como proposta, com quem pediu, a data e a origem", aberta.returncode == 0 and f"MU-001\tIncluir o custo por loja\tDiretora financeira\t{d0}\t\t\t\tproposta\t\t\tA-002" in linha_de(mud, "MU-001") and "Nenhum trabalho deste pedido começa antes da decisão" in aberta.stdout, aberta.stdout + linha_de(mud, "MU-001"))
+    proposta = em("mudanca", "MU-001")
+    confere("solicitação de mudança ainda sem análise diz o que falta", "# Solicitação de mudança MU-001" in proposta.stdout and "Prazo: Ainda não analisado" in proposta.stdout and "( ) Aprovada" in proposta.stdout, proposta.stdout)
+    confere("solicitação de mudança que não existe é recusada", em("mudanca", "MU-099").returncode != 0 and "Não achei a mudança 'MU-099'" in em("mudanca", "MU-099").stderr and em("mudanca").returncode == 2)
+    confere("mudança proposta não entra nas decisões pedidas", "MU-001" not in status())
+    confere("aprovar sem impacto medido é recusado", gov("--decidir", "MU-001", "--decisao", "aprovada", "--quem", "Diretora de marketing").returncode == 1 and "\tproposta\t" in linha_de(mud, "MU-001"))
+    confere("analisar pede ao menos um impacto", gov("--analisar", "MU-001").returncode == 2 and "\tproposta\t" in linha_de(mud, "MU-001"))
+    parcial = gov("--analisar", "MU-001", "--impacto-prazo", "5 dias úteis no diagnóstico")
+    confere("análise parcial fica em análise e diz o que falta", "\tem analise\t" in linha_de(mud, "MU-001") and "Falta medir o impacto em esforço, escopo" in parcial.stdout and gov("--decidir", "MU-001", "--decisao", "aprovada", "--quem", "Diretora de marketing").returncode == 1, parcial.stdout)
+    completa = gov("--analisar", "MU-001", "--impacto-esforco", "16 horas", "--impacto-escopo", "Uma página a mais")
+    confere("análise completa mantém o que já estava e aponta a solicitação", "5 dias úteis no diagnóstico\t16 horas\tUma página a mais\tem analise" in linha_de(mud, "MU-001") and "emitir.py mudanca MU-001" in completa.stdout, linha_de(mud, "MU-001"))
+    confere("mudança em análise entra nas decisões pedidas do status, com o impacto", "MU-001: mudança pedida por Diretora financeira, Incluir o custo por loja. Impacto: prazo 5 dias úteis no diagnóstico; esforço 16 horas; escopo Uma página a mais" in secao(status(), "Decisões pedidas"), status())
+    confere("decidir pede quem decidiu e uma decisão válida", gov("--decidir", "MU-001", "--decisao", "aprovada").returncode == 2 and gov("--decidir", "MU-001", "--decisao", "talvez", "--quem", "Diretora de marketing").returncode == 2 and "\tem analise\t" in linha_de(mud, "MU-001"))
+    rotina("--remarcar", "diag", d(25), "--motivo", "MU-001")
+    base_tsv = reg / "linha-de-base.tsv"
+    confere("linha de base que cita mudança ainda sem decisão é recusada", gov("--linha-de-base", "--motivo", "MU-001").returncode == 1 and "\n2\t" not in base_tsv.read_text(encoding="utf-8"))
+    aprovada = gov("--decidir", "MU-001", "--decisao", "aprovada", "--quem", "Diretora de marketing", hoje=d(1))
+    confere("a aprovação grava quem decidiu e quando, e manda levar ao plano", aprovada.returncode == 0 and f"\taprovada\tDiretora de marketing\t{d(1)}\t" in linha_de(mud, "MU-001") and "rotina.py --remarcar" in aprovada.stdout and '--linha-de-base --motivo "MU-001"' in aprovada.stdout and "aditivos" not in aprovada.stdout, aprovada.stdout)
+    confere("mudança decidida não é decidida nem analisada de novo", gov("--decidir", "MU-001", "--decisao", "rejeitada", "--quem", "X", "--motivo", "Y").returncode == 1 and gov("--analisar", "MU-001", "--impacto-prazo", "nenhum").returncode == 1 and "\taprovada\t" in linha_de(mud, "MU-001"))
+    confere("com a mudança aprovada, a linha de base nova é gravada", gov("--linha-de-base", "--motivo", "MU-001", "--aprovada-por", "Diretora de marketing", hoje=d(1)).returncode == 0 and "\n2\t" in base_tsv.read_text(encoding="utf-8") and "\tMU-001\n" in base_tsv.read_text(encoding="utf-8"))
+    decidida = em("mudanca", "MU-001", hoje=d(2)).stdout
+    confere("solicitação decidida mostra a decisão e a linha de base de referência", f"Aprovada em {d(1)}. Diretora de marketing" in secao(decidida, "Decisão") and "( ) Aprovada" not in decidida and "Referência: linha de base versão 2." in decidida, decidida)
+    confere("status executivo: a mudança decidida entra em mudanças e esforço", "MU-001 (aprovada em " + str(d(1)) in secao(em("status-executivo", hoje=d(2)).stdout, "Mudanças e esforço"))
+    gov("--mudanca", "Refazer o inventário por país", "--solicitante", "Diretor de tecnologia")
+    confere("rejeitar pede o motivo", gov("--decidir", "MU-002", "--decisao", "rejeitada", "--quem", "Diretora de marketing").returncode == 2 and "\tproposta\t" in linha_de(mud, "MU-002"))
+    rejeitada = gov("--decidir", "MU-002", "--decisao", "rejeitada", "--quem", "Diretora de marketing", "--motivo", "Fora do contrato", hoje=d(2))
+    adiado = linha_de(reg / "adiados.tsv", "B-001")
+    confere("a mudança rejeitada fica guardada nos adiados", rejeitada.returncode == 0 and "\trejeitada\tDiretora de marketing: Fora do contrato\t" in linha_de(mud, "MU-002") and f"B-001\tRefazer o inventário por país\tMudança MU-002 rejeitada em {d(2)}: Fora do contrato\t" in adiado and adiado.endswith("\taberto") and "B-001" in rejeitada.stdout, rejeitada.stdout + adiado)
+    confere("a mudança aprovada não vai para os adiados", "MU-001" not in (reg / "adiados.tsv").read_text(encoding="utf-8"))
+    gov("--incluir", "aditivos")
+    gov("--mudanca", "Sessão extra de repasse", "--solicitante", "Diretora de marketing")
+    gov("--analisar", "MU-003", "--impacto-prazo", "nenhum", "--impacto-esforco", "4 horas", "--impacto-escopo", "Uma sessão")
+    confere("com o registro de aditivos na lista, a aprovação lembra o aditivo", "registro de aditivos" in gov("--decidir", "MU-003", "--decisao", "aprovada", "--quem", "Diretora de marketing").stdout)
+    confere("os registros de governança continuam passando na checagem", "erro" not in validar(projeto, "--so", "governanca").stdout.lower().replace("nenhum erro", ""), validar(projeto, "--so", "governanca").stdout)
+
+    # O dia do status na lista do dia.
+    sexta, quinta = d0 + datetime.timedelta(days=11), d0 + datetime.timedelta(days=10)
+    confere("no dia do status, a agenda lembra o status semanal", "Dia do status semanal" in rotina("--lista", hoje=sexta).stdout and "Dia do status semanal" not in rotina("--lista", hoje=quinta).stdout, rotina("--lista", hoje=sexta).stdout)
+    em("status-semanal", "--gravar", hoje=sexta)
+    confere("com o status do dia já montado, a agenda não repete", "Dia do status semanal" not in rotina("--lista", hoje=sexta).stdout and "Dia do status semanal" in rotina("--lista", hoje=sexta + datetime.timedelta(days=7)).stdout)
+    gov("--tirar", "status-semanal", "--motivo", "O cliente tem o próprio status")
+    confere("sem o status semanal na lista do projeto, a agenda não lembra", "Dia do status semanal" not in rotina("--lista", hoje=sexta + datetime.timedelta(days=7)).stdout)
+
+    # Um projeto de versão anterior recebe o registro e o sinal novos.
+    antigo = tmp / "emissao-antigo"
+    antigo.mkdir()
+    instalar(antigo)
+    ant = antigo / "entregaveis/_projeto"
+    (ant / "emitidos.tsv").unlink()
+    (ant / "cadencias.tsv").write_text("".join(l for l in (ant / "cadencias.tsv").read_text(encoding="utf-8").splitlines(keepends=True) if not l.startswith("prazo_de_aprovacao")), encoding="utf-8")
+    (antigo / "entregaveis/_harness/VERSAO").write_text("0.10.0\n", encoding="utf-8")
+    padrao = rodar([PY, "-c", "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import rotina; print(rotina.parametros()['prazo_de_aprovacao'])"], antigo)
+    confere("sem o sinal no projeto, o prazo de aprovação é de cinco dias úteis", padrao.stdout.strip() == "5", padrao.stdout + padrao.stderr)
+    atualizado = instalar(antigo, "--atualizar")
+    confere("--atualizar cria o registro de emitidos e acrescenta o prazo de aprovação", atualizado.returncode == 0 and (ant / "emitidos.tsv").is_file() and "prazo_de_aprovacao\t5" in (ant / "cadencias.tsv").read_text(encoding="utf-8"), atualizado.stdout + atualizado.stderr)
 
 
 # --- Segundo cérebro --------------------------------------------------------
@@ -2359,6 +2633,10 @@ def testar_exemplo(tmp: Path) -> None:
     confere("o exemplo está dentro da linha de base", "Nenhum desvio contra a linha de base versão 1" in desvios.stdout, desvios.stdout + desvios.stderr)
     marca = rodar([PY, "-c", "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import comum; print(comum.carimbo(comum.BASE / 'leitura-executiva'))"], projeto)
     confere("a versão registrada no exemplo é a do conteúdo atual", marca.stdout.strip() and marca.stdout.strip() in (projeto / "entregaveis/_projeto/versoes.tsv").read_text(encoding="utf-8"), marca.stdout + marca.stderr)
+    guardado = (origem / "entregaveis/_projeto/emitidos/2026-11-20-status-semanal.md").read_text(encoding="utf-8")
+    refeito = rodar([PY, "entregaveis/_harness/scripts/emitir.py", "status-semanal", "--hoje", "2026-11-20"], projeto)
+    confere("o status semanal guardado no exemplo é o que os registros de hoje produzem", refeito.stdout == guardado and "**Semáforo: amarelo.**" in guardado and "leitura-executiva v1: enviada a Diretoria da Lojas Exemplo em 2026-11-05, sem aceite registrado" in guardado, refeito.stdout + refeito.stderr)
+    confere("o exemplo registra a emissão do status", "2026-11-20\tstatus-semanal\t\tentregaveis/_projeto/emitidos/2026-11-20-status-semanal.md\trascunho" in (origem / "entregaveis/_projeto/emitidos.tsv").read_text(encoding="utf-8"))
     cerebro = [PY, "entregaveis/_harness/scripts/cerebro.py"]
     confere("o estado do exemplo conta as seis notas, sem nada a absorver", "Segundo cérebro: 6 nota(s). Antes de escrever" in estado.stdout, estado.stdout)
     confere("o segundo cérebro do exemplo absorveu tudo o que o projeto registrou", "Nada a absorver" in rodar(cerebro + ["--pendentes"], projeto).stdout, rodar(cerebro + ["--pendentes"], projeto).stdout)
@@ -2425,6 +2703,7 @@ def main() -> int:
         testar_levantamento(tmp)
         testar_rotina(tmp)
         testar_governanca(tmp)
+        testar_emissao(tmp)
         testar_cerebro(tmp)
         testar_ambiente(tmp)
         testar_exemplo(tmp)
