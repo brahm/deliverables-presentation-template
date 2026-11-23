@@ -31,4 +31,4 @@ nomes e os números. Na coluna Layout vale um ou outro.
 ## Conflitos e lacunas
 
 O que os materiais não dizem, ou onde dois materiais se contradizem. Cada
-item é uma pergunta para o dono.
+item é uma pergunta para o consultor.

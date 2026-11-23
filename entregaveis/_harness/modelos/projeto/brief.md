@@ -3,7 +3,7 @@ projeto: PREENCHER
 cliente: PREENCHER
 tipo: PREENCHER
 pacotes:
-dono: PREENCHER
+consultor: PREENCHER
 idioma_dos_relatorios: pt-BR
 idiomas_dos_entregaveis: PREENCHER
 classificacao: PREENCHER
@@ -16,7 +16,7 @@ Os campos acima: `tipo` é o tipo de trabalho (transformação de marketing,
 assessment de martech e adtech, mídia, retail media, processos agênticos,
 proposta, treinamento ou outro). `classificacao` é o nível de sigilo dos
 materiais. `marcacao_obrigatoria` é o texto que toda capa precisa trazer,
-quando há um. `iniciado` vira `sim` quando o dono confirma este brief.
+quando há um. `iniciado` vira `sim` quando o consultor confirma este brief.
 
 ## O que é o projeto
 

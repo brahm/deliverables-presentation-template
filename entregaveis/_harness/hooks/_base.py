@@ -4,7 +4,7 @@
 Cada hook recebe um JSON pela entrada padrão e responde pelo código de
 saída: 0 deixa seguir, 2 bloqueia e mostra ao agente o que foi escrito na
 saída de erro. Um hook que falha por defeito próprio sai com 0, para
-nunca travar o trabalho do dono por causa do harness.
+nunca travar o trabalho do consultor por causa do harness.
 """
 from __future__ import annotations
 

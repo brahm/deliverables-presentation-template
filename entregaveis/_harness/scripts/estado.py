@@ -29,7 +29,7 @@ def proximo_passo(pasta: Path) -> str:
     if estado == "briefing":
         return "construir a storyline (skill construir-storyline)"
     if not aprovada:
-        return "a storyline aguarda a aprovação do dono; nenhuma página pode ser escrita antes"
+        return "a storyline aguarda a aprovação do consultor; nenhuma página pode ser escrita antes"
     if estado == "storyline":
         return "montar o storyboard (skill montar-storyboard)"
     if estado == "storyboard":
@@ -54,12 +54,12 @@ def linha_do_repositorio() -> list[str]:
     if geral == repositorio.PUBLICO:
         return [
             "Repositório PÚBLICO: um projeto de cliente não pode ser iniciado nem mantido aqui. "
-            "O dono cria um repositório privado, torna este privado ou remove o remoto e segue em git local. "
+            "O consultor cria um repositório privado, torna este privado ou remove o remoto e segue em git local. "
             "Enquanto isso o harness bloqueia a gravação dos registros do projeto"
             + (" e o envio ao remoto." if repositorio.tem_projeto() else ".")
         ]
     return [
-        "Repositório remoto não verificado: pergunte ao dono se ele é privado e registre com "
+        "Repositório remoto não verificado: pergunte ao consultor se ele é privado e registre com "
         "scripts/repositorio.py --confirmar. O harness bloqueia a gravação de registros e o envio enquanto isso."
     ]
 
@@ -69,7 +69,7 @@ def linhas_de_dominio() -> list[str]:
     texto = comum.ler(comum.BASE / "_dominio" / "dominio.md")
     if texto and comum.MARCA not in texto:
         return []
-    return ["Domínio do projeto ainda não calibrado: quando o dono fornecer referências, métodos, contexto e objetivo, aplique a skill calibrar-dominio."]
+    return ["Domínio do projeto ainda não calibrado: quando o consultor fornecer referências, métodos, contexto e objetivo, aplique a skill calibrar-dominio."]
 
 
 def linhas_de_estado() -> list[str]:
@@ -99,7 +99,7 @@ def linhas_de_estado() -> list[str]:
     decisoes = comum.ler(comum.PROJETO / "decisoes.md")
     assumidas = sum(1 for linha in decisoes.splitlines() if linha.startswith("|") and "(assumida)" in linha)
     if assumidas:
-        linhas.append(f"Decisões assumidas à espera do dono: {assumidas} (ver _projeto/decisoes.md).")
+        linhas.append(f"Decisões assumidas à espera do consultor: {assumidas} (ver _projeto/decisoes.md).")
     adiados = [l for l in comum.ler_tsv(comum.PROJETO / "adiados.tsv") if comum.normalizar(l.get("estado", "")) == "aberto"]
     if adiados:
         linhas.append(f"Itens adiados em aberto: {len(adiados)} (ver _projeto/adiados.tsv).")

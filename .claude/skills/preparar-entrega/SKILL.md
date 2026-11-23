@@ -30,6 +30,6 @@ o resultado em `entrega.md`, na pasta do entregável.
 7. Em apresentação remota, prepare as instruções de acesso, um plano
    para falha de tecnologia e os momentos de interação.
 8. Escreva o texto de envio: o pedido na primeira frase, o prazo e o que
-   está anexo. Quem envia é o dono. Nada sai do projeto sem ele.
-9. Quando o dono disser que apresentou ou enviou, mude o `estado` para
+   está anexo. Quem envia é o consultor. Nada sai do projeto sem ele.
+9. Quando o consultor disser que apresentou ou enviou, mude o `estado` para
    `entregue` e siga `fechar-entregavel`.

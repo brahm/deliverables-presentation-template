@@ -74,7 +74,7 @@ recursos são julgados na revisão.
 
 ## Voz
 
-Quando o registro de intake tem uma amostra de texto do dono (tipo
+Quando o registro de intake tem uma amostra de texto do consultor (tipo
 `voz`), leia a amostra antes de escrever. Siga o tamanho das frases, o
 vocabulário e as transições dela. A amostra vence as regras de pontuação
 desta página, menos a do travessão em material para cliente.

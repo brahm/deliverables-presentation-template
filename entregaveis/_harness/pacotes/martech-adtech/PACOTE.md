@@ -10,7 +10,7 @@ plataformas ou a escolha de uma plataforma específica.
 Projeto de mídia sem pergunta de plataforma usa o pacote de mídia.
 Projeto de rede de mídia de varejo usa o de retail media.
 
-## O que perguntar ao dono no início
+## O que perguntar ao consultor no início
 
 Além das perguntas de `iniciar-projeto`:
 
@@ -156,7 +156,7 @@ cenário conservador.
 ## Esqueletos de storyline
 
 Pontos de partida. A storyline de cada entregável é escrita para a
-audiência dele e aprovada pelo dono.
+audiência dele e aprovada pelo consultor.
 
 ### Leitura executiva do assessment
 

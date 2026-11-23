@@ -2,7 +2,7 @@
 """Levanta o que já existe em um projeto em andamento.
 
 A skill adotar-projeto roda este script antes de perguntar qualquer coisa
-ao dono. Ele não supõe nada sobre o projeto: pode ser um repositório de
+ao consultor. Ele não supõe nada sobre o projeto: pode ser um repositório de
 código, uma pasta só com apresentações ou um projeto que já usa outro
 conjunto de regras para agentes.
 

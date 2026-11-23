@@ -3,7 +3,7 @@
 
 O template traz só o motor e o esqueleto. As regras de verdade são
 escritas dentro de cada projeto, em _dominio/, a partir das referências,
-dos métodos, do contexto e do objetivo que o dono fornece. Elas nunca
+dos métodos, do contexto e do objetivo que o consultor fornece. Elas nunca
 voltam ao template.
 
 Uso:

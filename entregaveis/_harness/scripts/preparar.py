@@ -94,7 +94,7 @@ def preparar_interativo(ident: str, nome: str, base: str) -> list[str]:
     if faltas:
         raise SystemExit("A peça espera o briefing completo. Falta: " + ", ".join(faltas) + ".")
     if not comum.storyline_aprovada(pasta):
-        raise SystemExit("A peça espera a storyline aprovada pelo dono (aprovada: sim em storyline.md).")
+        raise SystemExit("A peça espera a storyline aprovada pelo consultor (aprovada: sim em storyline.md).")
     destino = pasta / "interativos" / f"{nome}.html"
     if destino.exists():
         return []

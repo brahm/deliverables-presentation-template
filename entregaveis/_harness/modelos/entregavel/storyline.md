@@ -5,7 +5,7 @@ aprovada_em:
 ---
 # Storyline
 
-A história inteira antes de qualquer página. Só o dono aprova: depois do
+A história inteira antes de qualquer página. Só o consultor aprova: depois do
 sim dele, registre `aprovada: sim`, a data e as palavras que ele usou.
 
 ## Abertura

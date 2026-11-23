@@ -17,4 +17,4 @@ metadata:
    quando.
 5. Quando o item for feito, mude o estado para `feito`. A linha fica.
 6. Antes de marcar um entregável como `entregue`, cada item aberto que é
-   dele foi feito ou foi movido com o dono avisado.
+   dele foi feito ou foi movido com o consultor avisado.

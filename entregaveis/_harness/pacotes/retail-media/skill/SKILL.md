@@ -11,13 +11,13 @@ O conteúdo do pacote está em
 `entregaveis/_harness/pacotes/retail-media/`. Esta skill diz que parte
 abrir em cada momento. As skills do fluxo continuam valendo.
 
-1. Antes de tudo, confirme com o dono de que lado o cliente está:
+1. Antes de tudo, confirme com o consultor de que lado o cliente está:
    varejista ou marca. Registre com `registrar-decisao`. Faça as outras
-   perguntas da seção "O que perguntar ao dono no início" de
+   perguntas da seção "O que perguntar ao consultor no início" de
    `PACOTE.md`.
 2. No intake, use as linhas do lado certo em `pedido-de-dados.tsv` e os
    roteiros do lado certo em `entrevistas.md`. Conversa com o outro lado
-   da mesa só com aprovação do dono e do cliente.
+   da mesa só com aprovação do consultor e do cliente.
 3. No briefing, confira o entregável na tabela "Entregáveis típicos".
    Para o varejista, a área comercial é a resistência mais provável:
    escreva o que ela teme perder.

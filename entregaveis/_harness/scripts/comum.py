@@ -25,7 +25,7 @@ INTAKE = BASE / "_intake"
 MODELOS = HARNESS / "modelos"
 LISTAS = HARNESS / "listas"
 
-# Marca deixada nos modelos onde o agente ou o dono precisa escrever.
+# Marca deixada nos modelos onde o agente ou o consultor precisa escrever.
 MARCA = "PREENCHER"
 
 ETAPAS = ["briefing", "storyline", "storyboard", "redacao", "revisao", "entregue"]

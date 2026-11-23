@@ -150,7 +150,10 @@ def testar_instalador(tmp: Path) -> None:
     confere("não toca na pasta de entregáveis que já existia", (andamento / "entregaveis/final/deck.pptx").read_text(encoding="utf-8") == "x" and "já existia" in saida.stdout)
     de_novo = instalar(andamento)
     confere("segunda instalação em projeto em andamento não muda nada", "Nada a fazer" in de_novo.stdout and (andamento / "AGENTS.md").read_text(encoding="utf-8").count("harness-de-entregaveis: inicio") == 1, de_novo.stdout)
+    (andamento / ".claude/skills/relatar-ao-dono").mkdir()
+    (andamento / ".claude/skills/relatar-ao-dono/SKILL.md").write_text("skill do projeto\n", encoding="utf-8")
     forcada = instalar(andamento, "--atualizar")
+    confere("--atualizar não retira a skill do projeto que tem o nome antigo de uma do kit", (andamento / ".claude/skills/relatar-ao-dono/SKILL.md").is_file(), forcada.stdout)
     confere("--atualizar não troca a skill do projeto", (andamento / ".claude/skills/humanizar-texto/SKILL.md").read_text(encoding="utf-8") == "minha skill\n", forcada.stdout)
 
     # Atualização: troca o que é do kit e preserva o que é do projeto.
@@ -160,10 +163,14 @@ def testar_instalador(tmp: Path) -> None:
     skill.write_text(skill.read_text(encoding="utf-8") + "\nlinha de versão antiga\n", encoding="utf-8")
     brief = vazio / "entregaveis/_projeto/brief.md"
     brief.write_text(brief.read_text(encoding="utf-8").replace("projeto: PREENCHER", "projeto: Meu projeto"), encoding="utf-8")
+    antiga = vazio / ".claude/skills/relatar-ao-dono"
+    antiga.mkdir()
+    (antiga / "SKILL.md").write_text("---\nname: relatar-ao-dono\nmetadata:\n  origem: harness-de-entregaveis\n---\n", encoding="utf-8")
     sem_opcao = instalar(vazio)
     confere("sem --atualizar, avisa da versão diferente e não troca", "Use --atualizar" in sem_opcao.stdout and (vazio / "entregaveis/_harness/REGRAS.md").read_text(encoding="utf-8") == "regra velha\n", sem_opcao.stdout)
     atualizada = instalar(vazio, "--atualizar")
     confere("--atualizar troca o que é do kit", (vazio / "entregaveis/_harness/REGRAS.md").read_text(encoding="utf-8") == (HARNESS / "REGRAS.md").read_text(encoding="utf-8") and "linha de versão antiga" not in skill.read_text(encoding="utf-8"), atualizada.stdout + atualizada.stderr)
+    confere("--atualizar retira a skill do kit que mudou de nome", not antiga.exists() and (vazio / ".claude/skills/relatar-ao-consultor/SKILL.md").is_file() and "relatar-ao-consultor" in atualizada.stdout, atualizada.stdout)
     confere("--atualizar preserva os registros do projeto", "projeto: Meu projeto" in brief.read_text(encoding="utf-8"))
 
     # Outro nome de pasta.
@@ -189,7 +196,7 @@ projeto: Diagnóstico de martech
 cliente: Varejista Exemplo
 tipo: assessment de martech e adtech
 pacotes:
-dono: Dona do projeto
+consultor: Consultora responsável
 idioma_dos_relatorios: pt-BR
 idiomas_dos_entregaveis: pt-BR, es, en
 classificacao: restrito
@@ -250,7 +257,7 @@ A empresa paga por plataformas que se repetem e perde lançamentos por causa dis
 
 STORYLINE = """---
 aprovada: sim
-aprovada_por: Dona do projeto
+aprovada_por: Consultora responsável
 aprovada_em: 2026-11-20
 ---
 # Storyline
@@ -381,7 +388,7 @@ def testar_checagens(tmp: Path) -> None:
     com("conteudo.md", ("## 2. Duas plataformas de e-mail fazem o mesmo trabalho", "## 2. Contexto"), "ERRO  [storyline]", "storyline: reprova título que é rótulo")
     com("conteudo.md", ("## 2. Duas plataformas de e-mail fazem o mesmo trabalho", "## 2. O que encontramos nas plataformas de e-mail:"), "ERRO  [storyline]", "storyline: reprova título que termina em dois-pontos")
     com("conteudo.md", ("## 2. Duas plataformas de e-mail fazem o mesmo trabalho", "## 2. " + "As duas plataformas de e-mail fazem o mesmo trabalho para a mesma base de clientes e de leads todos os meses"), "ERRO  [storyline]", "storyline: reprova título acima do limite do veículo")
-    com("storyline.md", ("aprovada: sim", "aprovada: nao"), "ERRO  [storyline]", "storyline: reprova conteúdo escrito sem aprovação do dono")
+    com("storyline.md", ("aprovada: sim", "aprovada: nao"), "ERRO  [storyline]", "storyline: reprova conteúdo escrito sem aprovação do consultor")
     com("conteudo.md", ("tipo: pedido", "tipo: texto"), "ERRO  [storyline]", "storyline: reprova material sem página de pedido", opcoes=("--rigoroso",))
     # Densidade
     com("conteudo.md", None, "ERRO  [densidade]", "densidade: reprova página projetada com texto demais", acrescentar=pagina(4, " ".join(["A equipe revisa o plano."] * 30)))
@@ -425,9 +432,9 @@ def testar_checagens(tmp: Path) -> None:
     estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto)
     confere("estado: mostra o projeto, o entregável e o material pendente", estado.returncode == 0 and "diag" in estado.stdout and "Modelo de apresentação" in estado.stdout and "Decisões assumidas" not in estado.stdout, estado.stdout + estado.stderr)
     with (projeto / "entregaveis/_projeto/decisoes.md").open("a", encoding="utf-8") as f:
-        f.write("| D-001 | 2026-11-20 | Deck de leitura em vez de projetado | O dono não disse | Vigente (assumida) |\n")
+        f.write("| D-001 | 2026-11-20 | Deck de leitura em vez de projetado | O consultor não disse | Vigente (assumida) |\n")
     estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto)
-    confere("estado: conta as decisões assumidas à espera do dono", "Decisões assumidas à espera do dono: 1" in estado.stdout, estado.stdout)
+    confere("estado: conta as decisões assumidas à espera do consultor", "Decisões assumidas à espera do consultor: 1" in estado.stdout, estado.stdout)
 
     # Revisão
     sem_rubrica = validar(projeto, "--carimbar", "diag")
@@ -860,7 +867,7 @@ def testar_repositorio(tmp: Path) -> None:
         confere("antes de gravar e antes de comando: bloqueiam o remoto não verificado", gravar("entregaveis/_projeto/brief.md").returncode == 2 and comando("git push").returncode == 2)
         confirmada = rodar([PY, script, "--confirmar", "sim, é o repositório privado do time"], projeto)
         registro = projeto / "entregaveis/_projeto/repositorio.tsv"
-        confere("a confirmação do dono fica registrada com as palavras dele", confirmada.returncode == 0 and "sim, é o repositório privado do time" in registro.read_text(encoding="utf-8"), confirmada.stdout + confirmada.stderr)
+        confere("a confirmação do consultor fica registrada com as palavras dele", confirmada.returncode == 0 and "sim, é o repositório privado do time" in registro.read_text(encoding="utf-8"), confirmada.stdout + confirmada.stderr)
         confere("depois da confirmação, o remoto não verificado é aceito", situacao().returncode == 0 and gravar("entregaveis/_projeto/brief.md").returncode == 0 and comando("git push").returncode == 0)
         remoto(f"{base}/aberto.git")
         confere("a confirmação de um remoto não vale para outro", situacao().returncode == 1)

@@ -36,6 +36,8 @@ FIM = "harness-de-entregaveis: fim"
 IGNORAR = shutil.ignore_patterns("__pycache__", ".estado", "*.pyc")
 # Linha que toda skill do kit traz no cabeçalho. Skill sem ela é do projeto.
 MARCA_DE_SKILL = "origem: harness-de-entregaveis"
+# Skills do kit que mudaram de nome. A antiga sai na atualização.
+SKILLS_RENOMEADAS = {"relatar-ao-dono": "relatar-ao-consultor"}
 
 # Arquivos de instrução de outros agentes. Recebem o bloco só se já existem.
 OUTROS_AGENTES = ["GEMINI.md", ".github/copilot-instructions.md", ".cursorrules", ".windsurfrules"]
@@ -111,6 +113,17 @@ class Instalador:
             nome = f"pacote-{pacote.parent.name}"
             if (self.destino / ".claude" / "skills" / nome).exists():
                 skills.append((nome, pacote))
+        for antiga, nova in SKILLS_RENOMEADAS.items():
+            alvo = self.destino / ".claude" / "skills" / antiga
+            arquivo = alvo / "SKILL.md"
+            if not arquivo.is_file() or MARCA_DE_SKILL not in arquivo.read_text(encoding="utf-8"):
+                continue  # não existe, ou é uma skill do projeto com o mesmo nome
+            if not self.atualizar:
+                self.mantido.append(f".claude/skills/{antiga} é de outra versão do kit, em que ela passou a se chamar {nova}. Use --atualizar para trocar.")
+                continue
+            if not self.simular:
+                shutil.rmtree(alvo)
+            self.nota(f".claude/skills/{antiga} retirada: ela passou a se chamar {nova}")
         for nome_da_skill, skill in skills:
             alvo = self.destino / ".claude" / "skills" / nome_da_skill
             if alvo.exists():
@@ -122,7 +135,7 @@ class Instalador:
                     # A skill é do projeto e só coincide no nome. Nunca é trocada.
                     self.mantido.append(
                         f".claude/skills/{nome_da_skill} já existia no projeto e não veio do kit. Ela foi mantida e a do kit "
-                        f"não foi instalada. A versão do kit está em {skill / 'SKILL.md'}: decida com o dono qual fica "
+                        f"não foi instalada. A versão do kit está em {skill / 'SKILL.md'}: decida com o consultor qual fica "
                         "ou renomeie a do projeto."
                     )
                     continue

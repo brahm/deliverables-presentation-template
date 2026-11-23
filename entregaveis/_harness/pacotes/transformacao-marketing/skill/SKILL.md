@@ -11,11 +11,11 @@ O conteúdo do pacote está em
 `entregaveis/_harness/pacotes/transformacao-marketing/`. Esta skill diz
 que parte abrir em cada momento. As skills do fluxo continuam valendo.
 
-1. No início do projeto, faça ao dono as perguntas da seção "O que
-   perguntar ao dono no início" de `PACOTE.md`, junto com as de
+1. No início do projeto, faça ao consultor as perguntas da seção "O que
+   perguntar ao consultor no início" de `PACOTE.md`, junto com as de
    `iniciar-projeto`.
 2. No intake, parta de `pedido-de-dados.tsv` e dos roteiros de
-   `entrevistas.md`. Combine com o dono o que pode ser dito aos
+   `entrevistas.md`. Combine com o consultor o que pode ser dito aos
    entrevistados sobre a mudança.
 3. No briefing, confira o entregável na tabela "Entregáveis típicos".
    Na seção de resistências, escreva quem perde direito de decisão com

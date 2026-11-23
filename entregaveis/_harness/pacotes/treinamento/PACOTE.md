@@ -11,7 +11,7 @@ Um treinamento existe para mudar o que as pessoas fazem no trabalho. Ele
 é desenhado de trás para a frente: primeiro o que a pessoa fará de
 diferente, depois como isso será verificado, e só então o conteúdo.
 
-## O que perguntar ao dono no início
+## O que perguntar ao consultor no início
 
 Além das perguntas de `iniciar-projeto`:
 
@@ -21,7 +21,7 @@ Além das perguntas de `iniciar-projeto`:
 - Como a empresa saberá que funcionou?
 - Qual é o formato: presencial, remoto ao vivo, autoinstrucional ou
   misto? Quanto tempo há e em quantas sessões?
-- Quem facilita: o dono, o time do cliente, outra pessoa? Com que
+- Quem facilita: o consultor, o time do cliente, outra pessoa? Com que
   domínio do assunto?
 - Há exame, certificação ou nota mínima? O resultado tem consequência
   para o participante?

@@ -3,6 +3,19 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.5.1
+
+- Quem usa o harness passa a se chamar consultor nas regras, nas
+  skills, no método, nos pacotes, nos modelos e nas mensagens dos
+  scripts. "Dono" continua valendo para quem responde por uma ação, um
+  processo ou uma plataforma.
+- A skill `relatar-ao-dono` passou a se chamar `relatar-ao-consultor`.
+- O campo `dono` de `_projeto/brief.md` passou a se chamar `consultor`.
+
+O que o projeto precisa fazer: atualize com `--atualizar`, que retira a
+skill de nome antigo. Renomeie o campo `dono` do brief para `consultor`.
+Os registros já escritos continuam valendo como estão.
+
 ## 0.5.0
 
 - Gerador de arquivos. `scripts/gerar.py ID` gera PowerPoint, Word, PDF

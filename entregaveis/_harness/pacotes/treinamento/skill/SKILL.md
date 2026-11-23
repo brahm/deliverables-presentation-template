@@ -11,8 +11,8 @@ O conteúdo do pacote está em
 `entregaveis/_harness/pacotes/treinamento/`. Esta skill diz que parte
 abrir em cada momento. As skills do fluxo continuam valendo.
 
-1. No início, faça ao dono as perguntas da seção "O que perguntar ao
-   dono no início" de `PACOTE.md`. Se a causa do problema não é falta de
+1. No início, faça ao consultor as perguntas da seção "O que perguntar ao
+   consultor no início" de `PACOTE.md`. Se a causa do problema não é falta de
    conhecimento ou de prática, diga isso antes de desenhar.
 2. No intake, parta de `pedido-de-dados.tsv` e dos roteiros de
    `entrevistas.md`. Peça exemplos reais de trabalho bom e fraco.
@@ -23,7 +23,7 @@ abrir em cada momento. As skills do fluxo continuam valendo.
 4. Antes da storyline, escreva os objetivos de aprendizagem com verbo
    observável e, para cada um, a evidência de aprendizagem.
 5. A storyline é o plano do curso. Parta do esqueleto em "Esqueletos de
-   storyline". O dono aprova os objetivos e o mapa de módulos.
+   storyline". O consultor aprova os objetivos e o mapa de módulos.
 6. Cada módulo segue a estrutura do framework 4, com mais tempo de
    prática do que de exposição. Em slides de aula, o veículo é
    `workshop`, e o texto de estudo vai para o caderno.

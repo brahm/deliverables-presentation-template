@@ -12,7 +12,7 @@ operação.
 Quando a mudança atinge a organização inteira, some o pacote de
 transformação de marketing.
 
-## O que perguntar ao dono no início
+## O que perguntar ao consultor no início
 
 Além das perguntas de `iniciar-projeto`:
 

@@ -17,7 +17,7 @@
 | `scripts/preparar.py` | Cria os registros e as pastas de entregável e ativa pacotes | No início do projeto e a cada entregável novo |
 | `scripts/levantar.py` | Levanta o que já existe em um projeto em andamento | Na adoção |
 | `scripts/gerar.py` | Gera PowerPoint, Word, PDF e Excel a partir da fonte em Markdown, sobre o modelo do projeto. Pede `python-pptx`, `python-docx` e `openpyxl` | Depois da redação e a cada correção da fonte |
-| `scripts/repositorio.py` | Diz se o remoto do git é local, privado ou público, e registra a confirmação do dono | No início do projeto, a cada gravação de registro e a cada envio |
+| `scripts/repositorio.py` | Diz se o remoto do git é local, privado ou público, e registra a confirmação do consultor | No início do projeto, a cada gravação de registro e a cada envio |
 | `scripts/dominio.py` | Aplica as regras do domínio do projeto e roda os casos de teste delas | A cada gravação, na validação e quando uma regra muda |
 | `scripts/conferir_interativo.js` | Abre um HTML interativo em um navegador sem interface, bloqueia a rede, lista os erros e grava as imagens. Opcional, pede Node e Playwright | Antes de entregar uma peça interativa |
 | `metodo/` | O método, as práticas de texto, o visual, os formatos, o HTML interativo e a rubrica | Aberto quando a tarefa toca no assunto |
@@ -51,7 +51,7 @@ ele recebe e corrige.
 
 | Trava | Hook |
 | --- | --- |
-| Página, arquivo final ou peça interativa sem briefing completo e storyline aprovada pelo dono | `hooks/antes_de_gravar.py` |
+| Página, arquivo final ou peça interativa sem briefing completo e storyline aprovada pelo consultor | `hooks/antes_de_gravar.py` |
 | Fim de turno com conteúdo alterado e sem revisão registrada | `hooks/fim_do_turno.py` |
 | Registro de projeto gravado, ou envio feito, com o remoto público ou não verificado | `hooks/antes_de_gravar.py` e `hooks/antes_de_comando.py` |
 
@@ -75,14 +75,14 @@ O template é público e não tem cliente. Ele traz o esqueleto: o motor
 das regras, o formato dos arquivos, os modelos em branco e os pacotes
 genéricos. O conteúdo de domínio é escrito em cada projeto, em
 `_dominio/`, a partir das referências, dos métodos, do contexto e do
-objetivo que o dono fornece. Esse conteúdo costuma ser propriedade de
+objetivo que o consultor fornece. Esse conteúdo costuma ser propriedade de
 uma organização ou dizer respeito a um cliente, e por isso:
 
 - um projeto iniciado só vive em pasta sem git, em git local ou em
   repositório privado. `scripts/repositorio.py` faz ao remoto o pedido
   de clone sem credencial: se o servidor entrega, o repositório é
   público e o harness bloqueia a gravação dos registros e o envio;
-- quando o remoto não responde, vale a confirmação do dono, registrada
+- quando o remoto não responde, vale a confirmação do consultor, registrada
   em `_projeto/repositorio.tsv`;
 - nada de `_dominio/` volta ao template, nem como lição proposta.
 
@@ -92,7 +92,7 @@ uma organização ou dizer respeito a um cliente, e por isso:
   `_dominio/`, escritos pela skill `calibrar-dominio`.
 - Um limite de densidade muda em `_projeto/limites.tsv`.
 - Um termo proibido entra em `_projeto/confidencial.tsv`.
-- Um vício de texto que o dono quer barrar entra em uma lista própria,
+- Um vício de texto que o consultor quer barrar entra em uma lista própria,
   `listas/texto-pt.tsv` por exemplo, com uma linha em `licoes.md`.
 - Um procedimento que o projeto repete vira uma skill nova em
   `.claude/skills/`, com uma linha na tabela de momentos de `REGRAS.md`.

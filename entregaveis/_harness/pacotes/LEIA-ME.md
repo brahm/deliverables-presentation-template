@@ -29,7 +29,7 @@ Cada pacote é uma pasta com:
 
 | Arquivo | O que traz |
 | --- | --- |
-| `PACOTE.md` | Quando usar, o que perguntar ao dono, os entregáveis típicos, os frameworks, os esqueletos de storyline, a evidência que cada afirmação pede e as armadilhas |
+| `PACOTE.md` | Quando usar, o que perguntar ao consultor, os entregáveis típicos, os frameworks, os esqueletos de storyline, a evidência que cada afirmação pede e as armadilhas |
 | `pedido-de-dados.tsv` | A lista padrão de dados a pedir ao cliente, com a análise que usa cada item e a prioridade |
 | `entrevistas.md` | Roteiro de entrevista por tipo de interlocutor |
 | `glossario.tsv` | Termos do domínio, para somar ao glossário do projeto |
@@ -44,5 +44,5 @@ nenhum cliente, porque o template é público.
 O que é próprio de um projeto é escrito dentro dele, em
 `entregaveis/_dominio/`, pela skill `calibrar-dominio`: o método, as
 regras de checagem e os casos de teste, a partir das referências, do
-contexto e do objetivo que o dono fornece. Onde o domínio do projeto e
+contexto e do objetivo que o consultor fornece. Onde o domínio do projeto e
 um pacote dizem coisas diferentes, vale o do projeto.
