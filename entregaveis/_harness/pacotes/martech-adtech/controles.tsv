@@ -1,0 +1,8 @@
+# Controles de governança deste tipo de projeto. Dizem o que precisa ficar registrado e aprovado, e não como fazer o trabalho.
+# condicao: sempre, ou a situação em que o controle vale (começa por quando). antes_de: a etapa do entregável antes da qual o controle precisa estar cumprido: storyline, storyboard, redacao, revisao ou envio.
+# registra: o que fica registrado. comprova: a evidência que fecha o controle.
+codigo	controle	condicao	antes_de	registra	comprova
+criterios-de-avaliacao	Critérios, pesos e escala aprovados antes de avaliar	sempre	storyline	Dimensões, critérios, pesos, escala e quem aprovou do lado do cliente	Decisão registrada (D-nnn) com o nome de quem aprovou os critérios
+achados-com-evidencia	Registro de achados com evidência e severidade	sempre	redacao	Achado, evidência, severidade, impacto, recomendação e dono no cliente	Cada achado que o material cita tem linha em evidencias.tsv (E-nnn)
+rastreabilidade	Rastreabilidade do caso de uso à recomendação	sempre	revisao	Caso de uso, requisito, capacidade, plataforma, lacuna e recomendação	Matriz em que toda recomendação aponta para uma lacuna e toda lacuna tem recomendação ou o motivo de ficar
+validacao-com-donos-das-plataformas	Validação dos achados com os donos das plataformas	sempre	envio	Achado, dono da plataforma, se confirma ou corrige, e a data	Resposta de cada dono, em ata (A-nnn) ou em mensagem guardada

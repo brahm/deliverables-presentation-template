@@ -169,7 +169,10 @@ que você abre quando a tarefa pede.
     consultor revisa e envia. Pedido fora do combinado passa por
     `entregaveis/_projeto/mudancas.tsv`, com o impacto e a decisão,
     antes de qualquer trabalho. O aceite vem do cliente, e o silêncio
-    não vale como aceite.
+    não vale como aceite. Um pacote ativo pode trazer controles de
+    governança do tipo de projeto, que saem com `governanca.py
+    --controles`. Um controle fecha com a evidência e com quem
+    confirmou, e a dispensa é do consultor.
 
 22. O que o projeto aprende vai para o segundo cérebro, em
     `entregaveis/_cerebro/`. Cada ação que grava um registro, uma ata,

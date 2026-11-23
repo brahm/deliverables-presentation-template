@@ -1,6 +1,6 @@
 ---
 name: pacote-martech-adtech
-description: Use em projeto de assessment de arquitetura de martech e adtech, ao pedir dados e marcar entrevistas, ao montar o briefing e a storyline de um entregável do assessment, ao dar nota de maturidade, ao recomendar manter, consolidar, substituir, desligar ou contratar uma plataforma e ao revisar o material.
+description: Use em projeto de assessment de arquitetura de martech e adtech, ao pedir dados e marcar entrevistas, ao montar o briefing e a storyline de um entregável do assessment, ao dar nota de maturidade, ao recomendar manter, consolidar, substituir, desligar ou contratar uma plataforma, ao revisar o material e quando um controle do tipo de projeto está pendente.
 metadata:
   origem: harness-de-entregaveis
 ---
@@ -38,6 +38,11 @@ abrir em cada momento. As skills do fluxo continuam valendo.
    recorte que prova o título.
 9. Na revisão, passe pela lista de "Armadilhas" além da rubrica, e
    registre em `revisao.md` as que o material evitou ou corrigiu.
-10. Não recomende um fornecedor pelo nome sem um processo de escolha. O
+10. Os controles de governança do assessment estão na seção "Controles
+    de governança" e saem com `governanca.py --controles`. Antes da
+    storyline, da redação, da revisão e do envio, confira os que valem
+    antes daquela etapa. Um controle fecha com a evidência e com quem
+    confirmou: `--controle CODIGO --cumprido --evidencia ID --quem NOME`.
+11. Não recomende um fornecedor pelo nome sem um processo de escolha. O
     nome de uma plataforma que o cliente já usa aparece como está nos
     materiais dele.

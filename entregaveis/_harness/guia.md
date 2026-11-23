@@ -75,6 +75,7 @@ As frases abaixo são exemplos. Use as suas palavras.
 | Pedir a pauta | "Prepare a pauta do comitê de quinta." |
 | Contar um envio | "Mandei a versão 2 do diagnóstico para a diretora de marketing." |
 | Contar um aceite | "A diretora de marketing aceitou o diagnóstico, com uma ressalva sobre o anexo." |
+| Fechar um controle | "A diretora aprovou os critérios de avaliação na reunião de ontem." |
 | Trazer um pedido fora do combinado | "O cliente pediu o custo por loja, que não estava no escopo." |
 | Trazer algo feito à mão | "Montei esta planilha de custos no fim de semana. Está na pasta de entrada." |
 | Encerrar o dia | "Por hoje é isso." |
@@ -139,13 +140,29 @@ e nunca volta ao template.
 
 ### Pacotes por tipo de projeto
 
-Sete pacotes adaptam o harness ao tipo de trabalho: transformação de
-marketing, martech e adtech, mídia, retail media, processos agênticos,
-proposta e treinamento. Cada um traz perguntas a fazer, entregáveis
-típicos, esqueletos de storyline, lista de pedido de dados, roteiro de
-entrevista e glossário. O agente ativa os que servem quando você diz do
-que é o projeto. Os pacotes se somam. A lista está em
-[pacotes/LEIA-ME.md](pacotes/LEIA-ME.md).
+Oito pacotes adaptam o harness ao tipo de trabalho: transformação de
+marketing, martech e adtech, mídia, processos de mídia digital, retail
+media, processos agênticos, proposta e treinamento. Um pacote pode
+trazer perguntas a fazer, entregáveis típicos, esqueletos de storyline,
+lista de pedido de dados, roteiro de entrevista e glossário. O agente
+ativa os que servem quando você diz do que é o projeto. Os pacotes se
+somam. A lista está em [pacotes/LEIA-ME.md](pacotes/LEIA-ME.md).
+
+Um pacote também pode trazer controles de governança do tipo de
+projeto. O controle não descreve atividade: ele diz o que precisa ficar
+registrado e aprovado, antes de que etapa do entregável, e que evidência
+o fecha. O método e o que é do cliente você fornece durante o projeto.
+
+| Pacote | Controles |
+| --- | --- |
+| Martech e adtech | Critérios aprovados antes de avaliar, achados com evidência, rastreabilidade do caso de uso à recomendação e validação com os donos das plataformas |
+| Processos de mídia digital | Taxonomia e dicionário de métricas, papéis e níveis de serviço entre anunciante, agência e plataformas, alçadas de autorização de mídia e validação com os donos dos processos. Dois condicionais: registro de entrevistas e workshops e avaliação de impacto da mudança |
+
+O estado conta os controles pendentes. A lista do dia pergunta uma vez
+se cada controle condicional vale e cobra o que chegou à etapa sem
+evidência. O registro de um envio avisa quando algum ficou para trás.
+Você fecha um controle dizendo a evidência, ou dispensa com o motivo. O
+pacote de processos de mídia digital traz só os controles.
 
 ### Checagens automáticas
 
@@ -521,6 +538,7 @@ Rode na raiz do projeto.
 | `python3 entregaveis/_harness/scripts/rotina.py --datas` | As datas que mudaram, com a original e o motivo |
 | `python3 entregaveis/_harness/scripts/rotina.py --lista` | A lista do dia, com os três itens que pedem atenção primeiro |
 | `python3 entregaveis/_harness/scripts/governanca.py` | O nível de governança e os materiais que o projeto emite |
+| `python3 entregaveis/_harness/scripts/governanca.py --controles` | Os controles de governança do tipo de projeto e a situação de cada um |
 | `python3 entregaveis/_harness/scripts/governanca.py --desvios` | O desvio de cada data contra a linha de base |
 | `python3 entregaveis/_harness/scripts/emitir.py` | Os materiais que saem prontos dos registros e a última emissão de cada um |
 | `python3 entregaveis/_harness/scripts/emitir.py status-semanal` | O rascunho do status da semana |

@@ -195,6 +195,13 @@ def ativar_pacote(nome: str) -> list[str]:
         texto = glossario.read_text(encoding="utf-8")
         glossario.write_text(texto + ("" if texto.endswith("\n") else "\n") + "\n".join(novos) + "\n", encoding="utf-8")
         feitos.append(f"{comum.relativo(glossario)} ({len(novos)} termos do pacote)")
+    if (pasta / "controles.tsv").is_file():
+        rotina_do_registro = comum.MODELOS / "projeto" / "controles.tsv"
+        registro = comum.PROJETO / "controles.tsv"
+        if not registro.exists() and rotina_do_registro.is_file() and comum.PROJETO.is_dir():
+            shutil.copyfile(rotina_do_registro, registro)
+        quantos = len([l for l in comum.ler_tsv(pasta / "controles.tsv") if l.get("codigo", "")])
+        feitos.append(f"{quantos} controle(s) de governança do tipo de projeto (governanca.py --controles)")
     brief = comum.PROJETO / "brief.md"
     texto = comum.ler(brief)
     campo = re.search(r"^pacotes:[ \t]*(.*)$", texto, flags=re.MULTILINE)

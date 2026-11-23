@@ -1,0 +1,10 @@
+# Controles de governança deste tipo de projeto. Dizem o que precisa ficar registrado e aprovado, e não como fazer o trabalho.
+# condicao: sempre, ou a situação em que o controle vale (começa por quando). antes_de: a etapa do entregável antes da qual o controle precisa estar cumprido: storyline, storyboard, redacao, revisao ou envio.
+# registra: o que fica registrado. comprova: a evidência que fecha o controle.
+codigo	controle	condicao	antes_de	registra	comprova
+taxonomia-e-metricas	Taxonomia de campanhas e dicionário de métricas aprovados	sempre	storyline	Padrão de nomes, dimensões, e a definição e a fórmula de cada métrica que os processos usam	Decisão registrada (D-nnn) com quem aprovou no anunciante e na agência
+papeis-e-niveis-de-servico	Papéis e níveis de serviço entre anunciante, agência e plataformas	sempre	revisao	Quem executa, quem aprova, quem é consultado e quem é informado em cada processo, e o prazo de cada passagem entre as partes	Matriz de papéis e níveis de serviço com o de acordo de cada parte, em ata (A-nnn) ou decisão (D-nnn)
+alcadas-de-autorizacao	Alçadas de aprovação de planos e autorizações de mídia	sempre	revisao	Quem aprova cada plano e cada autorização, até que valor, onde a aprovação fica registrada e como uma alteração é aprovada	Decisão registrada (D-nnn) com quem aprovou as alçadas no anunciante
+validacao-com-donos-dos-processos	Validação de cada processo com o dono	sempre	envio	Processo, dono, se confirma ou corrige, e a data	Resposta de cada dono de processo, em ata (A-nnn) ou em mensagem guardada
+entrevistas-e-workshops	Plano e registro de entrevistas e workshops	quando o levantamento ouve pessoas de mais de uma área ou de mais de uma empresa	storyline	Pessoa, tema, data, situação e a síntese do que foi dito	Reuniões registradas em reunioes.tsv (A-nnn), uma por entrevista ou workshop realizado
+impacto-da-mudanca	Avaliação de impacto da mudança	quando o processo novo muda o trabalho, o papel ou a ferramenta de alguém	envio	Público, o que muda para ele, a intensidade da mudança e o apoio necessário	Avaliação validada com o gestor de cada área afetada, em ata (A-nnn) ou decisão (D-nnn)

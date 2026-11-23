@@ -116,6 +116,8 @@ pelo porte do projeto, enxuto, padrão ou completo, e você escolhe os
 materiais que serão emitidos. O status, a pauta e o aceite saem dos
 registros como rascunho, e você revisa e envia. Um envio abre o prazo de
 resposta do aprovador, e um pedido fora do combinado espera a decisão.
+Os pacotes de tipo de projeto trazem os controles de governança próprios
+do tipo, que só fecham com evidência.
 
 O que o projeto aprende vai para o segundo cérebro, em notas de Markdown
 dentro de `entregaveis/_cerebro/`. O agente atualiza a nota do assunto a

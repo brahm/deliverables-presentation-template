@@ -313,6 +313,8 @@ def montar(hoje: datetime.date) -> dict:
                                        f"Aprovou, cobrei hoje, ainda não cobrei ou não depende mais de aprovação. Sem cobrança há {sem_cobranca(item)} dia(s) útil(eis)"))
     cobrados = {chave.split(":", 1)[1] for chave, _ in lista["confirmar"] if chave.startswith("cobranca:")}  # a pergunta do follow-up já cobre o item parado
     lista["confirmar"] += [(chave, texto + ". Está andando, travou ou não é mais necessário?") for chave, texto in resumo["parado"] if chave not in cobrados]
+    import governanca
+    lista["confirmar"] += [(f"controle:{codigo}", texto) for codigo, texto in governanca.controles_em_aberto()]
     lista["confirmar"] += list(resumo["cadencia"])
     lista["confirmar"] += [(f"pergunta:{chave}", texto) for chave, texto in perguntas_do_dia(hoje, p)]
     lista["algum_dia"] = [(l.get("id", "?"), l.get("item", "")) for l in comum.ler_tsv(comum.PROJETO / "adiados.tsv") if comum.normalizar(l.get("estado", "")) == "aberto"]

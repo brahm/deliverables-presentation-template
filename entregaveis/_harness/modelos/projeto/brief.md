@@ -15,7 +15,7 @@ iniciado: nao
 # Brief do projeto
 
 Os campos acima: `tipo` é o tipo de trabalho (transformação de marketing,
-assessment de martech e adtech, mídia, retail media, processos agênticos,
+assessment de martech e adtech, mídia, processos de mídia, retail media, processos agênticos,
 proposta, treinamento ou outro). `classificacao` é o nível de sigilo dos
 materiais. `marcacao_obrigatoria` é o texto que toda capa precisa trazer,
 quando há um. `fase` é o número da fase em que o projeto está, e a

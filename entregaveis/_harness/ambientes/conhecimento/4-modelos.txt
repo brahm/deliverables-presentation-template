@@ -1,6 +1,6 @@
 # Modelos
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.11.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.12.0. Gerado por empacotar.py: não edite à mão.
 
 Cada modelo é a forma de uma seção do registro do projeto ou de uma parte de um entregável. PREENCHER marca o que ainda precisa ser escrito.
 
@@ -225,7 +225,7 @@ iniciado: nao
 # Brief do projeto
 
 Os campos acima: `tipo` é o tipo de trabalho (transformação de marketing,
-assessment de martech e adtech, mídia, retail media, processos agênticos,
+assessment de martech e adtech, mídia, processos de mídia, retail media, processos agênticos,
 proposta, treinamento ou outro). `classificacao` é o nível de sigilo dos
 materiais. `marcacao_obrigatoria` é o texto que toda capa precisa trazer,
 quando há um. `fase` é o número da fase em que o projeto está, e a
@@ -618,6 +618,15 @@ horas	nunca	Horas trabalhadas		O consultor lança em esforco.tsv quando quiser. 
 # Esforço lançado, quando o consultor informa por conta própria. O harness não pergunta por horas e não avisa quando falta lançamento.
 # data: AAAA-MM-DD. horas: número, com ponto ou vírgula.
 data	pessoa	frente	entregavel	horas	observacao
+~~~
+
+### controles.tsv
+
+~~~text
+# As respostas do projeto aos controles de governança que os pacotes ativos trazem. Quem grava é o governanca.py --controle.
+# O controle sem linha aqui está pendente, e o condicional, a confirmar. situacao: pendente, a confirmar, cumprido ou nao se aplica.
+# evidencia: o id do registro (D-nnn, E-nnn, A-nnn) ou o arquivo que comprova. confirmado_em: AAAA-MM-DD.
+codigo	situacao	evidencia	confirmado_por	confirmado_em	observacao
 ~~~
 
 ## Fase
