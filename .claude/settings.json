@@ -7,6 +7,8 @@
       "Bash(python3 entregaveis/_harness/scripts/validar.py *)",
       "Bash(python3 entregaveis/_harness/scripts/preparar.py)",
       "Bash(python3 entregaveis/_harness/scripts/preparar.py *)",
+      "Bash(python3 entregaveis/_harness/scripts/empacotar.py)",
+      "Bash(python3 entregaveis/_harness/scripts/empacotar.py *)",
       "Bash(python3 entregaveis/_harness/scripts/fase.py)",
       "Bash(python3 entregaveis/_harness/scripts/fase.py *)",
       "Bash(python3 entregaveis/_harness/scripts/levantar.py)",

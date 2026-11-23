@@ -1,0 +1,344 @@
+# Pacote retail-media
+
+Arquivo de conhecimento do harness de entregáveis, versão 0.7.0. Gerado por empacotar.py: não edite à mão.
+
+Ponto de partida genérico para este tipo de projeto. O domínio do projeto vence o pacote onde os dois se contradizem.
+
+## Pacote: retail media
+
+### Quando usar
+
+O projeto trata de mídia vendida ou comprada dentro do ecossistema de
+um varejista: site, aplicativo, loja física e audiências baseadas em
+dados de compra. Há dois lados, e o pacote serve aos dois:
+
+- o varejista, que monta ou amplia a sua rede de mídia;
+- a marca, que decide quanto e onde investir nas redes dos varejistas.
+
+Defina o lado no início. Ele muda a audiência, os frameworks e o
+pedido.
+
+### O que perguntar ao consultor no início
+
+Além das perguntas de `iniciar-projeto`:
+
+- O cliente é o varejista ou a marca anunciante?
+- Para o varejista: a rede já existe? Quanto fatura e com que time? O
+  objetivo é receita nova, margem ou serviço aos fornecedores?
+- Para o varejista: quem manda hoje na relação com os fornecedores, e
+  como a área comercial vê a rede de mídia?
+- Para a marca: quem decide a verba hoje, o time comercial, o de mídia
+  ou o de comércio eletrônico? De que orçamento ela sai?
+- Que decisão o trabalho precisa provocar e até quando?
+- Que dados de venda e de campanha o cliente pode compartilhar?
+
+### Entregáveis típicos
+
+| Entregável | Lado | Veículo | Formato | Audiência que decide |
+| --- | --- | --- | --- | --- |
+| Tamanho da oportunidade e caso de negócio | Varejista | projetado | pptx, com a base em xlsx | Presidência, comercial e financeiro |
+| Modelo operacional da rede | Varejista | leitura | pptx | Diretoria comercial, de marketing e de tecnologia |
+| Oferta para anunciantes | Varejista | leitura | pptx | Diretoria da rede e comercial |
+| Requisitos e escolha de tecnologia | Varejista | documento | docx, com a matriz em xlsx | Tecnologia e compras |
+| Estratégia de investimento | Marca | projetado | pptx | Diretoria de marketing e comercial |
+| Avaliação das redes de varejistas | Marca | planilha | xlsx, com resumo em pptx | Mídia, comercial e comércio eletrônico |
+
+### Frameworks para o varejista
+
+#### 1. Tamanho da oportunidade
+
+A receita potencial sai do tráfego e das vendas do varejista, e não de
+uma porcentagem de mercado. Para cada tipo de inventário: volume
+disponível, parcela que pode levar anúncio sem prejudicar a compra,
+preço esperado e taxa de ocupação. Confira o total contra a receita de
+mídia como parcela das vendas e contra as verbas que os fornecedores já
+pagam. Mostre três cenários e as premissas.
+
+#### 2. Mapa de inventário
+
+| Onde | Formatos |
+| --- | --- |
+| Site e aplicativo | Produtos patrocinados na busca e nas listas, display, páginas de marca |
+| Fora do site | Mídia em outros veículos com audiências dos dados de compra do varejista |
+| Loja física | Telas, rádio de loja, pontas de gôndola, amostras, materiais impressos |
+| Canais de relacionamento | E-mail, mensagens e ofertas no programa de fidelidade |
+
+Para cada formato: volume, quem opera, como é vendido e como é medido.
+É um diagrama de camadas ou uma matriz.
+
+#### 3. Proposta de valor ao anunciante
+
+O que a rede oferece que outras mídias não oferecem: audiências por
+comportamento de compra, proximidade do momento da compra e medição que
+liga o anúncio à venda. Cada promessa pede uma prova. A medição precisa
+de definições que o anunciante possa conferir: janela de atribuição, o
+que conta como venda e se o resultado é incremental.
+
+#### 4. Verba de mídia e verba comercial
+
+O ponto mais sensível. A receita da rede pode ser dinheiro novo, do
+orçamento de marketing do fornecedor, ou só mudar de nome, saindo da
+verba comercial que o varejista já recebia. Separe as duas no caso de
+negócio. Defina como a rede e a área comercial negociam juntas e quem
+fecha o plano anual com o fornecedor.
+
+#### 5. Modelo operacional
+
+Funções: vendas a anunciantes, operação de campanhas, produto e preço,
+dados e medição, atendimento. Decisões de desenho: onde a rede fica na
+estrutura, como se relaciona com comercial e marketing, o que é
+operado por parceiro e que metas e incentivos evitam o conflito com a
+área comercial.
+
+#### 6. Tecnologia
+
+Capacidades: servidor de anúncios de varejo, leilão de produtos
+patrocinados, plataforma de autosserviço, gestão de audiências,
+ativação fora do site, sala limpa de dados, medição e relatórios. Para
+cada uma, a escolha entre construir, comprar e operar com parceiro, com
+custo, prazo e controle sobre os dados.
+
+#### 7. Preço e modelo comercial
+
+Leilão ou preço fixo por formato, pacotes anuais, mínimo de
+investimento, autosserviço ou venda assistida por porte de anunciante.
+O preço considera a margem que o produto anunciado deixa ao fornecedor.
+
+#### 8. Experiência de compra e privacidade
+
+Limite de anúncios por página, relevância e regras para o que pode ser
+anunciado. Base legal e consentimento para usar dados de compra em
+mídia, dentro e fora do site. Um anúncio que piora a busca custa vendas,
+e a página deve mostrar esse custo.
+
+### Frameworks para a marca
+
+#### 9. Papel do retail media no plano
+
+O que a mídia no varejista faz que as outras não fazem, por objetivo:
+defender posição na busca do varejista, ganhar novos compradores,
+lançar produto. Diga de qual orçamento sai a verba e o que deixa de ser
+comprado.
+
+#### 10. Avaliação das redes
+
+Uma matriz de varejistas por critérios, na planilha: participação nas
+vendas da marca, audiência, formatos, qualidade da medição, acesso a
+dados, custo, facilidade de operação e peso na negociação comercial.
+Declare o peso de cada critério antes de dar as notas.
+
+#### 11. Medição entre varejistas
+
+Cada rede mede de um jeito. Defina o padrão da marca: janela,
+definição de venda, novos compradores e incrementalidade. Peça o mesmo
+a todas e registre quem não entrega. Retorno relatado pela própria rede
+é o nível mais fraco de evidência.
+
+#### 12. Organização interna
+
+Quem decide e quem opera entre comercial, mídia e comércio eletrônico.
+Sem dono único, a marca negocia a mesma verba duas vezes.
+
+### Esqueletos de storyline
+
+#### Caso de negócio da rede (varejista)
+
+1. Capa
+2. Resumo: o tamanho da oportunidade, o investimento e o pedido
+3. O que os fornecedores já investem e para onde o dinheiro está indo
+4. O inventário que o varejista tem e não vende
+5. A receita potencial em três cenários, com as premissas
+6. Quanto disso é dinheiro novo e quanto é verba comercial que muda de nome
+7. O que a rede precisa oferecer para ganhar a verba de marketing
+8. O modelo operacional e a relação com a área comercial
+9. A tecnologia: construir, comprar ou operar com parceiro
+10. O caminho em ondas
+11. O pedido: decisões, donos e datas
+12. Apêndice: método, premissas e fontes
+
+#### Estratégia de investimento (marca)
+
+1. Resumo: a recomendação e o pedido
+2. Quanto a marca investe hoje nos varejistas e quem decide
+3. O que esse investimento entrega, e com que nível de evidência
+4. O papel do retail media no plano
+5. A avaliação das redes
+6. A alocação recomendada e o que sai de outros orçamentos
+7. O padrão de medição a exigir
+8. Quem decide e quem opera
+9. O pedido
+
+### Evidência que cada afirmação pede
+
+| Afirmação | Fonte aceitável |
+| --- | --- |
+| Tráfego, buscas e vendas do varejista | Dados internos do varejista, com período |
+| Verba que os fornecedores já pagam | Contratos comerciais e extrato financeiro |
+| Preço de formato | Tabela vigente da rede ou resultado de leilão |
+| Receita potencial | Cálculo na planilha, com as premissas |
+| Resultado de campanha | Relatório com janela e definição de venda declaradas |
+| Resultado incremental | Experimento com grupo de controle |
+| Tamanho do mercado | Estudo citável, com nome, autor e ano |
+| Comparação entre redes | Matriz com critérios e pesos declarados |
+
+### Armadilhas
+
+- Não dizer de que lado o cliente está.
+- Calcular a oportunidade como parcela de um número de mercado, sem
+  passar pelo inventário real.
+- Contar como receita nova a verba comercial que só mudou de nome.
+- Ignorar o conflito entre a rede e a área comercial.
+- Tratar o retorno relatado pela rede como resultado incremental.
+- Encher a busca de anúncios e não medir o efeito na conversão da loja.
+- Para a marca: avaliar redes só pelo retorno relatado, que não é
+  comparável entre elas.
+- Prometer ao anunciante uma medição que a tecnologia ainda não entrega.
+
+## Roteiros de entrevista
+
+Uma entrevista dura de 45 a 60 minutos. Registre a entrevista no intake
+com o tipo `entrevista` e leve cada achado ao registro de evidências com
+a área e a data. Uma fala só é citada com nome quando a pessoa autoriza.
+
+Use os roteiros do lado em que o cliente está. Conversas com
+fornecedores ou com varejistas, do outro lado da mesa, só com a
+aprovação do consultor e do cliente.
+
+### Varejista: presidência e diretoria
+
+- O que a rede de mídia precisa ser para a empresa em três anos?
+- Qual é a meta: receita, margem ou relação com os fornecedores?
+- Que risco preocupa mais: a experiência do cliente, o conflito com
+  fornecedores ou o investimento?
+- Quem deve ser o dono da rede?
+
+### Varejista: área comercial
+
+- Como é negociado o plano anual com um fornecedor grande?
+- Que verbas o fornecedor paga hoje e pelo que ele recebe?
+- Como a rede de mídia entra nessa negociação?
+- O que você teme perder com a rede?
+- Que fornecedores pedem mais dados e mais medição?
+
+### Varejista: time da rede de mídia
+
+- Que formatos são vendidos, a quem e como?
+- Qual é a ocupação do inventário e onde ele sobra?
+- Como um anunciante compra, acompanha e recebe o resultado?
+- O que os anunciantes pedem e a rede não entrega?
+- Que parte da operação é manual?
+
+### Varejista: comércio eletrônico e experiência do cliente
+
+- Quantos anúncios cabem em uma página de busca antes de a conversão cair?
+- Que regras definem o que pode ser anunciado e onde?
+- Como a relevância dos produtos patrocinados é controlada?
+
+### Varejista: dados, tecnologia e privacidade
+
+- Que dados de compra podem ser usados em mídia e com que base legal?
+- Como as audiências são montadas e ativadas dentro e fora do site?
+- Que tecnologia de anúncios existe e o que ela não faz?
+- Como a venda é ligada ao anúncio, na loja física e no digital?
+
+### Marca: diretoria de marketing e comercial
+
+- Quanto a marca investe nos varejistas e de quais orçamentos?
+- Quem decide esse investimento, e com que informação?
+- O que a marca recebe de volta em dados e em resultado?
+- O investimento é escolha de mídia ou condição da negociação comercial?
+
+### Marca: mídia e comércio eletrônico
+
+- Como as campanhas nos varejistas são planejadas e operadas?
+- Que resultado cada rede relata e com que definição?
+- Onde os números das redes e os de vendas da marca não fecham?
+- Que rede você cortaria e qual ampliaria? Por quê?
+
+### Marca: gestão de contas de varejo
+
+- Como a mídia entra no plano anual com cada varejista?
+- O que acontece com a negociação quando a marca reduz a mídia?
+- Que varejistas compartilham dados de venda, e em que nível?
+
+## Procedimento do pacote retail-media
+
+Quando: em projeto de retail media, do lado do varejista que monta uma rede de mídia ou do lado da marca que investe nela, ao pedir dados e marcar entrevistas, ao montar o briefing e a storyline, ao calcular o tamanho da oportunidade, ao comparar redes e ao revisar o material.
+
+O conteúdo do pacote está em
+`entregaveis/_harness/pacotes/retail-media/`. Esta skill diz que parte
+abrir em cada momento. As skills do fluxo continuam valendo.
+
+1. Antes de tudo, confirme com o consultor de que lado o cliente está:
+   varejista ou marca. Registre com `registrar-decisao`. Faça as outras
+   perguntas da seção "O que perguntar ao consultor no início" de
+   `PACOTE.md`.
+2. No intake, use as linhas do lado certo em `pedido-de-dados.tsv` e os
+   roteiros do lado certo em `entrevistas.md`. Conversa com o outro lado
+   da mesa só com aprovação do consultor e do cliente.
+3. No briefing, confira o entregável na tabela "Entregáveis típicos".
+   Para o varejista, a área comercial é a resistência mais provável:
+   escreva o que ela teme perder.
+4. Na storyline, parta do esqueleto em "Esqueletos de storyline" e
+   reescreva cada título com o achado deste projeto.
+5. O tamanho da oportunidade sai do inventário real, em três cenários,
+   com as premissas na planilha. Separe sempre dinheiro novo de verba
+   comercial que muda de nome.
+6. Todo resultado de campanha traz a janela de atribuição e a definição
+   de venda. Só chame de incremental o que veio de experimento.
+7. Cada afirmação usa a fonte que a tabela "Evidência que cada
+   afirmação pede" aceita.
+8. Na comparação de redes, declare critérios e pesos antes das notas. A
+   matriz fica na planilha.
+9. Na revisão, passe pela lista de "Armadilhas" além da rubrica.
+
+## Termos do pacote
+
+~~~text
+# Termos de retail media. Ao ativar o pacote, as linhas entram no glossário do projeto.
+# A coluna evitar fica vazia: o projeto decide que variantes proibir, conforme o vocabulário do cliente.
+termo	definicao	evitar	idioma
+retail media	Mídia vendida por um varejista nos seus canais e com os seus dados de compra		pt
+rede de mídia de varejo	A operação do varejista que vende, entrega e mede essa mídia		pt
+produto patrocinado	Anúncio de um produto nos resultados de busca e nas listas do varejista		pt
+mídia fora do site	Anúncios em outros veículos, comprados com audiências dos dados do varejista		pt
+mídia em loja	Anúncios em telas, áudio e espaços da loja física		pt
+verba comercial	O que o fornecedor paga ao varejista dentro da negociação de compra e venda		pt
+verba de marketing	O orçamento de marca e de mídia do fornecedor, decidido fora da negociação comercial		pt
+plano anual conjunto	O acordo anual entre varejista e fornecedor, com metas, verbas e ações		pt
+medição de ciclo fechado	A ligação entre a exposição ao anúncio e a venda registrada pelo varejista		pt
+novo comprador	Quem comprou a marca pela primeira vez em um período definido		pt
+incrementalidade	O resultado que só aconteceu por causa da campanha, medido com grupo de controle		pt
+ROAS	Retorno sobre o investimento em mídia: a receita atribuída dividida pelo valor investido		pt
+janela de atribuição	O período depois do anúncio em que uma venda é creditada a ele		pt
+carga de anúncios	A parcela dos espaços de uma página ocupada por anúncios		pt
+autosserviço	Plataforma em que o anunciante cria e gerencia as próprias campanhas		pt
+sala limpa de dados	Ambiente em que duas empresas cruzam dados sem que uma veja os dados individuais da outra		pt
+servidor de anúncios de varejo	Sistema que escolhe e entrega os anúncios nos canais do varejista		pt
+~~~
+
+## Pedido de dados
+
+~~~text
+# Lista padrão de pedido de dados para um projeto de retail media. Use as linhas do lado em que o cliente está.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que alguma análise da storyline usa.
+# prioridade: essencial (sem ele não há análise), importante (melhora um achado) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Varejista: tráfego, buscas e páginas vistas por mês, no site e no aplicativo	Tamanho da oportunidade e inventário	Planilha	Comércio eletrônico ou dados	essencial
+Varejista: vendas por categoria e por fornecedor, no digital e na loja física	Tamanho da oportunidade	Planilha	Comercial ou dados	essencial
+Varejista: receita atual de mídia por formato e por anunciante	Ocupação do inventário e ponto de partida	Planilha	Rede de mídia ou financeiro	essencial
+Varejista: verbas comerciais recebidas dos fornecedores, por tipo	Separar dinheiro novo de verba que muda de nome	Planilha	Comercial ou financeiro	essencial
+Varejista: tabela de preços, formatos e pacotes vendidos	Preço e modelo comercial	Apresentação ou planilha	Rede de mídia	importante
+Varejista: inventário de loja física, com telas, espaços e fluxo de clientes	Mapa de inventário	Planilha	Operações de loja	importante
+Varejista: tamanho da base identificada e do programa de fidelidade, com consentimento	Audiências e privacidade	Planilha	CRM ou dados	essencial
+Varejista: tecnologia de anúncios em uso, contratos e custos	Tecnologia	Planilha e contratos	Tecnologia ou rede de mídia	importante
+Varejista: relatórios de campanha entregues aos anunciantes	Proposta de valor e medição	Apresentação	Rede de mídia	importante
+Varejista: estrutura e pessoas da rede de mídia e da área comercial	Modelo operacional	Organograma	Recursos humanos	importante
+Varejista: testes sobre o efeito dos anúncios na conversão da loja	Experiência de compra	Relatório	Comércio eletrônico	complementar
+Marca: investimento por varejista e por formato, com o orçamento de origem	Papel do retail media e alocação	Planilha	Mídia, comercial ou financeiro	essencial
+Marca: vendas por varejista e por categoria	Avaliação das redes	Planilha	Comercial	essencial
+Marca: relatórios de campanha recebidos de cada rede	Medição entre varejistas	Apresentação ou exportação	Mídia ou comércio eletrônico	essencial
+Marca: planos anuais e acordos comerciais com os varejistas	Relação entre mídia e negociação	PDF	Gestão de contas	importante
+Marca: plano de mídia geral e resultados dos outros canais	Papel do retail media no plano	Planilha	Mídia	importante
+Estudos de mercado sobre retail media que o cliente já comprou	Tamanho do mercado com fonte citável	PDF	Diretoria	complementar
+~~~

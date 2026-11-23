@@ -3,6 +3,22 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.7.0
+
+- O harness fora do Claude Code. `_harness/ambientes/` traz o texto de
+  instruções para colar e os arquivos de conhecimento para enviar ao
+  Claude desktop, ao ChatGPT desktop e ao Microsoft Copilot, com o passo
+  a passo de cada um. Nesses ambientes não há trava nem checagem
+  automática: as regras viram instruções, e o agente confere à mão.
+- `scripts/empacotar.py --projeto` monta o pacote do projeto, com o
+  brief, as fases, as decisões, as evidências e o domínio, em
+  `entregaveis/_ambiente/`, que fica fora do git.
+- A skill `usar-outro-ambiente` leva o trabalho para fora e traz de
+  volta o registro e os materiais, que passam pelas checagens daqui.
+
+O que o projeto precisa fazer: atualize com `--atualizar`, que acrescenta
+`entregaveis/_ambiente/` ao `.gitignore`.
+
 ## 0.6.0
 
 - Fases do projeto. Um projeto muda de natureza e continua o mesmo: a

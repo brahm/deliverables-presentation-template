@@ -1,0 +1,389 @@
+# Pacote treinamento
+
+Arquivo de conhecimento do harness de entregáveis, versão 0.7.0. Gerado por empacotar.py: não edite à mão.
+
+Ponto de partida genérico para este tipo de projeto. O domínio do projeto vence o pacote onde os dois se contradizem.
+
+## Pacote: treinamento
+
+### Quando usar
+
+O projeto entrega capacitação: curso, trilha de módulos, workshop,
+material didático, exercícios, exames e guias para quem facilita. Serve
+também para o workshop de trabalho de um projeto de consultoria, em que
+o grupo precisa sair com uma decisão ou um produto.
+
+Um treinamento existe para mudar o que as pessoas fazem no trabalho. Ele
+é desenhado de trás para a frente: primeiro o que a pessoa fará de
+diferente, depois como isso será verificado, e só então o conteúdo.
+
+### O que perguntar ao consultor no início
+
+Além das perguntas de `iniciar-projeto`:
+
+- Quem são os participantes, quantos, com que experiência e em que
+  idioma?
+- O que eles precisam passar a fazer no trabalho depois do treinamento?
+- Como a empresa saberá que funcionou?
+- Qual é o formato: presencial, remoto ao vivo, autoinstrucional ou
+  misto? Quanto tempo há e em quantas sessões?
+- Quem facilita: o consultor, o time do cliente, outra pessoa? Com que
+  domínio do assunto?
+- Há exame, certificação ou nota mínima? O resultado tem consequência
+  para o participante?
+- Que ferramentas e dados os participantes usarão nos exercícios? Podem
+  ser dados reais?
+- Que materiais o cliente já tem sobre o assunto?
+
+### Entregáveis típicos
+
+| Entregável | Veículo | Formato | Para quem |
+| --- | --- | --- | --- |
+| Plano do curso | documento | docx | Patrocinador e recursos humanos, que aprovam |
+| Slides de aula | workshop | pptx | Participantes, com as notas para quem facilita |
+| Guia de quem facilita | documento | docx | Quem facilita |
+| Caderno do participante | documento | docx ou pdf | Participantes |
+| Caderno de exercícios | documento | docx, com dados em xlsx | Participantes |
+| Gabarito comentado | documento | docx | Quem facilita e quem corrige |
+| Exame e matriz de prova | documento | docx, com o banco de questões em xlsx | Quem aplica e quem corrige |
+| Roteiro de workshop | documento | docx | Quem facilita e o patrocinador |
+| Guia rápido de uma página | leitura | pdf | Participantes, depois do curso |
+
+O gabarito e o banco de questões ficam em arquivos separados dos
+materiais do participante, e a pasta `saida/` não os mistura.
+
+### Frameworks
+
+#### 1. Análise de necessidade
+
+Quatro perguntas: o que as pessoas fazem hoje, o que precisam fazer, por
+que não fazem e o que o treinamento pode mudar. Quando a causa é falta
+de ferramenta, de tempo ou de incentivo, treinamento não resolve, e o
+plano do curso diz isso.
+
+#### 2. Objetivos de aprendizagem
+
+Cada objetivo completa a frase "ao final, a pessoa é capaz de" com um
+verbo que se observa. Os níveis, do mais simples ao mais exigente,
+seguem a taxonomia de Bloom revisada:
+
+| Nível | Verbos |
+| --- | --- |
+| Lembrar | listar, nomear, reconhecer |
+| Entender | explicar, resumir, dar exemplo |
+| Aplicar | usar, calcular, executar, configurar |
+| Analisar | comparar, diagnosticar, separar causas |
+| Avaliar | julgar, priorizar, recomendar, criticar |
+| Criar | desenhar, planejar, propor, construir |
+
+"Entender o funil" não se observa. "Diagnosticar em que etapa do funil
+uma campanha perde mais" se observa. Três a cinco objetivos por módulo.
+
+#### 3. Desenho de trás para a frente
+
+Para cada objetivo, nesta ordem:
+
+1. a evidência de que a pessoa o atingiu: exercício, entrega ou questão;
+2. a prática que a prepara para isso;
+3. o conteúdo mínimo que a prática exige.
+
+O conteúdo que não serve a nenhum objetivo sai, por mais interessante
+que seja. Ele pode ir para a leitura complementar.
+
+#### 4. Estrutura de um módulo
+
+| Momento | O que acontece | Parcela do tempo |
+| --- | --- | --- |
+| Abertura | Um caso ou uma pergunta que mostra por que isso importa | 5% a 10% |
+| Conceito | Um conceito por vez, com o exemplo antes da regra | 20% a 30% |
+| Demonstração | Quem facilita resolve um caso e pensa em voz alta | 10% a 15% |
+| Prática | Os participantes resolvem, sozinhos ou em grupo | 35% a 50% |
+| Retorno | Correção comentada e erros comuns | 10% a 15% |
+| Fecho | O que levar para o trabalho e a ponte para o próximo módulo | 5% |
+
+Nenhum bloco de exposição passa de 20 minutos sem atividade. Parta do
+que o participante já sabe e peça que ele o diga primeiro.
+
+#### 5. Exercícios
+
+Cada exercício tem: o objetivo que mede, o enunciado, os dados ou o
+caso, o tempo, a forma de trabalho, o que entregar, o critério de
+correção, o gabarito comentado e os erros comuns. Use casos do contexto
+dos participantes. Dados reais só com autorização e sem dados pessoais.
+A dificuldade sobe ao longo do módulo: exercício guiado, depois com
+menos apoio, depois um caso aberto.
+
+#### 6. Exames
+
+A matriz de prova vem antes das questões: objetivos nas linhas, níveis
+nas colunas e o número de questões em cada célula, proporcional à
+importância do objetivo. Regras para questões:
+
+- cada questão mede um objetivo declarado;
+- o enunciado traz uma situação, e não um pedido de definição, quando o
+  objetivo é aplicar ou analisar;
+- em múltipla escolha, há uma alternativa correta, as erradas são erros
+  que alguém comete de verdade e todas têm tamanho parecido;
+- sem "todas as anteriores", sem "nenhuma das anteriores" e sem negação
+  dupla;
+- nenhuma questão dá a resposta de outra;
+- questão aberta tem rubrica de correção com níveis e exemplos.
+
+Defina a nota mínima e o que acontece com quem não a atinge antes de
+aplicar. Faça um teste do exame com duas ou três pessoas do público. O
+banco de questões guarda, para cada questão, o objetivo, o nível, a
+resposta e a justificativa.
+
+#### 7. Workshop de trabalho
+
+Um workshop tem um produto: uma decisão, uma lista priorizada, um
+desenho. O roteiro traz:
+
+- o objetivo e o produto esperado, em uma frase;
+- os participantes e por que cada um está ali;
+- o que cada um prepara antes;
+- a agenda com horário, atividade, dinâmica, material e responsável;
+- as perguntas exatas de cada atividade;
+- como as decisões são tomadas e registradas;
+- o plano para quando o tempo acabar ou o grupo travar;
+- o que acontece depois, com donos e datas.
+
+Planeje para 60% do tempo. Em sessão remota, uma atividade a cada dez
+minutos e instruções de acesso enviadas antes.
+
+#### 8. Materiais
+
+| Material | Regra |
+| --- | --- |
+| Slides de aula | Apoiam a fala. O texto de estudo fica no caderno |
+| Caderno do participante | Lido sem apresentador, com exemplos e espaço para notas |
+| Guia de quem facilita | Tempo por bloco, o que dizer, perguntas a fazer, respostas esperadas, erros comuns |
+| Guia rápido | Uma página, para consultar no trabalho |
+| Leitura prévia | Curta, com uma pergunta para trazer respondida |
+
+Um termo novo aparece definido na primeira vez e entra no glossário.
+
+#### 9. Avaliação do treinamento
+
+Quatro níveis, do modelo de Kirkpatrick: reação dos participantes,
+aprendizagem medida por exercício ou exame, aplicação no trabalho
+algumas semanas depois e resultado para o negócio. Planeje no início
+como cada nível será medido. A pesquisa de reação sozinha não diz se
+alguém aprendeu.
+
+#### 10. Sustentação
+
+O que acontece depois da sala: prática espaçada, um desafio aplicado ao
+trabalho, acompanhamento do gestor, horários para dúvidas, comunidade.
+Sem isso, a maior parte se perde em semanas.
+
+### Esqueletos de storyline
+
+Em treinamento, a storyline é o plano do curso: os módulos em ordem, o
+objetivo de cada um e a evidência de aprendizagem.
+
+#### Curso em módulos
+
+1. Capa
+2. Para quem é, o que a pessoa fará de diferente e como será verificado
+3. O mapa do curso: módulos, duração e dependências
+4. Módulo 1: abertura com um caso do contexto dos participantes
+5. Módulo 1: conceito, com o exemplo antes da regra
+6. Módulo 1: demonstração
+7. Módulo 1: exercício
+8. Módulo 1: correção e erros comuns
+9. Módulo 1: o que levar para o trabalho
+10. Os módulos seguintes, na mesma estrutura
+11. Avaliação final
+12. O que acontece depois do curso
+13. Apêndice: glossário, leituras e guia rápido
+
+#### Workshop de trabalho
+
+1. Por que estamos aqui e o que sai desta sessão
+2. O que já sabemos, em uma página
+3. Atividade 1: a pergunta, a dinâmica e o tempo
+4. Síntese da atividade 1
+5. Atividade 2
+6. Síntese e decisão
+7. Próximos passos, com donos e datas
+
+#### Exame
+
+1. Instruções: tempo, material permitido, nota mínima
+2. Questões, agrupadas por módulo e em ordem de dificuldade
+3. Em arquivo separado: gabarito, justificativas e rubricas
+
+### Evidência que cada afirmação pede
+
+| Afirmação | Fonte aceitável |
+| --- | --- |
+| Lacuna de competência do público | Avaliação, entrevistas com gestores ou dados de desempenho, por grupo |
+| Conteúdo técnico ensinado | Material do projeto, documentação oficial ou fonte citável |
+| Caso usado em aula ou exercício | Caso do cliente autorizado, ou caso fictício marcado como fictício |
+| Dados de exercício | Dados reais autorizados e sem dados pessoais, ou dados fictícios marcados |
+| Resposta de uma questão | Justificativa escrita no banco de questões, com a fonte |
+| Resultado do treinamento | Exame, avaliação de aplicação ou indicador, com data e número de pessoas |
+
+Um caso fictício não finge ser real. Os números dele são coerentes entre
+si e trazem a marca de exemplo.
+
+### Armadilhas
+
+- Começar pelo conteúdo e deixar a prática para o tempo que sobrar.
+- Escrever objetivos com "entender" e "conhecer".
+- Ensinar tudo o que se sabe sobre o assunto.
+- Usar os slides como apostila.
+- Exercício sem gabarito ou sem critério de correção.
+- Questão que mede memória quando o objetivo é aplicar.
+- Alternativa errada absurda, que ninguém marcaria.
+- Gabarito no mesmo arquivo que vai para o participante.
+- Medir só a satisfação dos participantes.
+- Workshop sem produto definido.
+- Agenda que usa todo o tempo e não deixa folga.
+- Guia de quem facilita que só repete os slides.
+- Dados reais com informação pessoal em exercício.
+
+## Roteiros de entrevista
+
+Conversas curtas, de 30 a 45 minutos, antes de desenhar. Registre no
+intake com o tipo `entrevista` e leve cada achado ao registro de
+evidências com a área e a data. Uma fala só é citada com nome quando a
+pessoa autoriza.
+
+Peça exemplos de trabalho real: um plano bem feito e um mal feito
+ensinam mais sobre a lacuna do que a opinião de qualquer pessoa.
+
+### Patrocinador
+
+- O que as pessoas precisam fazer de diferente depois do treinamento?
+- Que problema de negócio motivou o pedido?
+- Como você vai saber que funcionou, e em quanto tempo?
+- O que já foi tentado?
+- O resultado do exame tem consequência para o participante?
+
+### Gestores dos participantes
+
+- Em que situações de trabalho a lacuna aparece?
+- Mostre um exemplo de trabalho bom e um de trabalho fraco.
+- O que as pessoas já sabem e não usam? Por quê?
+- Quanto tempo você libera para o treinamento e para a prática depois?
+- Como você vai acompanhar a aplicação?
+
+### Participantes, em amostra
+
+- Como é o seu trabalho no dia a dia com este assunto?
+- O que é mais difícil nele?
+- Que treinamento anterior foi útil, e o que ele tinha?
+- Que ferramentas e dados você usa?
+- O que você gostaria de sair sabendo fazer?
+
+### Especialistas no assunto
+
+- Quais são os conceitos sem os quais nada mais se entende?
+- Que erros os iniciantes cometem com mais frequência?
+- Como você explica isso a alguém novo? Que exemplo usa?
+- O que mudou recentemente e ainda não está nos materiais?
+- Que fontes você considera confiáveis?
+
+### Quem vai facilitar
+
+- Que experiência você tem com o assunto e com facilitação?
+- De que apoio você precisa no guia: roteiro de fala, respostas, tempos?
+- Que perguntas difíceis você espera do grupo?
+- Como é o espaço ou a plataforma da sessão?
+
+### Recursos humanos e capacitação
+
+- Que padrões de curso, de certificação e de registro a empresa usa?
+- Em que plataforma o material será publicado?
+- Que regras valem para exame, nota mínima e segunda chance?
+- Que requisitos de acessibilidade e de idioma existem?
+
+## Procedimento do pacote treinamento
+
+Quando: em projeto de treinamento ou quando o entregável é um curso, um módulo de aula, um workshop, material didático, um caderno de exercícios, um exame ou um guia de facilitação, ao levantar a necessidade, ao escrever objetivos, ao desenhar módulos, exercícios e questões e ao revisar o material.
+
+O conteúdo do pacote está em
+`entregaveis/_harness/pacotes/treinamento/`. Esta skill diz que parte
+abrir em cada momento. As skills do fluxo continuam valendo.
+
+1. No início, faça ao consultor as perguntas da seção "O que perguntar ao
+   consultor no início" de `PACOTE.md`. Se a causa do problema não é falta de
+   conhecimento ou de prática, diga isso antes de desenhar.
+2. No intake, parta de `pedido-de-dados.tsv` e dos roteiros de
+   `entrevistas.md`. Peça exemplos reais de trabalho bom e fraco.
+3. No briefing, use o tipo `treinamento`. A audiência são os
+   participantes, a transformação é o que eles fazem hoje e o que farão
+   depois, e a chamada para ação é a aplicação no trabalho. Veja o
+   veículo de cada material na tabela "Entregáveis típicos".
+4. Antes da storyline, escreva os objetivos de aprendizagem com verbo
+   observável e, para cada um, a evidência de aprendizagem.
+5. A storyline é o plano do curso. Parta do esqueleto em "Esqueletos de
+   storyline". O consultor aprova os objetivos e o mapa de módulos.
+6. Cada módulo segue a estrutura do framework 4, com mais tempo de
+   prática do que de exposição. Em slides de aula, o veículo é
+   `workshop`, e o texto de estudo vai para o caderno.
+7. Cada exercício e cada questão traz o objetivo que mede, o critério
+   de correção e a resposta comentada. Monte a matriz de prova antes de
+   escrever o exame.
+8. Gabaritos, rubricas e banco de questões ficam em arquivos separados
+   dos materiais do participante. Confira isso em `saida/` antes de
+   entregar.
+9. Cada afirmação usa a fonte que a tabela "Evidência que cada
+   afirmação pede" aceita. Caso e dado fictício levam a marca de
+   exemplo. Dado real não traz informação pessoal.
+10. Na revisão, aplique a seção de material de treinamento da rubrica e
+    passe pela lista de "Armadilhas". Confira se cada objetivo tem
+    prática e avaliação, e se cada questão aponta para um objetivo.
+
+## Termos do pacote
+
+~~~text
+# Termos de treinamento. Ao ativar o pacote, as linhas entram no glossário do projeto.
+# A coluna evitar fica vazia: o projeto decide que variantes proibir, conforme o vocabulário do cliente.
+termo	definicao	evitar	idioma
+objetivo de aprendizagem	O que a pessoa é capaz de fazer ao final, dito com um verbo que se observa		pt
+módulo	Uma unidade do curso, com objetivos, prática e evidência de aprendizagem próprios		pt
+plano do curso	O documento com o público, os objetivos, os módulos, a avaliação e a logística		pt
+evidência de aprendizagem	O exercício, a entrega ou a questão que mostra que o objetivo foi atingido		pt
+exercício guiado	Prática com passos indicados e apoio de quem facilita		pt
+estudo de caso	Situação descrita em detalhe, que os participantes analisam e resolvem		pt
+gabarito comentado	A resposta de cada exercício ou questão, com a justificativa e os erros comuns		pt
+rubrica de correção	Os critérios e os níveis usados para dar nota a uma resposta aberta		pt
+matriz de prova	A tabela que distribui as questões do exame por objetivo e por nível		pt
+banco de questões	O conjunto de questões com objetivo, nível, resposta e justificativa		pt
+alternativa errada	Opção incorreta de uma questão de múltipla escolha, baseada em um erro real		pt
+nota mínima	A nota a partir da qual o participante é aprovado		pt
+guia de quem facilita	O roteiro da sessão para quem conduz: tempos, falas, perguntas e respostas esperadas		pt
+caderno do participante	O material de estudo e de anotação que o participante leva		pt
+guia rápido	Uma página para consulta durante o trabalho		pt
+workshop de trabalho	Sessão em grupo que termina com um produto: decisão, lista priorizada ou desenho		pt
+leitura prévia	Material curto enviado antes da sessão, com uma pergunta a trazer respondida		pt
+prática espaçada	Repetição do conteúdo em intervalos, depois do curso, para fixar		pt
+~~~
+
+## Pedido de dados
+
+~~~text
+# Lista padrão de pedido de materiais para um projeto de treinamento.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que o plano do curso usa.
+# prioridade: essencial (sem ele não há desenho), importante (melhora o material) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Perfil dos participantes: quantidade, cargos, experiência, idioma e local	Análise de necessidade e formato	Planilha	Recursos humanos ou patrocinador	essencial
+O que os participantes precisam passar a fazer, descrito pelo patrocinador	Objetivos de aprendizagem	Documento ou conversa registrada	Patrocinador	essencial
+Exemplos reais de trabalho bom e de trabalho fraco no assunto	Lacuna, casos e exercícios	Arquivos sem dados pessoais	Gestores	essencial
+Materiais existentes sobre o assunto: cursos, manuais, apresentações	Conteúdo e ponto de partida	Qualquer formato	Capacitação ou área técnica	importante
+Documentação oficial das ferramentas e dos processos ensinados	Conteúdo técnico com fonte	Links ou PDF	Área técnica	essencial
+Dados para exercícios, reais e autorizados ou a descrição para criar fictícios	Exercícios	Planilha	Área técnica ou dados	importante
+Ambiente de prática: acessos às ferramentas para os participantes	Exercícios práticos	Acesso de treinamento	Tecnologia	importante
+Tempo disponível, número de sessões, datas e formato	Mapa do curso e agenda	Documento	Patrocinador	essencial
+Regras de exame e de certificação: nota mínima, tentativas, registro	Exames	Documento	Recursos humanos	importante
+Modelos de apresentação e de documento, e o guia de marca	Formato dos materiais	Arquivos de modelo	Comunicação ou capacitação	essencial
+Plataforma em que o material será publicado e os formatos que ela aceita	Formato de saída	Documento	Capacitação	importante
+Quem facilita e a experiência de cada pessoa	Guia de quem facilita	Lista	Patrocinador	essencial
+Resultados de avaliações ou de treinamentos anteriores	Lacuna e lições	Relatório agregado	Recursos humanos	complementar
+Glossário e vocabulário interno do cliente	Termos do material	Documento	Área técnica	importante
+Requisitos de acessibilidade e de idioma	Formato e versões	Documento	Recursos humanos	complementar
+Indicadores de trabalho que o treinamento deve mover	Avaliação do treinamento	Painel ou planilha	Gestores	importante
+~~~

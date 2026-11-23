@@ -1,0 +1,353 @@
+# Pacote transformacao-marketing
+
+Arquivo de conhecimento do harness de entregáveis, versão 0.7.0. Gerado por empacotar.py: não edite à mão.
+
+Ponto de partida genérico para este tipo de projeto. O domínio do projeto vence o pacote onde os dois se contradizem.
+
+## Pacote: transformação de marketing
+
+### Quando usar
+
+O projeto muda a forma como o marketing de uma empresa trabalha:
+organização, processos, competências, parceiros, orçamento e o uso de
+dados e tecnologia. Serve para diagnóstico, desenho do modelo
+operacional, roadmap de transformação e plano de mudança.
+
+Quando a pergunta principal é sobre plataformas, some o pacote de
+martech e adtech. Quando é sobre automação com agentes, some o de
+processos agênticos.
+
+### O que perguntar ao consultor no início
+
+Além das perguntas de `iniciar-projeto`:
+
+- Que resultado de negócio a transformação precisa entregar, em quanto
+  tempo e medido como?
+- O que provocou o projeto: troca de liderança, queda de resultado,
+  corte de orçamento, fusão, nova estratégia?
+- O escopo cobre quais marcas, regiões e funções?
+- O que não pode mudar: estrutura, contratos de agência, sistemas?
+- Quem patrocina, quem perde poder com a mudança e quem pode vetar?
+- Já houve outra transformação? O que ficou dela?
+
+### Entregáveis típicos
+
+| Entregável | Veículo | Formato | Audiência que decide |
+| --- | --- | --- | --- |
+| Diagnóstico e ambição | projetado | pptx | Presidência e diretoria de marketing |
+| Modelo operacional alvo | leitura | pptx | Diretoria de marketing e recursos humanos |
+| Mapa de processos e de papéis | documento | docx, com as matrizes em xlsx | Gerências de marketing |
+| Roadmap e caso de negócio | projetado | pptx, com a base em xlsx | Diretoria e financeiro |
+| Plano de mudança e comunicação | leitura | pptx ou docx | Patrocinador e recursos humanos |
+| Acompanhamento do programa | leitura | pptx | Comitê do programa |
+
+### Frameworks
+
+#### 1. Árvore de valor
+
+Do resultado de negócio às frentes em que o marketing atua e, de cada
+frente, às capacidades que ela exige. Crescimento de receita se abre em
+aquisição, frequência, tíquete e retenção, por exemplo. A árvore diz que
+capacidades importam para este cliente e evita um diagnóstico genérico.
+É um diagrama de fluxo com divisão.
+
+#### 2. Diagnóstico de capacidades
+
+Dimensões: estratégia e marca, conhecimento do cliente e dados, conteúdo
+e criação, mídia, canais próprios e relacionamento, comércio, medição,
+tecnologia, pessoas e organização, parceiros.
+
+Use a escala de cinco níveis com critério declarado por dimensão e
+evidência por nota, como em qualquer assessment. Avalie só as dimensões
+que a árvore de valor apontou como relevantes e diga quais ficaram fora.
+
+#### 3. Modelo operacional
+
+Quatro perguntas, cada uma com uma página:
+
+- Estrutura: o que fica no centro, o que fica nas marcas ou regiões e o
+  que é compartilhado.
+- Decisão: quem decide, quem executa, quem é consultado e quem é
+  informado, para as dez ou quinze decisões que mais travam hoje.
+- Processo: como o trabalho anda de ponta a ponta.
+- Governança: que fóruns existem, com que frequência e com que poder.
+
+Mostre o modelo atual e o alvo lado a lado. Uma estrutura nova sem os
+direitos de decisão é só um organograma.
+
+#### 4. Processo de ponta a ponta
+
+Siga uma campanha real do pedido ao resultado. Registre etapas, papéis,
+sistemas, tempo em cada etapa, tempo de espera, idas e voltas e
+aprovações. Os números que a audiência lembra são o tempo total, a
+parte dele que é espera e a quantidade de aprovações. É um diagrama de
+fluxo linear com raias por papel.
+
+#### 5. Modelo de parceiros
+
+O que fica dentro de casa, o que fica com agências e o que é híbrido,
+por atividade. Critérios: importância estratégica, frequência, escala,
+disponibilidade de talento e custo. Para cada agência: escopo,
+remuneração, quem detém os dados e as contas, e sobreposição com outra
+agência ou com o time interno.
+
+#### 6. Orçamento
+
+O orçamento de marketing aberto por objetivo, por canal e pela divisão
+entre o que chega ao consumidor (mídia e ativação) e o que não chega
+(produção, taxas, tecnologia, pessoas). Compare dois ou três anos. A
+pergunta é o que o orçamento atual financia que a estratégia não pede.
+
+#### 7. Pessoas e competências
+
+Matriz de competências por papel: as que o modelo alvo exige e o nível
+atual. A lacuna se fecha por capacitação, contratação, parceiro ou
+realocação, e o plano diz qual para cada caso. Dados de pessoas são
+sensíveis: mostre por grupo, nunca por nome.
+
+#### 8. Gestão da mudança
+
+- Partes interessadas: influência, posição atual e posição necessária.
+- Impactos por papel: o que cada grupo para de fazer, começa a fazer e
+  continua fazendo.
+- Comunicação: mensagem, canal, emissor e data, por grupo.
+- Adoção: os comportamentos que mostram que a mudança pegou e como
+  serão medidos.
+
+A resistência costuma vir de quem perde direito de decisão. Trate isso
+no material, com nome de papel e resposta.
+
+#### 9. Roadmap com pilotos
+
+Ondas com entrega reconhecível em cada uma. Comece por um ou dois
+pilotos em uma marca ou região, com meta, prazo e critério para
+escalar. O piloto prova o modelo e produz o caso que convence o resto
+da empresa.
+
+#### 10. Árvore de indicadores
+
+Do indicador de negócio aos indicadores de marketing e aos operacionais,
+com dono, fonte e frequência. Separe indicadores de resultado dos
+indicadores de adoção da transformação.
+
+### Esqueletos de storyline
+
+#### Diagnóstico e ambição
+
+1. Capa
+2. Resumo: a conclusão, o que está em jogo e o pedido
+3. O que o negócio precisa do marketing nos próximos anos
+4. Como o marketing trabalha hoje, em um caso real de ponta a ponta
+5. O achado principal, com o número que o prova
+6. O segundo achado
+7. O terceiro achado
+8. O que isso custa em tempo, dinheiro e oportunidade
+9. Como o marketing poderia trabalhar: o mesmo caso, no modelo alvo
+10. O que muda para cada grupo
+11. O caminho: pilotos e ondas
+12. O pedido: decisões, donos e datas
+13. Apêndice: método, escala, entrevistas e fontes
+
+#### Modelo operacional alvo
+
+1. Os princípios do desenho, cada um ligado a um achado
+2. A estrutura: centro, marcas e regiões
+3. Quem decide o quê
+4. Os processos que mudam
+5. Os fóruns de governança
+6. O modelo de parceiros
+7. As competências que faltam e como chegam
+8. Riscos da transição
+9. O pedido
+
+#### Roadmap e caso de negócio
+
+1. Resumo com o valor, o investimento e os marcos
+2. Os pilotos e o critério para escalar
+3. As ondas e o que cada uma entrega
+4. O valor, separado em ganho de eficiência e de crescimento
+5. O investimento e as premissas
+6. O plano de mudança
+7. A governança do programa
+8. O pedido
+
+### Evidência que cada afirmação pede
+
+| Afirmação | Fonte aceitável |
+| --- | --- |
+| Tempo de um processo | Datas reais de campanhas recentes ou medição acompanhada |
+| Quantidade de aprovações ou de retrabalho | Registro do fluxo de trabalho ou reconstrução validada pelos envolvidos |
+| Distribuição do orçamento | Orçamento e realizado do financeiro |
+| Sobreposição entre agências ou com o time interno | Contratos e escopos, validados pelo gestor de cada um |
+| Lacuna de competência | Avaliação com critério declarado, por grupo |
+| Nota de capacidade | Critério declarado mais entrevista, documento ou dado |
+| Opinião das equipes | Entrevistas ou pesquisa, com o número de respondentes |
+| Valor da transformação | Premissas escritas, com a origem de cada uma |
+
+### Armadilhas
+
+- Apresentar um organograma como modelo operacional.
+- Fazer o diagnóstico de todas as capacidades com o mesmo peso. A
+  árvore de valor diz quais importam.
+- Recomendar práticas de outra empresa sem mostrar por que servem a
+  esta.
+- Esconder quem perde com a mudança. A audiência sabe, e o silêncio
+  tira a confiança no resto.
+- Prometer ganho de eficiência e de crescimento com as mesmas pessoas e
+  no mesmo prazo, sem dizer o que deixa de ser feito.
+- Tratar a gestão da mudança como a última seção. Ela decide se o
+  modelo sai do papel.
+- Mostrar dados de pessoas por nome.
+- Escrever o roadmap como lista de projetos. Cada onda precisa de uma
+  entrega que a audiência reconheça.
+
+## Roteiros de entrevista
+
+Uma entrevista dura de 45 a 60 minutos. Peça sempre um exemplo recente,
+contado do começo ao fim. Registre a entrevista no intake com o tipo
+`entrevista` e leve cada achado ao registro de evidências com a área e
+a data. Uma fala só é citada com nome quando a pessoa autoriza.
+
+Em projeto de transformação, quem é entrevistado quer saber o que vai
+mudar para ele. Combine com o consultor o que pode ser dito.
+
+### Presidência e diretoria de negócio
+
+- O que o negócio precisa do marketing nos próximos três anos?
+- Onde o marketing mais ajuda hoje, e onde mais frustra?
+- Que decisão de marketing demorou demais para sair?
+- Como você sabe se o dinheiro de marketing foi bem gasto?
+- O que faria esta transformação ter dado certo?
+
+### Diretoria de marketing
+
+- Quais são as três prioridades do ano e o que as ameaça?
+- Em que o time gasta tempo que não devia?
+- Que decisões sobem para você e poderiam ficar abaixo?
+- O que mudou na última reorganização e o que ficou igual?
+- Que capacidade falta e você compraria amanhã?
+- Quem vai resistir à mudança, e por quê?
+
+### Gerências de marca e de produto
+
+- Conte a última campanha, do pedido ao resultado. Quanto tempo levou?
+- Quantas pessoas aprovaram, e o que cada aprovação mudou?
+- De que dado você precisa e não tem na hora de decidir?
+- Como é o trabalho com as agências? Onde há retrabalho?
+- O que o centro faz por você, e o que atrapalha?
+
+### Mídia, relacionamento e canais digitais
+
+- Como o plano do ano vira campanha no ar?
+- Que parte do trabalho é manual e se repete?
+- Como as áreas dividem audiências, calendário e orçamento?
+- Que indicador você acompanha e quem mais olha para ele?
+- O que você faria com mais autonomia?
+
+### Dados e tecnologia
+
+- Como chegam os pedidos do marketing e quanto esperam na fila?
+- Que decisões o marketing toma sem dado por falta de acesso ou prazo?
+- Que projetos em andamento mudam o que o marketing pode fazer?
+- Como marketing e tecnologia decidem prioridades juntos?
+
+### Recursos humanos
+
+- Como são definidos cargos, carreiras e metas em marketing?
+- Que competências a empresa não consegue contratar ou reter?
+- Que restrições existem para mudar estrutura e papéis?
+- Como foram comunicadas as mudanças anteriores e o que se aprendeu?
+
+### Financeiro
+
+- Como o orçamento de marketing é montado, aprovado e revisado?
+- Que parte dele é fixa por contrato?
+- Que retorno o financeiro espera ver e em que prazo?
+- Como um caso de negócio de transformação é avaliado aqui?
+
+### Agências e parceiros
+
+- Como chega um pedido do cliente e o que costuma faltar nele?
+- Onde o processo com o cliente trava?
+- Que parte do seu escopo se sobrepõe a outra agência ou ao time interno?
+- O que você mudaria na forma de trabalhar juntos?
+
+## Procedimento do pacote transformacao-marketing
+
+Quando: em projeto de transformação de marketing, ao pedir dados e marcar entrevistas, ao montar o briefing e a storyline de um diagnóstico, de um modelo operacional, de um roadmap ou de um plano de mudança, ao avaliar capacidades e ao revisar o material.
+
+O conteúdo do pacote está em
+`entregaveis/_harness/pacotes/transformacao-marketing/`. Esta skill diz
+que parte abrir em cada momento. As skills do fluxo continuam valendo.
+
+1. No início do projeto, faça ao consultor as perguntas da seção "O que
+   perguntar ao consultor no início" de `PACOTE.md`, junto com as de
+   `iniciar-projeto`.
+2. No intake, parta de `pedido-de-dados.tsv` e dos roteiros de
+   `entrevistas.md`. Combine com o consultor o que pode ser dito aos
+   entrevistados sobre a mudança.
+3. No briefing, confira o entregável na tabela "Entregáveis típicos".
+   Na seção de resistências, escreva quem perde direito de decisão com
+   a mudança e como o material responde.
+4. Antes do diagnóstico, monte a árvore de valor. Ela define que
+   capacidades entram na avaliação.
+5. Na storyline, parta do esqueleto em "Esqueletos de storyline" e
+   reescreva cada título com o achado deste projeto. Use um caso real
+   de ponta a ponta para mostrar o que é e o que poderia ser, e declare
+   `recurso: contraste` nas páginas que fazem essa comparação.
+6. Um modelo operacional mostra estrutura, direitos de decisão,
+   processo e governança. Sem os quatro, a página volta para a análise.
+7. Cada afirmação usa a fonte que a tabela "Evidência que cada
+   afirmação pede" aceita. Dado de pessoas aparece por grupo.
+8. O plano de mudança é escrito junto com o modelo, e cada grupo
+   afetado tem a sua linha de impacto.
+9. Na revisão, passe pela lista de "Armadilhas" além da rubrica.
+
+## Termos do pacote
+
+~~~text
+# Termos de transformação de marketing. Ao ativar o pacote, as linhas entram no glossário do projeto.
+# A coluna evitar fica vazia: o projeto decide que variantes proibir, conforme o vocabulário do cliente.
+termo	definicao	evitar	idioma
+modelo operacional	Como o marketing se organiza para entregar: estrutura, direitos de decisão, processos e governança		pt
+árvore de valor	O desdobramento do resultado de negócio em frentes de atuação e nas capacidades que cada uma exige		pt
+capacidade	O que a organização consegue fazer de forma repetida, com pessoas, processo, dados e tecnologia		pt
+direito de decisão	A definição de quem decide, quem executa, quem é consultado e quem é informado		pt
+processo de ponta a ponta	A sequência completa de um trabalho, do pedido ao resultado, atravessando áreas		pt
+tempo de ciclo	O tempo entre o pedido e a entrega de um trabalho, incluindo as esperas		pt
+centro de excelência	Time central que concentra uma competência e atende marcas ou regiões		pt
+modelo de parceiros	A divisão do trabalho entre o time interno e as agências, por atividade		pt
+internalização	Trazer para o time interno uma atividade antes feita por agência		pt
+gestão da mudança	O trabalho de levar as pessoas afetadas a adotar a nova forma de trabalhar		pt
+parte interessada	Pessoa ou grupo que influencia a mudança ou é afetado por ela		pt
+piloto	Aplicação do modelo novo em uma marca ou região, com meta e critério para escalar		pt
+onda	Etapa do roadmap com uma entrega que a audiência reconhece		pt
+indicador de adoção	Medida de que as pessoas passaram a trabalhar do jeito novo		pt
+caso de negócio	O valor esperado, o investimento e as premissas de uma mudança		pt
+patrocinador	O executivo que responde pela transformação e remove os bloqueios		pt
+~~~
+
+## Pedido de dados
+
+~~~text
+# Lista padrão de pedido de dados para um projeto de transformação de marketing.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que alguma análise da storyline usa.
+# prioridade: essencial (sem ele não há diagnóstico), importante (melhora um achado) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Estratégia de negócio e plano de marketing do ano	Árvore de valor	Apresentação	Diretoria de marketing	essencial
+Organograma de marketing, com cargos, quantidade de pessoas e localização	Modelo operacional e competências	PDF ou planilha	Recursos humanos	essencial
+Descrições de cargo e metas das áreas de marketing	Direitos de decisão e indicadores	Documento	Recursos humanos	importante
+Orçamento e realizado de marketing dos últimos dois ou três anos, por objetivo e por canal	Análise de orçamento	Planilha	Financeiro	essencial
+Calendário de campanhas dos últimos 12 meses, com datas de pedido, aprovação e veiculação	Processo de ponta a ponta	Planilha ou exportação da ferramenta de fluxo de trabalho	Operações de marketing	essencial
+Mapas de processo e fluxos de aprovação existentes	Processo de ponta a ponta	Qualquer formato	Operações de marketing	importante
+Contratos, escopos e remuneração das agências e dos parceiros	Modelo de parceiros	PDF	Compras ou marketing	essencial
+Lista de fóruns e comitês de marketing, com participantes e frequência	Governança	Planilha	Diretoria de marketing	importante
+Painéis e relatórios de resultado usados pela diretoria	Árvore de indicadores	Apresentação ou acesso de leitura	Marketing ou dados	essencial
+Pesquisas de clima ou de engajamento das áreas de marketing	Gestão da mudança	Relatório agregado	Recursos humanos	complementar
+Lista de plataformas de marketing em uso, com dono	Capacidade de tecnologia	Planilha	Tecnologia ou marketing	importante
+Projetos em andamento que afetam o marketing	Dependências do roadmap	Apresentação	Escritório de projetos	importante
+Materiais de transformações anteriores e o balanço delas	Lições e resistências	Apresentação	Diretoria ou recursos humanos	complementar
+Avaliações de competência ou planos de capacitação existentes, por grupo	Pessoas e competências	Planilha agregada	Recursos humanos	importante
+Estudos de mercado e comparações que o cliente já comprou	Comparação com fonte citável	PDF	Diretoria de marketing	complementar
+Lista de partes interessadas, com papel e posição conhecida	Gestão da mudança	Planilha	Patrocinador	essencial
+~~~

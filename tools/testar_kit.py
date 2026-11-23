@@ -1223,6 +1223,64 @@ def testar_fases(tmp: Path) -> None:
     confere("mensagem: não avisa de fase em pedido comum", "evoluir-projeto" not in comum_.stdout, comum_.stdout)
 
 
+def testar_ambientes(tmp: Path) -> None:
+    print("Outros ambientes")
+    ambientes = HARNESS / "ambientes"
+    instrucoes = (ambientes / "instrucoes.md").read_text(encoding="utf-8")
+    conhecimento = sorted(a.name for a in (ambientes / "conhecimento").iterdir())
+    confere("as instruções cabem no menor limite dos ambientes", len(instrucoes) <= 8000, f"{len(instrucoes)} caracteres")
+    confere("os arquivos de conhecimento são .txt e cabem em um agente", all(n.endswith(".txt") for n in conhecimento) and len(conhecimento) <= 20, str(conhecimento))
+    confere("o conjunto básico e um pacote cabem em cinco arquivos", len([n for n in conhecimento if not n.startswith("pacote-")]) == 4)
+    pacotes = sorted(p.name for p in (HARNESS / "pacotes").iterdir() if (p / "PACOTE.md").is_file())
+    confere("há um arquivo de conhecimento por pacote", [n for n in conhecimento if n.startswith("pacote-")] == [f"pacote-{p}.txt" for p in pacotes])
+    procedimentos = (ambientes / "conhecimento/1-procedimentos.txt").read_text(encoding="utf-8")
+    so_com_arquivos = {"adotar-projeto", "atualizar-harness", "usar-outro-ambiente"}
+    for skill in sorted(p.name for p in (RAIZ / ".claude/skills").iterdir() if p.is_dir()):
+        if skill in so_com_arquivos:
+            confere(f"{skill}: fica fora dos procedimentos de outros ambientes", f"## {skill}\n" not in procedimentos)
+        else:
+            confere(f"{skill}: está nos procedimentos e nas instruções", f"## {skill}\n" in procedimentos and f"`{skill}`" in instrucoes)
+    for nome in ("1-procedimentos", "2-metodo-e-texto", "3-formatos-e-visual", "4-modelos", "5-projeto", "pacote-NOME"):
+        confere(f"as instruções dizem para que serve {nome}", f"`{nome}`" in instrucoes)
+    em_dia = rodar([PY, "entregaveis/_harness/scripts/empacotar.py", "--conferir"], RAIZ)
+    confere("os arquivos de conhecimento estão em dia com o método e as skills", em_dia.returncode == 0, em_dia.stdout + em_dia.stderr)
+
+    projeto = tmp / "ambientes"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+
+    def empacotar(*opcoes: str) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/empacotar.py", *opcoes], projeto)
+
+    confere("a cópia instalada também está em dia", empacotar("--conferir").returncode == 0)
+    cedo = empacotar("--projeto")
+    confere("não monta o pacote de um projeto que não foi iniciado", cedo.returncode != 0 and not (projeto / "entregaveis/_ambiente").exists(), cedo.stdout + cedo.stderr)
+    pasta = montar_exemplo(projeto)
+    rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--pacote", "martech-adtech"], projeto)
+    montado = empacotar("--projeto")
+    saida = projeto / "entregaveis/_ambiente"
+    nomes = sorted(a.name for a in saida.iterdir()) if saida.is_dir() else []
+    confere("monta o pacote do projeto com as instruções, o método e o projeto", montado.returncode == 0 and {"instrucoes.txt", "1-procedimentos.txt", "2-metodo-e-texto.txt", "3-formatos-e-visual.txt", "4-modelos.txt", "5-projeto.txt"} <= set(nomes), montado.stdout + montado.stderr)
+    confere("leva só os pacotes do projeto", [n for n in nomes if n.startswith("pacote-")] == ["pacote-martech-adtech.txt"], str(nomes))
+    do_projeto = (saida / "5-projeto.txt").read_text(encoding="utf-8")
+    confere("o arquivo do projeto traz o brief, as evidências e a storyline", "Varejista Exemplo" in do_projeto and "E-001" in do_projeto and "Duas plataformas de e-mail fazem o mesmo trabalho" in do_projeto)
+    confere("a lista de nomes confidenciais fica de fora", "Projeto Girassol" not in "".join((saida / n).read_text(encoding="utf-8") for n in nomes))
+    confere("avisa que o pacote leva material do projeto", "regras de material" in montado.stdout)
+    confere("o pacote do projeto fica fora do git", "entregaveis/_ambiente/" in (projeto / ".gitignore").read_text(encoding="utf-8"))
+    outra = tmp / "pacote-fora"
+    outra.mkdir()
+    (outra / "meu.txt").write_text("meu arquivo\n", encoding="utf-8")
+    fora = empacotar("--projeto", "--saida", str(outra))
+    confere("--saida grava em outra pasta sem apagar o que estava lá", fora.returncode == 0 and (outra / "5-projeto.txt").is_file() and (outra / "meu.txt").read_text(encoding="utf-8") == "meu arquivo\n", fora.stdout + fora.stderr)
+    texto = projeto / "entregaveis/_harness/metodo/texto.md"
+    texto.write_text(texto.read_text(encoding="utf-8") + "\nUma prática nova.\n", encoding="utf-8")
+    atrasado = empacotar("--conferir")
+    confere("acusa o arquivo de conhecimento fora de dia", atrasado.returncode == 1 and "2-metodo-e-texto.txt" in atrasado.stdout, atrasado.stdout + atrasado.stderr)
+    refeito = empacotar()
+    confere("refaz só o arquivo que mudou", refeito.returncode == 0 and "2-metodo-e-texto.txt" in refeito.stdout and "1-procedimentos.txt" not in refeito.stdout and empacotar("--conferir").returncode == 0, refeito.stdout + refeito.stderr)
+
+
 def testar_pacotes(tmp: Path) -> None:
     print("Pacotes")
     pacotes = sorted(p for p in (HARNESS / "pacotes").iterdir() if p.is_dir())
@@ -1312,6 +1370,7 @@ def main() -> int:
         testar_repositorio(tmp)
         testar_gerador(tmp)
         testar_fases(tmp)
+        testar_ambientes(tmp)
         testar_pacotes(tmp)
         testar_levantamento(tmp)
     finally:
