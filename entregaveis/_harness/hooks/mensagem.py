@@ -48,6 +48,16 @@ AVISO_DE_ATA = (
     "Harness de entregáveis: se a mensagem traz uma ata ou conta o que houve em uma reunião, aplique a skill processar-ata. "
     "As atas ficam em entregaveis/_atas/, fora do git."
 )
+# Sinais de que o cliente respondeu, ou foi cobrado, sobre algo que o projeto esperava.
+FOLLOW_UP = re.compile(
+    r"\b(?:cliente|diretor[a]?|gerente|patrocinador[a]?)\b[^.\n]{0,60}\b(?:aprov(?:ou|aram)|respond(?:eu|eram)|confirm(?:ou|aram)|liber(?:ou|aram))\b|"
+    r"\bcobr(?:ei|amos|ado)\b|\bfollow[- ]?up\b|\bfup\b",
+    flags=re.IGNORECASE,
+)
+AVISO_DE_FOLLOW_UP = (
+    "Harness de entregáveis: se o cliente respondeu ou foi cobrado sobre algo que o projeto esperava, registre com "
+    "scripts/rotina.py --cobrado ID, com --resposta aprovou quando ele aprovou. O comando diz o que volta às próximas ações."
+)
 
 
 def principal() -> int:
@@ -64,6 +74,8 @@ def principal() -> int:
         print(AVISO_DE_DISPENSA)
     if ATA.search(str(dados.get("prompt", ""))):
         print(AVISO_DE_ATA)
+    if FOLLOW_UP.search(str(dados.get("prompt", ""))):
+        print(AVISO_DE_FOLLOW_UP)
     linhas = []
     for pasta in comum.entregaveis():
         m, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))

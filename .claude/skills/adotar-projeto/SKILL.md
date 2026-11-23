@@ -56,7 +56,10 @@ levante, encaixe e pergunte.
    - o que do material existente deve ser refeito pelo método.
    - as reuniões que se repetem e onde as atas ficam hoje. Os ritos
      vão para `_projeto/ritos.tsv`, e as atas passam a ser salvas em
-     `entregaveis/_atas/`.
+     `entregaveis/_atas/`;
+   - os materiais de governança que já circulam, como status, atas e
+     cronograma. Com `definir-governanca`, o formato do cliente fica e
+     só a fonte muda.
 9. Ative os pacotes do tipo de trabalho e abra o intake para o que falta,
    como nos passos 6 a 9 de `iniciar-projeto`. Os métodos e os padrões
    que o projeto já segue entram no domínio, com a skill

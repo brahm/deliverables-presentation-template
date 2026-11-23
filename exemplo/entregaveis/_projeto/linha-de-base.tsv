@@ -1,0 +1,6 @@
+# A referência aprovada de prazo e esforço. Quem grava é o governanca.py --linha-de-base. Nenhuma linha é apagada.
+# Cada versão é uma fotografia dos prazos dos entregáveis, dos marcos e das ações com base: sim. A mudança aprovada gera uma versão nova.
+# tipo: entregavel, marco ou acao. data_base: AAAA-MM-DD. esforco_base: em horas ou dias, quando o consultor informa.
+versao	item	tipo	descricao	data_base	esforco_base	aprovada_em	aprovada_por	motivo
+1	leitura-executiva	entregavel	Leitura executiva do diagnóstico das plataformas de marketing	2026-11-05		2026-11-06	Diretora de marketing	Primeira linha de base, gravada com o nível de governança
+1	T-002	acao	Avisar que os dois contratos de março não renovam	2027-01-15		2026-11-06	Diretora de marketing	Primeira linha de base, gravada com o nível de governança

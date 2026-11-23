@@ -72,7 +72,9 @@ diz o que aconteceu, e você reconhece a mudança.
       trabalho novo entra;
     - os materiais, com `receber-materiais`: o que chegou continua
       valendo, e o pacote novo traz a lista do que pedir;
-    - as regras de material e a classificação, que mudam com o contrato.
+    - as regras de material e a classificação, que mudam com o contrato;
+    - o nível de governança, com `definir-governanca`: o projeto vendido
+      costuma pedir mais materiais do que a proposta pedia.
 11. Rode `python3 entregaveis/_harness/scripts/estado.py` e
     `python3 entregaveis/_harness/scripts/validar.py`. A fase só está
     aberta de verdade quando a passagem e o brief não têm trecho por

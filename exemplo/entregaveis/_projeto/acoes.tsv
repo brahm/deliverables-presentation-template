@@ -5,7 +5,9 @@
 # estado: proposta (espera o sim do consultor), aberta, concluida ou cancelada.
 # origem: A-nnn quando veio de uma ata, com o trecho em observacao, ou consultor. movida_em: a última vez em que o item andou.
 # O prazo só muda com rotina.py --remarcar, que guarda a data anterior em prazos.tsv.
-id	tipo	item	dono	lado	inicio	prazo	base	estado	origem	movida_em	observacao
-T-001	tarefa	Nomear quem conduz a migração das duas plataformas	Diretor de tecnologia	cliente	2026-11-05	2026-12-15	nao	aberta	A-001	2026-11-06	Decidido na reunião de diretoria (D-008)
-T-002	tarefa	Avisar que os dois contratos de março não renovam	Diretora financeira	cliente	2026-11-05	2027-01-15	sim	aberta	A-001	2026-11-06	O aviso até esta data evita a multa de rescisão (E-008)
-T-003	tarefa	Pedir os relatórios de uso aos donos das plataformas	Diretora de marketing	cliente	2026-11-05	2026-11-30	nao	aberta	A-001	2026-11-06	Destrava M-007 e a análise de subuso (B-001)
+# depende_de: ids que precisam terminar antes (T-nnn, M-nnn, DP-nnn ou entregável), separados por vírgula. entregavel: o entregável que a ação serve.
+# A ação que depende de aprovação, dado ou decisão do cliente só segue com a confirmação: rotina.py --cobrado ID --resposta aprovou.
+id	tipo	item	dono	lado	inicio	prazo	base	estado	origem	movida_em	observacao	depende_de	entregavel
+T-001	tarefa	Nomear quem conduz a migração das duas plataformas	Diretor de tecnologia	cliente	2026-11-05	2026-12-15	nao	aberta	A-001	2026-11-06	Decidido na reunião de diretoria (D-008)		
+T-002	tarefa	Avisar que os dois contratos de março não renovam	Diretora financeira	cliente	2026-11-05	2027-01-15	sim	aberta	A-001	2026-11-06	O aviso até esta data evita a multa de rescisão (E-008)		
+T-003	tarefa	Pedir os relatórios de uso aos donos das plataformas	Diretora de marketing	cliente	2026-11-05	2026-11-30	nao	aberta	A-001	2026-11-20	Destrava M-007 e a análise de subuso (B-001)		

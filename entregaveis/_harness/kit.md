@@ -13,10 +13,13 @@
 | `guia.md` | O guia de uso para o consultor, com todos os recursos | Lido pelo consultor, e pelo agente quando ele pergunta como usar |
 | `.claude/skills/` | Um procedimento curto por momento | Aberta pelo agente quando o momento chega |
 | `.claude/settings.json` | Liga os seis hooks | Pelo Claude Code |
-| `hooks/mensagem.py` | Lembra o agente do ponto em que cada entregável está e da skill do momento, quando a mensagem fala de uma mudança de fase, de uma ata ou de uma dispensa | A cada mensagem, no Claude Code |
+| `hooks/mensagem.py` | Lembra o agente do ponto em que cada entregável está e da skill do momento, quando a mensagem fala de uma mudança de fase, de uma ata, de uma dispensa ou de um follow-up com o cliente | A cada mensagem, no Claude Code |
 | `scripts/estado.py` | O estado do projeto em poucas linhas | No início da sessão |
 | `scripts/validar.py` | As checagens em script | A cada gravação (hook), antes da revisão e no pull request |
-| `scripts/rotina.py` | A rotina do dia: acha atas e arquivos novos, compara a data de hoje com os prazos do cronograma, guarda o histórico de cada data mudada e grava o diário | No início e no fim do dia, e quando um prazo muda |
+| `scripts/rotina.py` | A rotina do dia: acha atas e arquivos novos, compara a data de hoje com os prazos do cronograma, guarda o histórico de cada data mudada, monta a lista do dia, registra o follow-up com o cliente e grava o diário | No início e no fim do dia, e quando um prazo muda |
+| `scripts/afazeres.py` | O que a lista do dia usa: os itens abertos, quem trava quem, a exposição dos riscos, as cobranças e as perguntas de cada frequência | Chamado pelo `rotina.py --lista` |
+| `scripts/governanca.py` | Sugere o nível de governança pelo porte, grava a escolha e os materiais, e mantém a linha de base, os desvios, as versões e o aceite | Depois do brief, quando o porte muda e a cada envio |
+| `governanca/catalogo.tsv` | O catálogo dos materiais de governança, com o nível em que cada um entra, a cadência, o destinatário e os registros de onde sai | Lido pelo `governanca.py` |
 | `scripts/ambiente.py` | Confere se a máquina tem o Python, o Git e os programas do gerador, e diz como instalar o que falta em cada sistema | Antes de instalar e no início do projeto |
 | `scripts/preparar.py` | Cria os registros e as pastas de entregável e ativa pacotes | No início do projeto e a cada entregável novo |
 | `scripts/fase.py` | Mostra as fases do projeto e abre uma fase nova, guardando o brief da anterior e criando a página de passagem | Quando o projeto muda de natureza |
@@ -50,6 +53,7 @@ as mesmas no arquivo que acabou de ser gravado.
 | Domínio | As regras que o projeto escreveu em `_dominio/`, e regra sem caso de teste que acusa e que passa |
 | Repositório | Projeto com conteúdo em remoto público ou não verificado |
 | Prazos | Ação aberta sem dono ou sem prazo, data ou estado inválido, item vencido sem resposta do consultor |
+| Governança | Nível ou estado inválido, material fora do catálogo, id citado que não existe, ação concluída antes da confirmação do cliente, entregável sem aprovador |
 
 ## As três travas
 
@@ -87,9 +91,21 @@ que o consultor diz. O consultor corrige no resumo do dia.
 | `reunioes.tsv` | Cada ata processada e cada reunião que ficou sem ata, com o que saiu dela |
 | `ritos.tsv` | As reuniões que se repetem e a cadência de cada uma |
 | `acoes.tsv` | As tarefas, os marcos, as decisões pedidas e as aprovações, com dono, prazo e a reunião de origem |
-| `riscos.tsv` | Os riscos, com causa, efeito e dono |
+| `riscos.tsv` | Os riscos, com causa, efeito, dono, probabilidade, impacto, o item que ameaçam e a resposta |
+| `premissas.tsv` | As premissas, com quem valida, até quando e o que acontece se forem falsas |
+| `issues.tsv` | Os problemas que já aconteceram, com dono, ação, prazo e escalada |
+| `dependencias.tsv` | O que o projeto espera de outra pessoa ou área, e o que fica travado enquanto isso |
+| `mudancas.tsv` | Os pedidos fora do combinado, com o impacto e a decisão |
+| `papeis.tsv` | Quem executa, quem aprova, quem é consultado e quem é informado em cada item |
+| `linha-de-base.tsv` | As datas combinadas, por versão, com o motivo e quem aprovou |
+| `versoes.tsv` | Cada versão enviada de um entregável, com o que mudou, quem recebeu e o aceite |
+| `cobrancas.tsv` | Cada follow-up feito com o cliente e a resposta |
+| `esforco.tsv` | As horas, quando o consultor quer registrar. Não gera pergunta nem aviso |
+| `governanca.tsv` | O nível escolhido, material por material, com o que foi tirado, incluído ou feito sob medida |
+| `perguntas.tsv` | A frequência de cada pergunta da lista do dia |
+| `afazeres.md` | A lista do dia gravada, com uma caixa por item |
 | `prazos.tsv` | O histórico de cada data mudada: a original, a anterior, a nova, quem mudou e o motivo |
-| `cadencias.tsv` | Os limites dos avisos e a pausa do projeto |
+| `cadencias.tsv` | Os limites dos avisos, o dia do status, a tolerância de prazo e a pausa do projeto |
 | `alertas.tsv` | Os avisos já mostrados, para o aviso leve não se repetir |
 | `diario.md` | O fechamento de cada dia |
 

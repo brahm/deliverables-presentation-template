@@ -1,0 +1,4 @@
+# Cada follow-up feito com o cliente sobre um item que aguarda aprovação, dado ou decisão. Quem grava é o rotina.py --cobrado.
+# item: T-nnn, M-nnn ou DP-nnn. resposta: cobrado, aprovou ou dispensada.
+item	cobrado_em	quem	resposta	nota
+T-003	2026-11-20	consultor	cobrado	Mensagem à diretora de marketing

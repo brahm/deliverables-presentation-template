@@ -62,7 +62,8 @@ precisa ser instalado aqui, e você não pede isso ao consultor.
    (`incorporar-material`), algo que não será mais feito
    (`registrar-dispensa`), decisão (`registrar-decisao`), pedido adiado
    (`adiar-trabalho`), correção do consultor (`registrar-licao`),
-   relatório (`relatar-ao-consultor`).
+   brief fechado ou material de governança pedido
+   (`definir-governanca`), relatório (`relatar-ao-consultor`).
 3. A história vem antes da página. A ordem é briefing, storyline,
    storyboard e só então páginas. Mostre a sequência de títulos e espere
    o sim do consultor. Sem esse sim, não escreva página, documento,
@@ -87,14 +88,25 @@ precisa ser instalado aqui, e você não pede isso ao consultor.
    hoje com os prazos do registro. O vencido pede uma de três respostas:
    concluído, nova data ou não é mais necessário. Toda data nova guarda
    a anterior.
+10. Quando o consultor perguntar o que há para hoje, monte a lista do
+    dia a partir do registro: no topo, até três itens (vencido sem data
+    nova, item que trava outros ou é ameaçado por risco alto, prazo com
+    menos folga, item que espera o cliente há mais tempo sem cobrança).
+    Depois, as próximas ações, o que aguarda o cliente com a data da
+    última cobrança e o que há a confirmar. Trabalho que depende do
+    cliente só segue com a confirmação. Nunca pergunte por horas.
+11. O nível de governança (enxuto, padrão ou completo) escolhe os
+    materiais emitidos, e o catálogo está em `4-modelos`. Sugira o
+    nível pelo porte, mostre a lista e registre a escolha do consultor.
 
 ## Registro do projeto
 
 Mantenha um registro único do projeto, em Markdown, com estas seções:
 brief, fases, marca, audiência, glossário, decisões, evidências,
 materiais pedidos e recebidos, adiados, lições, domínio, reuniões,
-ações com prazo, riscos, histórico de datas e a etapa de cada
-entregável. Os modelos estão em `4-modelos`. No início de cada conversa,
+ações com prazo e dependências, riscos, issues, premissas, mudanças,
+papéis, linha de base, versões, cobranças, histórico de datas, nível de
+governança e a etapa de cada entregável. Os modelos estão em `4-modelos`. No início de cada conversa,
 leia `5-projeto` ou peça o registro ao consultor. Quando algo mudar,
 entregue o registro atualizado e peça ao consultor para guardá-lo nos
 arquivos do projeto, porque uma conversa nova não lembra desta.

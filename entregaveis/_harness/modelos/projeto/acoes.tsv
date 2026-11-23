@@ -5,4 +5,6 @@
 # estado: proposta (espera o sim do consultor), aberta, concluida ou cancelada.
 # origem: A-nnn quando veio de uma ata, com o trecho em observacao, ou consultor. movida_em: a última vez em que o item andou.
 # O prazo só muda com rotina.py --remarcar, que guarda a data anterior em prazos.tsv.
-id	tipo	item	dono	lado	inicio	prazo	base	estado	origem	movida_em	observacao
+# depende_de: ids que precisam terminar antes (T-nnn, M-nnn, DP-nnn ou entregável), separados por vírgula. entregavel: o entregável que a ação serve.
+# A ação que depende de aprovação, dado ou decisão do cliente só segue com a confirmação: rotina.py --cobrado ID --resposta aprovou.
+id	tipo	item	dono	lado	inicio	prazo	base	estado	origem	movida_em	observacao	depende_de	entregavel

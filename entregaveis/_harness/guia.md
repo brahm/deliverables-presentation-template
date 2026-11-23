@@ -68,6 +68,10 @@ As frases abaixo são exemplos. Use as suas palavras.
 | Contar uma reunião sem ata | "Falei com a diretora financeira hoje. Ela aprovou o prazo e pediu o custo por loja." |
 | Responder a um prazo vencido | "A nomeação fica para o dia 20, porque o diretor está de férias." |
 | Dispensar algo | "O relatório de uso não é mais necessário. O cliente desistiu dessa frente." |
+| Contar um follow-up | "Cobrei a diretora financeira hoje. Ela responde até sexta." |
+| Confirmar uma aprovação | "A diretora de marketing aprovou o plano de migração." |
+| Escolher a governança | "Fique no nível enxuto e inclua a pauta da reunião semanal." |
+| Trazer um pedido fora do combinado | "O cliente pediu o custo por loja, que não estava no escopo." |
 | Trazer algo feito à mão | "Montei esta planilha de custos no fim de semana. Está na pasta de entrada." |
 | Encerrar o dia | "Por hoje é isso." |
 | Fechar um entregável | "Apresentei hoje. Aprovaram a saída de duas plataformas e perguntaram pela multa." |
@@ -233,12 +237,81 @@ git.
 
 ### Rotina do dia
 
-No começo do dia, o agente mostra em uma tela o que chegou, o que espera
-o seu sim, os prazos e o que parou. No fim, grava no diário o que foi
-feito e o que fica para amanhã. As reuniões que se repetem ficam em
+No começo do dia, o agente mostra a lista do dia, descrita a seguir. No
+fim, grava no diário o que foi feito e o que fica para amanhã. As reuniões que se repetem ficam em
 `_projeto/ritos.tsv`, e o agente avisa quando uma delas passa sem ata.
 Em uma pausa do projeto, diga até quando, e os avisos param até essa
 data.
+
+### Lista do dia
+
+A lista junta tudo o que está aberto e separa em cinco partes: a caixa
+de entrada, com o que chegou e ainda não foi classificado, as próximas
+ações, que são as suas e as da equipe, o que aguarda o cliente, a agenda
+do dia e o que há a confirmar. O que foi adiado fica fora da vista até a
+revisão da semana.
+
+No topo sobem no máximo três itens, nesta ordem de critério:
+
+| Critério | O que sobe |
+| --- | --- |
+| Vencimento | O item vencido que ainda não tem data nova |
+| Bloqueio e risco | O item que trava outros, ou que é ameaçado por um risco de exposição alta |
+| Folga | O prazo próximo com menos dias úteis de folga |
+| Espera | O item que aguarda o cliente há mais tempo sem cobrança |
+
+A exposição de um risco é a probabilidade vezes o impacto, cada um em
+baixa, média ou alta. Cada item do topo diz por que subiu. A lista é
+gravada em `_projeto/afazeres.md`, com uma caixa por item.
+
+As perguntas da parte de confirmar têm frequência. As de reunião sem
+registro e de dispensa vêm todo dia. As de riscos, retorno do cliente,
+premissas, adiados e nível de governança vêm uma vez por semana, na
+véspera do status. As de satisfação e de benefício vêm a cada marco. A
+frequência de cada uma fica em `_projeto/perguntas.tsv` e é sua para
+mudar. O agente nunca pergunta por horas trabalhadas.
+
+### Follow-up com o cliente
+
+Um trabalho que depende de aprovação, dado ou decisão do cliente só
+segue com a confirmação. Você informa quando ela chega, ou o agente
+pergunta na lista do dia se o follow-up foi feito. As respostas são
+quatro: aprovou, cobrei hoje, ainda não cobrei ou não depende mais de
+aprovação. Cada cobrança fica em `_projeto/cobrancas.tsv`, com a data, e
+aparece na lista e no status. Enquanto a confirmação não chega, o agente
+recusa marcar como concluído ou em andamento o trabalho que depende
+dela.
+
+### Nível de governança
+
+Depois do brief, o agente lê o porte do projeto e sugere um de três
+níveis. Você escolhe, e pode tirar, incluir ou pedir um material
+diferente.
+
+| Nível | Quando serve | O que é emitido |
+| --- | --- | --- |
+| Enxuto | Até oito semanas, uma frente, equipe de até três pessoas, sem comitê formal | Sete materiais curtos: abertura, status semanal, nota de reunião, pedidos ao cliente, aceite, mudança e encerramento |
+| Padrão | Mais de oito semanas, duas a quatro frentes, comitê formal ou pagamento por marco | Os do enxuto em versão formal, mais plano integrado, matriz de papéis, pauta, status executivo e ciclo de aprovação, entre outros |
+| Completo | Mais de seis meses, mais de quatro frentes, comitê em mais de um nível ou benefício comprometido | Os do padrão, mais matriz de riscos, painel, status diário e os controles de benefícios e de contrato |
+
+O nível escolhe o que é emitido, e os registros existem em qualquer
+nível. Ações, riscos, issues, premissas, dependências, decisões,
+mudanças, versões e linha de base são mantidos pelo agente a cada
+evento, sem custo para você. Um material que o catálogo não tem entra
+sob medida: você diz o destinatário, a cadência e o que ele traz. O
+agente revê o nível quando o projeto cresce ou encolhe e pergunta uma
+vez por semana se os sinais pedirem outro.
+
+### Mudanças, linha de base e versões
+
+Um pedido fora do combinado entra em `_projeto/mudancas.tsv`, com o
+impacto em prazo, esforço e escopo, e espera a sua decisão e a do
+cliente. A linha de base guarda as datas combinadas dos entregáveis, dos
+marcos e das ações de contrato. Uma versão nova da linha de base pede o
+motivo e quem aprovou, e o agente mostra o desvio de cada item contra
+ela. Cada envio de um entregável ganha uma versão em
+`_projeto/versoes.tsv`, com o que mudou e quem recebeu. O aceite é
+registrado com o nome de quem aceitou, e esse nome vem do cliente.
 
 ### Prazos pelo cronograma
 
@@ -341,6 +414,8 @@ No Claude Code, três situações bloqueiam o agente. Todas têm saída.
 | O agente diz que falta algo na máquina | Diga sim para ele instalar, ou siga os comandos que ele mostrar. Só o Python impede o trabalho |
 | Um aviso de prazo não faz mais sentido | Diga se foi concluído, a data nova ou que não é mais necessário. O aviso some com a resposta |
 | Os avisos chegam cedo ou tarde demais para este projeto | Peça ao agente para ajustar os limites em `_projeto/cadencias.tsv` |
+| A lista do dia pergunta demais, ou de menos | Peça ao agente para mudar a frequência da pergunta em `_projeto/perguntas.tsv` |
+| O projeto emite material demais para o tamanho dele | Diga qual material tirar e o motivo. O registro por trás dele continua mantido |
 | Uma sessão nova parece não lembrar do projeto | Pergunte "como está o projeto?". O agente lê os registros e retoma |
 
 ## Ajustes para quem já tem prática
@@ -376,4 +451,7 @@ Rode na raiz do projeto.
 | `python3 entregaveis/_harness/scripts/empacotar.py --projeto` | O pacote para levar o projeto a outro aplicativo |
 | `python3 entregaveis/_harness/scripts/rotina.py` | O resumo do dia: o que chegou, o que espera o seu sim e os prazos |
 | `python3 entregaveis/_harness/scripts/rotina.py --datas` | As datas que mudaram, com a original e o motivo |
+| `python3 entregaveis/_harness/scripts/rotina.py --lista` | A lista do dia, com os três itens que pedem atenção primeiro |
+| `python3 entregaveis/_harness/scripts/governanca.py` | O nível de governança e os materiais que o projeto emite |
+| `python3 entregaveis/_harness/scripts/governanca.py --desvios` | O desvio de cada data contra a linha de base |
 | `python3 entregaveis/_harness/scripts/ambiente.py` | O que a máquina tem e o que falta, com o comando de cada falta |

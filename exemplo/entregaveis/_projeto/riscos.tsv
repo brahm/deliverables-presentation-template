@@ -1,0 +1,8 @@
+# Riscos, problemas e preocupações do projeto.
+# estado: proposto (veio de uma ata e espera o sim do consultor), aberto ou fechado.
+# origem: A-nnn quando veio de uma ata, T-nnn quando veio de uma terceira remarcação, ou consultor.
+# probabilidade e impacto: alta, media ou baixa. A exposição é alta quando uma é alta e a outra é pelo menos média.
+# ameaca: ids dos itens que o risco ameaça (T-nnn, M-nnn, DP-nnn ou entregável), separados por vírgula. A lista do dia sobe esses itens.
+# resposta: o que está sendo feito para evitar ou reduzir.
+id	risco	causa	efeito	dono	estado	origem	revisado_em	probabilidade	impacto	ameaca	resposta
+RS-001	O aviso de não renovação passa de 15 de janeiro	O aviso depende de uma pessoa e cai no período de férias	A multa de rescisão consome parte do custo evitado (E-008)	Diretora financeira	aberto	A-001	2026-11-06	media	alta	T-002	Lembrar na primeira semana de janeiro e confirmar o envio

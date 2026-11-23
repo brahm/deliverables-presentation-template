@@ -131,16 +131,22 @@ def formatos_e_visual() -> str:
     return "\n".join(partes)
 
 
+# Os registros de governança, nos modelos e no pacote de um projeto.
+DE_GOVERNANCA = ("governanca.tsv", "papeis.tsv", "premissas.tsv", "issues.tsv", "dependencias.tsv", "mudancas.tsv", "linha-de-base.tsv", "versoes.tsv",
+                 "cobrancas.tsv", "perguntas.tsv", "esforco.tsv")
+
+
 def modelos() -> str:
     nota = "Cada modelo é a forma de uma seção do registro do projeto ou de uma parte de um entregável. PREENCHER marca o que ainda precisa ser escrito."
     partes = [topo("Modelos", nota)]
     grupos = (
         ("Entregável", comum.MODELOS / "entregavel", ("briefing.md", "storyline.md", "storyboard.md", "conteudo.md", "documento.md", "planilha.md", "revisao.md")),
         ("Projeto", comum.MODELOS / "projeto", ("brief.md", "fases.md", "audiencia.md", "marca.md", "regras-de-material.md", "decisoes.md", "licoes.md", "evidencias.tsv", "glossario.tsv", "adiados.tsv", "limites.tsv",
-             "acoes.tsv", "riscos.tsv", "reunioes.tsv", "ritos.tsv", "prazos.tsv", "cadencias.tsv", "diario.md")),
+             "acoes.tsv", "riscos.tsv", "reunioes.tsv", "ritos.tsv", "prazos.tsv", "cadencias.tsv", "diario.md") + DE_GOVERNANCA),
         ("Fase", comum.MODELOS / "fase", ("passagem.md",)),
         ("Materiais", comum.MODELOS / "intake", ("registro.tsv",)),
         ("Domínio", comum.MODELOS / "dominio", ("dominio.md", "checagens.tsv", "casos.tsv")),
+        ("Catálogo de materiais de governança", comum.HARNESS / "governanca", ("catalogo.tsv",)),
     )
     for titulo, pasta, nomes in grupos:
         partes.append(f"## {titulo}\n")
@@ -184,7 +190,7 @@ def arquivos_do_kit(do_projeto: bool = False) -> dict[str, str]:
 # --- o pacote de um projeto -------------------------------------------------
 
 REGISTROS = ("brief.md", "fases.md", "audiencia.md", "marca.md", "regras-de-material.md", "decisoes.md", "licoes.md", "glossario.tsv", "evidencias.tsv", "adiados.tsv", "limites.tsv",
-             "acoes.tsv", "riscos.tsv", "reunioes.tsv", "ritos.tsv", "prazos.tsv", "cadencias.tsv", "diario.md")
+             "acoes.tsv", "riscos.tsv", "reunioes.tsv", "ritos.tsv", "prazos.tsv", "cadencias.tsv", "diario.md") + DE_GOVERNANCA
 
 
 def pacotes_do_projeto() -> list[str]:

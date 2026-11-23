@@ -107,6 +107,14 @@ item parado dentro do prazo, um prazo próximo e um prazo vencido, que
 pede uma de três respostas: concluído, nova data ou não é mais
 necessário. A data anterior fica guardada.
 
+A lista do dia traz no topo até três itens: o vencido, o que trava
+outros ou é ameaçado por um risco alto, o prazo com menos folga e o que
+espera o cliente há mais tempo sem cobrança. O que depende de aprovação
+do cliente só segue com a confirmação, que você informa ou o agente
+pergunta pelo follow-up. O agente também sugere o nível de governança
+pelo porte do projeto, enxuto, padrão ou completo, e você escolhe os
+materiais que serão emitidos.
+
 Quando o projeto muda de natureza, diga o que aconteceu: a proposta foi
 vendida, uma extensão foi contratada. O agente abre uma fase nova, que
 herda as decisões, as evidências e tudo o que foi produzido.
@@ -124,6 +132,8 @@ python3 entregaveis/_harness/scripts/fase.py          # as fases do projeto: pro
 python3 entregaveis/_harness/scripts/dominio.py       # os casos de teste do domínio
 python3 entregaveis/_harness/scripts/repositorio.py   # o remoto é local, privado ou público
 python3 entregaveis/_harness/scripts/rotina.py        # o resumo do dia: atas novas, prazos e o que espera o seu sim
+python3 entregaveis/_harness/scripts/rotina.py --lista  # a lista do dia, com o que pede atenção primeiro
+python3 entregaveis/_harness/scripts/governanca.py    # o nível de governança e os materiais emitidos
 python3 entregaveis/_harness/scripts/ambiente.py      # o que a máquina tem e como instalar o que falta
 ```
 

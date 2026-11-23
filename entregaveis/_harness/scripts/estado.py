@@ -14,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import comum  # noqa: E402
+import governanca  # noqa: E402
 import repositorio  # noqa: E402
 import rotina  # noqa: E402
 import validar  # noqa: E402
@@ -104,6 +105,7 @@ def linhas_de_estado() -> list[str]:
         f"Idiomas dos entregáveis: {meta.get('idiomas_dos_entregaveis', '?')} | classificação: {meta.get('classificacao', '?')}",
     ]
     linhas += linhas_de_fase()
+    linhas += governanca.linha_de_estado()
     linhas += linhas_de_dominio()
     pastas = comum.entregaveis()
     if not pastas:

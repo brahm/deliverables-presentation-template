@@ -1,0 +1,15 @@
+# As perguntas que a lista do dia faz ao consultor e a frequência de cada uma. Troque a frequência para ajustar o projeto.
+# frequencia: diaria, semanal (na véspera do status), marco (quando um marco é concluído ou um entregável é aceito) ou nunca.
+# respondida_em: quem grava é o rotina.py --respondida. As perguntas sobre item vencido, follow-up e proposta saem dos registros e não ficam aqui.
+pergunta	frequencia	texto	respondida_em	observacao
+reuniao	diaria	Houve reunião ou conversa que não está registrada?		Sim: conte o que houve, e a skill processar-ata registra
+dispensa	diaria	Algo deixou de ser necessário ou de depender de aprovação?		Sim: a skill registrar-dispensa registra
+riscos	semanal	Os três riscos principais continuam valendo, com a mesma probabilidade e o mesmo impacto?		
+retorno	semanal	O cliente deu retorno sobre o que foi enviado?		Só aparece quando há versão enviada sem aceite
+premissas	semanal	Alguma destas premissas foi confirmada ou caiu?		Só aparece quando há premissa a confirmar
+algum_dia	semanal	Algum item adiado volta ao plano ou sai de vez?		Só aparece quando há item adiado em aberto
+satisfacao	marco	Como o cliente avaliou este marco? Uma nota e uma frase bastam.		
+beneficio	marco	O benefício esperado deste marco já apareceu?		
+materiais	marco	Algum material de governança deixou de ser lido?		Sim: a skill definir-governanca tira o material ou desce o nível
+nivel	semanal	Os sinais do projeto pedem um nível de governança acima do atual. Sobe o nível?		Só aparece quando os sinais passam do nível atual. Troque a frequência para nunca se o nível fica como está
+horas	nunca	Horas trabalhadas		O consultor lança em esforco.tsv quando quiser. Nenhuma pergunta e nenhum aviso

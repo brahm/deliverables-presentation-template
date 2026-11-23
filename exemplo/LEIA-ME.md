@@ -45,6 +45,8 @@ nunca citou uma skill: o agente aplicou cada uma no momento certo.
 | 4 de novembro | | Preparou a versão curta, as perguntas previstas, o roteiro e a pré-leitura | [entrega.md](entregaveis/leitura-executiva/entrega.md) |
 | 5 e 6 de novembro | Apresentou e contou o que a diretoria decidiu e perguntou | Registrou as decisões, respondeu à pergunta sobre a multa e guardou a lição | [fechamento.md](entregaveis/leitura-executiva/fechamento.md), D-008, D-009 e L-002 |
 | 6 de novembro | Contou a reunião sem ata e deu data nova aos relatórios de uso | Registrou a reunião como relato da consultora, abriu as três tarefas com dono e prazo e guardou a data anterior do pedido | [reunioes.tsv](entregaveis/_projeto/reunioes.tsv), [acoes.tsv](entregaveis/_projeto/acoes.tsv), [prazos.tsv](entregaveis/_projeto/prazos.tsv) |
+| 6 de novembro | Confirmou o nível de governança que o agente sugeriu | Leu oito semanas, uma frente e nenhum comitê, sugeriu o nível enxuto e gravou os sete materiais, quem aprova, a linha de base, o risco do aviso e a premissa da migração | D-010, [governanca.tsv](entregaveis/_projeto/governanca.tsv), [papeis.tsv](entregaveis/_projeto/papeis.tsv), [linha-de-base.tsv](entregaveis/_projeto/linha-de-base.tsv), [riscos.tsv](entregaveis/_projeto/riscos.tsv), [premissas.tsv](entregaveis/_projeto/premissas.tsv) |
+| 20 de novembro | Disse que cobrou os relatórios de uso da diretora de marketing | Registrou a cobrança, que passa a aparecer na lista do dia | [cobrancas.tsv](entregaveis/_projeto/cobrancas.tsv) |
 
 ## Se você tem cinco minutos
 
@@ -74,15 +76,25 @@ python3 entregaveis/_harness/scripts/validar.py --rigoroso
 python3 entregaveis/_harness/scripts/gerar.py leitura-executiva --pdf --imagens
 python3 entregaveis/_harness/scripts/rotina.py --hoje 2026-11-27
 python3 entregaveis/_harness/scripts/rotina.py --datas
+python3 entregaveis/_harness/scripts/rotina.py --lista --hoje 2026-11-27
+python3 entregaveis/_harness/scripts/governanca.py
+python3 entregaveis/_harness/scripts/governanca.py --desvios
 ```
 
-O estado lista um material em falta, uma decisão assumida e um item
-adiado. Eles fazem parte da história do exemplo. A rotina compara uma
-data com os prazos das três tarefas da reunião: com `--hoje`, você vê o
-resumo de qualquer dia, com o que está parado, o que vence logo e o que
-venceu. O segundo comando mostra a data que mudou, com a original e o
-motivo. O gerador pede o pacote
-`python-pptx`, e o PDF e as imagens pedem o LibreOffice.
+O estado lista o nível de governança, um material em falta, uma decisão
+assumida e um item adiado. Eles fazem parte da história do exemplo. A
+rotina compara uma data com os prazos das três tarefas da reunião: com
+`--hoje`, você vê o resumo de qualquer dia, com o que está parado, o que
+vence logo e o que venceu. O comando `--datas` mostra a data que mudou,
+com a original e o motivo. O gerador pede o pacote `python-pptx`, e o
+PDF e as imagens pedem o LibreOffice.
+
+A lista do dia põe três itens no topo. O primeiro é o aviso de não
+renovação, que só vence em janeiro e sobe porque um risco de exposição
+alta o ameaça. Depois vêm os dois prazos mais próximos. Abaixo ficam o
+que espera o cliente, com a cobrança de 20 de novembro, e as perguntas
+da semana. O comando `governanca.py` mostra os sete materiais do nível
+enxuto, e `--desvios` compara as datas de hoje com a linha de base.
 
 Para experimentar, abra a pasta com o seu agente e peça uma mudança, por
 exemplo trocar o título da página 4 por um rótulo como "Investimento". A
@@ -93,8 +105,9 @@ checagem devolve o que corrigir.
 O exemplo tem uma fase, um entregável e um idioma. Ele não traz modelo
 de apresentação do cliente, documento em Word, planilha, peça interativa
 nem versão em espanhol ou inglês. A pasta de atas está vazia, porque a
-única reunião foi contada pela consultora. O método de cada uma dessas partes
-está em `entregaveis/_harness/metodo/`.
+única reunião foi contada pela consultora. A governança fica no nível
+enxuto, com os registros preenchidos e nenhum material emitido. O
+método de cada uma dessas partes está em `entregaveis/_harness/metodo/`.
 
 ## Em um projeto seu
 

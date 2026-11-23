@@ -8,6 +8,7 @@ idiomas: PREENCHER
 duracao_min:
 prazo:
 origem:
+depende_de:
 fase:
 estado: briefing
 ---
@@ -18,8 +19,9 @@ ou treinamento. `veiculo`: projetado (alguém apresenta), leitura (deck
 lido sem apresentador), documento, planilha ou workshop. `formato`: pptx,
 docx, pdf, xlsx ou html. `origem`: o arquivo já existente, quando o entregável
 foi adotado de um projeto em andamento. `fase`: a fase do projeto em que
-o entregável nasceu. `estado`: briefing, storyline,
-storyboard, redacao, revisao ou entregue.
+o entregável nasceu. `depende_de`: os ids que precisam terminar antes
+(`T-nnn`, `M-nnn`, `DP-nnn` ou outro entregável), separados por vírgula.
+`estado`: briefing, storyline, storyboard, redacao, revisao ou entregue.
 
 ## Audiência
 
