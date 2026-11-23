@@ -82,6 +82,10 @@ def projeto() -> list[Achado]:
             achados.append(Achado("erro", "projeto", nome, 0, f"O campo '{campo}' do brief está vazio."))
     if MARCA in corpo:
         achados.append(Achado("erro", "projeto", nome, 0, f"O brief ainda tem trechos marcados com {MARCA}."))
+    fase = comum.fase_atual()
+    passagem = comum.PROJETO / "fases" / f"fase-{fase - 1}" / "passagem.md"
+    if fase > 1 and (not passagem.is_file() or MARCA in comum.ler(passagem)):
+        achados.append(Achado("aviso", "projeto", comum.relativo(passagem), 0, f"A passagem da fase {fase - 1} para a {fase} ainda não foi escrita por inteiro: siga a skill evoluir-projeto."))
     return achados
 
 

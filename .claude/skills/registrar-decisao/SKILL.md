@@ -22,6 +22,10 @@ decisões em outro lugar, use esse lugar.
 5. Conflito: se uma tarefa contraria uma decisão vigente ou uma
    instrução anterior do consultor, pare essa parte e pergunte, com as opções
    e a que você recomenda. Não escolha um lado em silêncio.
-6. Depois de uma decisão nova, mude o que dependia dela: o briefing, a
+6. Uma decisão que muda o contrato, o tipo de trabalho ou a decisão que
+   o projeto precisa provocar abre uma fase nova: aplique
+   `evoluir-projeto`. Mudança de entregáveis, de prazo ou de audiência
+   dentro da mesma fase é escopo, e fica aqui.
+7. Depois de uma decisão nova, mude o que dependia dela: o briefing, a
    storyline, as páginas. Uma mudança na grande ideia ou na sequência de
    títulos pede nova aprovação da storyline.

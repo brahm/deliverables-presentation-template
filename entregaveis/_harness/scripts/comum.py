@@ -254,6 +254,19 @@ def entregaveis() -> list[Path]:
     )
 
 
+def fase_atual() -> int:
+    """A fase em que o projeto está, pelo campo 'fase' do brief. Um projeto sem o campo está na fase 1."""
+    meta, _ = cabecalho(ler(PROJETO / "brief.md"))
+    valor = meta.get("fase", "").strip()
+    return int(valor) if valor.isdigit() and int(valor) > 0 else 1
+
+
+def fase_do_entregavel(meta: dict) -> int:
+    """A fase em que o entregável nasceu. Sem o campo, é a fase 1."""
+    valor = meta.get("fase", "").strip()
+    return int(valor) if valor.isdigit() and int(valor) > 0 else 1
+
+
 def arquivos_de_conteudo(pasta: Path) -> list[Path]:
     """Arquivos com o texto do entregável, em todos os idiomas."""
     achados: list[Path] = []

@@ -38,3 +38,6 @@ continuam valendo, e a seção 7 de `metodo/metodo.md` dá o argumento.
    `validar.py --so confidencialidade`.
 10. Quem envia a proposta é o consultor. Prepare o texto de envio com
     `preparar-entrega` e pare.
+11. Quando o consultor disser que a proposta foi vendida, aplique
+    `evoluir-projeto`: o projeto passa à fase do trabalho vendido, e o
+    que a proposta prometeu vira a linha de base dela.

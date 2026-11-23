@@ -19,4 +19,7 @@ metadata:
    audiência com o que a reunião ensinou.
 6. Reveja `_projeto/adiados.tsv`: o que era deste entregável foi feito,
    ou passa para outro com o consultor avisado.
-7. Relate com `relatar-ao-consultor`.
+7. Se o que aconteceu muda a natureza do projeto, aplique
+   `evoluir-projeto`: a proposta foi vendida, uma extensão foi
+   contratada ou o trabalho passa a ser de outro tipo.
+8. Relate com `relatar-ao-consultor`.

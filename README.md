@@ -50,12 +50,17 @@ pacotes extras. Só o gerador de arquivos pede `python-pptx`,
    modelo, com o que foi checado, o que foi assumido e o que ficou por
    fazer. Quem envia ao cliente é você.
 
+Quando o projeto muda de natureza, diga o que aconteceu: a proposta foi
+vendida, uma extensão foi contratada. O agente abre uma fase nova, que
+herda as decisões, as evidências e tudo o que foi produzido.
+
 Você não precisa citar skill nem comando. Os que ajudam a acompanhar:
 
 ```sh
 python3 entregaveis/_harness/scripts/estado.py        # onde cada entregável está
 python3 entregaveis/_harness/scripts/validar.py       # todas as checagens
 python3 entregaveis/_harness/scripts/gerar.py ID      # PowerPoint, Word, PDF ou Excel sobre o seu modelo
+python3 entregaveis/_harness/scripts/fase.py          # as fases do projeto: proposta, trabalho vendido, extensão
 python3 entregaveis/_harness/scripts/dominio.py       # os casos de teste do domínio
 python3 entregaveis/_harness/scripts/repositorio.py   # o remoto é local, privado ou público
 ```
