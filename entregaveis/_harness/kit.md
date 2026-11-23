@@ -16,6 +16,7 @@
 | `scripts/validar.py` | As checagens em script | A cada gravação (hook), antes da revisão e no pull request |
 | `scripts/preparar.py` | Cria os registros e as pastas de entregável e ativa pacotes | No início do projeto e a cada entregável novo |
 | `scripts/levantar.py` | Levanta o que já existe em um projeto em andamento | Na adoção |
+| `scripts/gerar.py` | Gera PowerPoint, Word, PDF e Excel a partir da fonte em Markdown, sobre o modelo do projeto. Pede `python-pptx`, `python-docx` e `openpyxl` | Depois da redação e a cada correção da fonte |
 | `scripts/repositorio.py` | Diz se o remoto do git é local, privado ou público, e registra a confirmação do dono | No início do projeto, a cada gravação de registro e a cada envio |
 | `scripts/dominio.py` | Aplica as regras do domínio do projeto e roda os casos de teste delas | A cada gravação, na validação e quando uma regra muda |
 | `scripts/conferir_interativo.js` | Abre um HTML interativo em um navegador sem interface, bloqueia a rede, lista os erros e grava as imagens. Opcional, pede Node e Playwright | Antes de entregar uma peça interativa |

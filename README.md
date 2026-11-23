@@ -29,7 +29,8 @@ simulação antes de instalar.
 
 O prompt completo e a instalação sem Python estão em
 [INSTALL.md](INSTALL.md). Requisito: Python 3.9 ou mais novo, sem
-pacotes extras.
+pacotes extras. Só o gerador de arquivos pede `python-pptx`,
+`python-docx` e `openpyxl`, e o LibreOffice para o PDF.
 
 ## Usar
 
@@ -45,14 +46,16 @@ pacotes extras.
    sequência de títulos que conta a história.
 4. Aprove a storyline. Só depois disso o agente escreve páginas,
    documentos, planilhas e peças interativas.
-5. Receba o material revisado, com o que foi checado, o que foi
-   assumido e o que ficou por fazer. Quem envia ao cliente é você.
+5. Receba o material revisado e o arquivo final gerado sobre o seu
+   modelo, com o que foi checado, o que foi assumido e o que ficou por
+   fazer. Quem envia ao cliente é você.
 
 Você não precisa citar skill nem comando. Os que ajudam a acompanhar:
 
 ```sh
 python3 entregaveis/_harness/scripts/estado.py        # onde cada entregável está
 python3 entregaveis/_harness/scripts/validar.py       # todas as checagens
+python3 entregaveis/_harness/scripts/gerar.py ID      # PowerPoint, Word, PDF ou Excel sobre o seu modelo
 python3 entregaveis/_harness/scripts/dominio.py       # os casos de teste do domínio
 python3 entregaveis/_harness/scripts/repositorio.py   # o remoto é local, privado ou público
 ```
@@ -91,9 +94,6 @@ regras, as skills e as checagens, sem os hooks.
 
 ## O que esta versão ainda não tem
 
-- O gerador de PowerPoint, Word, PDF e Excel sobre o modelo do projeto.
-  Hoje o agente gera o arquivo final com as ferramentas que tiver, a
-  partir da fonte em Markdown.
 - Os pacotes de instruções para Claude desktop, ChatGPT desktop e
   Microsoft Copilot.
 - Um exemplo completo, do brief à entrega.

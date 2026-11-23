@@ -3,6 +3,26 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.5.0
+
+- Gerador de arquivos. `scripts/gerar.py ID` gera PowerPoint, Word, PDF
+  e Excel a partir da fonte em Markdown, sobre o modelo registrado em
+  `_projeto/marca.md`. Escolhe o layout pelo tipo de página, tira as
+  páginas de exemplo do modelo, leva as notas, as tabelas, as imagens e
+  a linha de fonte, e desenha gráficos nativos a partir de blocos
+  `grafico`. Aceita modelo com mais de um slide mestre, com layouts de
+  nome repetido e exportado por outro programa. Recusa o entregável sem storyline aprovada e o que reprova
+  nas checagens, a não ser com `--rascunho`.
+- `--imagens` grava uma imagem por página, para a conferência do
+  arquivo renderizado.
+- `_projeto/marca.md` ganhou a seção "Layouts do modelo".
+- Um bloco de código não conta mais nas palavras da página.
+
+O que o projeto precisa fazer: instale os pacotes do formato que usa
+(`python-pptx`, `python-docx`, `openpyxl`). Registre os modelos em
+`_projeto/marca.md`, rode `gerar.py --layouts` e gere de novo os
+arquivos finais a partir da fonte.
+
 ## 0.4.0
 
 - HTML interativo e animado, em 2D e 3D, como peça de apoio de qualquer

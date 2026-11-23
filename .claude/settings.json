@@ -10,6 +10,7 @@
       "Bash(python3 entregaveis/_harness/scripts/levantar.py)",
       "Bash(python3 entregaveis/_harness/scripts/levantar.py *)",
       "Bash(node entregaveis/_harness/scripts/conferir_interativo.js *)",
+      "Bash(python3 entregaveis/_harness/scripts/gerar.py *)",
       "Bash(python3 entregaveis/_harness/scripts/repositorio.py)",
       "Bash(python3 entregaveis/_harness/scripts/dominio.py)",
       "Bash(python3 entregaveis/_harness/scripts/dominio.py *)"

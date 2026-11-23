@@ -22,8 +22,9 @@ o resultado em `entrega.md`, na pasta do entregável.
 5. Outros idiomas. Reescreva o conteúdo aprovado em `conteudo.xx.md` ou
    `documento.xx.md`, para o leitor daquele idioma. Números, fontes e
    títulos dizem o mesmo em todas as versões. Valide cada versão.
-6. Arquivo final. Gere em `saida/` com a skill `desenhar-visual`, no
-   padrão de nome do projeto, e confira a marcação obrigatória. As
+6. Arquivo final. Gere em `saida/` com a skill `desenhar-visual` e
+   `gerar.py`, uma vez por idioma (`--idioma es`), renomeie para o
+   padrão de nome do projeto e confira a marcação obrigatória. As
    peças de `interativos/` vão junto, cada uma com uma linha que diz
    para que serve e como abrir.
 7. Em apresentação remota, prepare as instruções de acesso, um plano

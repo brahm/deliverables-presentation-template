@@ -33,6 +33,81 @@ partir dela, sobre o modelo registrado em `entregaveis/_projeto/marca.md`,
 e fica em `saida/`. Uma correção feita só no arquivo final se perde na
 próxima geração: corrija a fonte e gere de novo.
 
+## Gerar o arquivo
+
+`python3 entregaveis/_harness/scripts/gerar.py ID` gera o arquivo no
+formato do briefing. O gerador recusa o entregável sem briefing completo
+e storyline aprovada, e o que reprova nas checagens. Com `--rascunho`
+ele gera assim mesmo e carimba a marca de rascunho em todas as páginas.
+
+| Opção | O que faz |
+| --- | --- |
+| `--formato pptx`, `docx`, `pdf` ou `xlsx` | Gera em outro formato |
+| `--idioma es` | Gera a versão de `conteudo.es.md` ou `documento.es.md` |
+| `--pdf` | Gera também o PDF |
+| `--imagens` | Gera uma imagem por página em `saida/conferencia/`, para conferir |
+| `--modelo ARQUIVO` | Usa este modelo em vez do registrado |
+| `--layouts` | Lista os layouts do modelo de apresentação, com os campos de cada um |
+
+O gerador pede pacotes de fora, um por formato: `python-pptx`,
+`python-docx` e `openpyxl`. O PDF e as imagens pedem o LibreOffice, e as
+imagens também o `pdftoppm`. Sem eles, o script diz o que falta e o
+agente gera o arquivo com as ferramentas que tiver.
+
+O que entra em cada formato:
+
+- PowerPoint. Cada página de `conteudo.md` vira um slide em um layout
+  do modelo, escolhido pelo campo `tipo`. As páginas de exemplo do
+  modelo saem. Parágrafos e listas vão para o campo de texto, as notas
+  para as notas de quem apresenta, uma tabela Markdown vira tabela, uma
+  imagem citada entra ajustada à área e um bloco `grafico` vira gráfico
+  nativo. A página que cita evidência ganha a linha de fonte, com a
+  origem e a data do registro.
+- Word e PDF. `documento.md` vira um documento com os estilos do
+  modelo: título, títulos de seção, listas, tabelas, citações e imagens.
+  O texto de exemplo do modelo sai, e ficam o cabeçalho e o rodapé. As
+  evidências citadas como `[E-001]` formam a seção de fontes no fim. Um
+  bloco `grafico` entra como tabela: para uma figura, gere a imagem e
+  cite-a.
+- Excel. `planilha.md` e os arquivos `.csv` ou `.tsv` de `dados/` viram
+  uma planilha com a aba de leitura, uma aba por arquivo com cabeçalho
+  fixo, filtro e números como números, o dicionário de dados e os
+  gráficos nativos dos blocos `grafico`.
+
+Um gráfico é descrito na fonte, dentro de um bloco de código com o nome
+`grafico`. Em apresentação, os dados vão no bloco ou em um arquivo de
+`dados/`:
+
+~~~text
+```grafico
+tipo: barras
+destaque: E-mail
+dados:
+Função | Plataformas
+E-mail | 2
+Dados | 1
+```
+~~~
+
+`tipo` aceita `barras`, `colunas`, `linhas` e `pizza`. `destaque` é a
+categoria ou a série que o título cita: ela leva a cor de destaque e o
+resto fica em cinza. `arquivo: dados/NOME.csv` substitui a tabela do
+bloco. O título do gráfico é o título da página, e por isso o campo
+`titulo` é opcional. Em planilha, o bloco aponta para os dados de uma
+aba, com os campos `aba`, `categorias` e `valores`.
+
+O layout de cada tipo de página é escolhido pelo nome e pelos campos
+dos layouts do modelo, em todos os slides mestres. Quando a escolha não
+serve, fixe o layout por tipo na seção "Layouts do modelo" de
+`_projeto/marca.md`, ou em uma página só, com o campo `layout` no
+comentário da página. Vale o nome do layout ou o número que
+`gerar.py --layouts` mostra, que resolve o modelo com nomes repetidos.
+O título que não cabe no campo do layout sai com a letra menor, até 60%
+do tamanho do modelo. Se nem assim couber, o script avisa: encurte o
+título ou troque o layout. As cores de
+destaque e de apoio dos gráficos vêm da linha "Cores de destaque em
+gráficos" da mesma página, em código hexadecimal.
+
 Antes de entregar um arquivo gerado, abra o resultado e olhe página por
 página. Texto que estoura a caixa, gráfico cortado e fonte trocada só
 aparecem no arquivo renderizado.

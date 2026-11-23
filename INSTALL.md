@@ -92,6 +92,9 @@ entregáveis do projeto.
 
 - Python 3.9 ou mais novo, sem pacotes extras, para o instalador, as
   checagens e os hooks.
+- O gerador de arquivos (`gerar.py`) é a única peça que pede pacotes de
+  fora: `python-pptx`, `python-docx` e `openpyxl`, um por formato. O PDF
+  e as imagens de conferência pedem o LibreOffice.
 - Os hooks rodam no Claude Code. Em outros agentes, as regras mandam
   rodar `estado.py` no início e `validar.py` antes de entregar.
 

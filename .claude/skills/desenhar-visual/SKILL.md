@@ -23,13 +23,20 @@ formatos em `metodo/formatos.md`.
    `_projeto/marca.md`. Use os layouts do modelo em vez de desenhar por
    cima deles. Sem modelo registrado, peça um e use um desenho neutro
    até ele chegar.
-6. Gere o arquivo final a partir da fonte em Markdown e grave em
-   `saida/`, com o nome no padrão do projeto. Em planilha, cada aba traz
-   os dados com unidade no cabeçalho, há uma aba de leitura e um
-   dicionário de dados, e os gráficos são nativos da planilha.
-7. Abra o resultado e olhe página por página, de preferência convertido
-   em imagem. Procure texto que estoura a caixa, elemento cortado ou
-   sobreposto e fonte trocada.
+6. Gere o arquivo final a partir da fonte em Markdown com
+   `python3 entregaveis/_harness/scripts/gerar.py ID --imagens`. Ele
+   usa o modelo registrado, grava em `saida/` e recusa o que reprova
+   nas checagens. Um gráfico é um bloco `grafico` na fonte, com o
+   destaque no que o título cita. Em planilha, cada aba traz os dados
+   com unidade no cabeçalho, há uma aba de leitura e um dicionário de
+   dados, e os gráficos são nativos. A sintaxe está em `formatos.md`.
+   Se faltar um pacote, o script diz qual: instale, ou gere com as
+   ferramentas que tiver e diga isso no relatório.
+7. Olhe as imagens de `saida/conferencia/`, página por página. Procure
+   texto que estoura a caixa, elemento cortado ou sobreposto, layout
+   errado para o tipo de página e fonte trocada. Com o modelo novo em
+   mãos, rode `gerar.py --layouts` e fixe em `_projeto/marca.md` o
+   layout dos tipos que o gerador escolheu mal.
 8. Um problema visto no arquivo é corrigido na fonte, e o arquivo é
    gerado de novo.
 9. Uma tabela com mais linhas do que a página comporta vai para a
