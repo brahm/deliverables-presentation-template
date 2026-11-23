@@ -108,6 +108,17 @@ python3 entregaveis/_harness/scripts/dominio.py       # os casos de teste do dom
 python3 entregaveis/_harness/scripts/repositorio.py   # o remoto é local, privado ou público
 ```
 
+## Ver um exemplo
+
+A pasta [exemplo/](exemplo/LEIA-ME.md) traz um projeto fictício inteiro,
+do brief à entrega: o que a consultora disse em cada etapa, o que o
+agente registrou e o [arquivo final](exemplo/resultado/leitura-executiva.pdf).
+Para abrir o exemplo com o harness rodando:
+
+```sh
+python3 tools/abrir_exemplo.py ../exemplo-aberto
+```
+
 ## O que o harness segura
 
 Três travas bloqueiam o agente no Claude Code:
@@ -137,6 +148,7 @@ em [ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md).
 | Para saber | Leia |
 | --- | --- |
 | As regras e o momento de cada skill | [REGRAS.md](entregaveis/_harness/REGRAS.md) |
+| Um projeto fictício, do brief à entrega | [exemplo/LEIA-ME.md](exemplo/LEIA-ME.md) |
 | O método, etapa por etapa | [metodo.md](entregaveis/_harness/metodo/metodo.md) |
 | As práticas de texto | [texto.md](entregaveis/_harness/metodo/texto.md) |
 | Formatos, veículos e idiomas | [formatos.md](entregaveis/_harness/metodo/formatos.md) |
@@ -145,10 +157,6 @@ em [ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md).
 | Os pacotes por tipo de projeto | [LEIA-ME.md](entregaveis/_harness/pacotes/LEIA-ME.md) |
 | As peças do kit, as checagens e os créditos | [kit.md](entregaveis/_harness/kit.md) |
 | O que mudou em cada versão | [HISTORY.md](HISTORY.md) |
-
-## O que esta versão ainda não tem
-
-- Um exemplo completo, do brief à entrega.
 
 ## Testar o kit
 

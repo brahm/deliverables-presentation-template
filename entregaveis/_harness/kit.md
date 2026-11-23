@@ -121,7 +121,8 @@ criado a partir do template, apague-os ao iniciar:
 - `HISTORY.md`
 - `.github/about.md`
 - `LICENSE` (a licença do kit segue em `_harness/LICENCA.txt`)
-- `tools/testar_kit.py`
+- `tools/testar_kit.py` e `tools/abrir_exemplo.py`
+- `exemplo/`, o projeto fictício do brief à entrega
 - `.github/workflows/kit.yml`
 
 ## Fontes do método

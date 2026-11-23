@@ -1,0 +1,11 @@
+# Todo número e todo achado usado em um entregável tem uma linha aqui.
+# tipo: fato, estimativa ou suposicao. confianca: alta, media ou baixa.
+id	afirmacao	valor	fonte	data	tipo	confianca	onde_usada
+E-001	Plataformas de marketing contratadas	17	Contratos e faturas das plataformas de marketing (M-004)	2026-09-25	fato	alta	leitura-executiva
+E-002	Plataformas que repetem uma capacidade atendida por outra	3	Inventário confirmado com os donos das plataformas (M-004 e M-008)	2026-10-02	fato	alta	leitura-executiva
+E-003	Custo anual das três plataformas repetidas	R$ 1,9 milhão	Contratos e faturas das plataformas de marketing (M-004)	2026-09-25	fato	alta	leitura-executiva
+E-004	Tempo entre o abandono do carrinho e o envio da campanha	2 dias	Medição do caso de carrinho abandonado (M-009)	2026-10-08	fato	media	leitura-executiva
+E-005	Nota de maturidade em dados e identidade	2 em 5	Escala declarada e entrevistas com os donos das plataformas (M-008)	2026-10-09	estimativa	media	leitura-executiva
+E-006	Contratos de plataformas repetidas que vencem em março de 2027	2	Contratos das plataformas de marketing (M-004)	2026-09-25	fato	alta	leitura-executiva
+E-007	Custo evitado por ano com a saída das duas plataformas de março	R$ 1,2 milhão	Soma dos dois contratos (M-004), com a migração em três meses (D-005)	2026-10-12	estimativa	media	leitura-executiva
+E-008	Multa de rescisão nos dois contratos de março com aviso até 2027-01-15	nenhuma	Cláusulas de rescisão dos contratos (M-004)	2026-11-06	fato	alta	leitura-executiva, follow-up

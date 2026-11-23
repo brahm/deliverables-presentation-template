@@ -246,9 +246,10 @@ def linha_de_fonte(campo: str, idioma: str, registro: dict[str, dict]) -> str:
     return f"{ROTULO_DE_FONTE.get(idioma, 'Fonte')}: {'; '.join(partes)}." if partes else ""
 
 
-def por_titulo_no_arquivo(documento, titulo: str) -> None:
+def por_titulo_no_arquivo(documento, titulo: str, neutro: bool = False) -> None:
     """Grava o título nas propriedades do arquivo. Um modelo que liga as propriedades por uma relação
-    fora do padrão fica como está: criar outra parte com o mesmo nome estraga o arquivo."""
+    fora do padrão fica como está: criar outra parte com o mesmo nome estraga o arquivo. No desenho
+    neutro, apaga o autor e a descrição que a biblioteca traz no arquivo de base dela."""
     pacote = documento.part.package
     padrao = "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"
     try:
@@ -257,6 +258,9 @@ def por_titulo_no_arquivo(documento, titulo: str) -> None:
         if any(str(parte.partname).lower() == "/docprops/core.xml" for parte in pacote.iter_parts()):
             return
     documento.core_properties.title = titulo
+    if neutro:
+        for campo in ("author", "last_modified_by", "comments"):
+            setattr(documento.core_properties, campo, "")
 
 
 # --- PowerPoint -----------------------------------------------------------
@@ -637,7 +641,7 @@ def gerar_pptx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
             corrida.font.color.rgb = RGBColor(0xA3, 0x38, 0x2C)
         if pagina.notas.strip():
             slide.notes_slide.notes_text_frame.text = plano(pagina.notas.strip())
-    por_titulo_no_arquivo(prs, plano(paginas[0].titulo))
+    por_titulo_no_arquivo(prs, plano(paginas[0].titulo), neutro=not modelo)
     prs.save(str(destino))
     return len(paginas)
 
@@ -735,7 +739,7 @@ def gerar_docx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
             detalhe = ", ".join(v for v in (linha.get("fonte", ""), linha.get("data", "")) if v)
             paragrafo(f"**{ident}**: {detalhe or '?'}")
     if titulo_do_documento:
-        por_titulo_no_arquivo(doc, titulo_do_documento)
+        por_titulo_no_arquivo(doc, titulo_do_documento, neutro=not modelo)
     doc.save(str(destino))
     return quantos
 

@@ -3,6 +3,26 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.7.1
+
+- Um exemplo completo. A pasta `exemplo/` traz um projeto fictício do
+  brief à entrega, com os registros, o domínio, a storyline aprovada, as
+  páginas, a revisão, a entrega, o fechamento e o arquivo final. Tudo
+  nele é inventado, e o guia `exemplo/LEIA-ME.md` conta o que a
+  consultora disse em cada etapa.
+- `tools/abrir_exemplo.py DESTINO` abre o exemplo em uma pasta nova, com
+  o harness instalado. Os testes do kit abrem o exemplo a cada mudança e
+  conferem se ele passa nas checagens de hoje.
+- O README explica a criação do projeto pelo site do GitHub, pelo
+  terminal e sem GitHub, com o link direto para o formulário.
+- Sem modelo registrado, o gerador apaga das propriedades do arquivo o
+  autor e a descrição que a biblioteca traz no arquivo de base dela.
+- Nos modelos do domínio, o exemplo de regra passou a usar o id `R-001`,
+  para não se confundir com as decisões, que usam `D-nnn`.
+
+O que o projeto precisa fazer: nada. O exemplo e o comando que o abre
+ficam só no repositório do template.
+
 ## 0.7.0
 
 - O harness fora do Claude Code. `_harness/ambientes/` traz o texto de

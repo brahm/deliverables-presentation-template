@@ -1,0 +1,5 @@
+# O que foi pedido e não foi feito, ou foi movido. Nada some em silêncio.
+# estado: aberto ou feito.
+id	item	motivo	para_quando	estado
+B-001	Análise de subuso das licenças, com usuários ativos sobre licenças pagas	Os relatórios de uso (M-007) não chegaram até a leitura executiva	Depois da chegada de M-007, em entregável próprio	aberto
+B-002	Resposta sobre a multa de rescisão dos contratos de março	A pergunta surgiu na reunião de 2026-11-05 e pedia a leitura das cláusulas	2026-11-06, no follow-up	feito
