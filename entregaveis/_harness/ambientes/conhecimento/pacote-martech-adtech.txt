@@ -1,0 +1,416 @@
+# Pacote martech-adtech
+
+Arquivo de conhecimento do harness de entregáveis, versão 0.7.0. Gerado por empacotar.py: não edite à mão.
+
+Ponto de partida genérico para este tipo de projeto. O domínio do projeto vence o pacote onde os dois se contradizem.
+
+## Pacote: assessment de arquitetura de martech e adtech
+
+### Quando usar
+
+O projeto avalia as plataformas de marketing e de mídia de uma empresa e
+recomenda o que manter, consolidar, substituir, desligar ou contratar.
+Serve também quando o pedido é uma arquitetura alvo, um roadmap de
+plataformas ou a escolha de uma plataforma específica.
+
+Projeto de mídia sem pergunta de plataforma usa o pacote de mídia.
+Projeto de rede de mídia de varejo usa o de retail media.
+
+### O que perguntar ao consultor no início
+
+Além das perguntas de `iniciar-projeto`:
+
+- Que decisão motivou o assessment: renovação de contrato, corte de
+  custo, troca de plataforma, nova estratégia de dados, auditoria?
+- O escopo cobre martech, adtech ou os dois? Inclui dados e analytics?
+- Há uma plataforma cuja permanência já foi decidida, ou cuja saída já
+  foi decidida?
+- Quem patrocina e quem pode vetar: marketing, tecnologia, dados,
+  compras, jurídico?
+- O cliente espera uma nota de maturidade? Com que referência de
+  comparação?
+
+### Entregáveis típicos
+
+| Entregável | Veículo | Formato | Audiência que decide |
+| --- | --- | --- | --- |
+| Leitura executiva do assessment | projetado | pptx | Diretoria de marketing e de tecnologia |
+| Relatório do assessment | leitura ou documento | pptx ou docx | Donos das plataformas e arquitetura |
+| Inventário de plataformas | planilha | xlsx | Arquitetura, compras e donos das plataformas |
+| Arquitetura alvo | leitura | pptx | Arquitetura e donos das plataformas |
+| Roadmap e caso de negócio | projetado | pptx, com a base em xlsx | Diretoria e financeiro |
+| Requisitos para escolha de plataforma | documento | docx, com a matriz em xlsx | Compras, arquitetura e a área usuária |
+
+### Frameworks
+
+Cada framework abaixo diz o que produz, de que dados precisa e que tipo
+de página costuma mostrar o resultado.
+
+#### 1. Inventário de plataformas
+
+A base de todo o resto. Uma linha por plataforma contratada ou
+construída, na planilha. Colunas: nome, categoria, capacidade principal,
+área dona, usuários ativos, contrato (início, fim, aviso de renovação),
+custo anual (licença, serviços, operação), integrações, dados pessoais
+que trata, e a decisão recomendada.
+
+Uma plataforma que ninguém da empresa sabe dizer de quem é já é um
+achado. Registre como está e não adivinhe o dono.
+
+#### 2. Mapa de capacidades em camadas
+
+A arquitetura descrita pelo que ela precisa fazer, antes dos nomes dos
+produtos. É um diagrama de pilha.
+
+| Camada | Capacidades |
+| --- | --- |
+| Coleta e consentimento | Tags, SDKs, coleta pelo servidor, gestão de consentimento |
+| Dados e identidade | Armazém de dados, perfil único de cliente, resolução de identidade, segmentação |
+| Decisão e inteligência | Modelos de propensão, recomendação, regras de próxima ação, testes |
+| Orquestração e conteúdo | Jornadas, automação de campanhas, gestão de conteúdo e de ativos |
+| Entrega própria | E-mail, push, SMS, mensageria, site, aplicativo, atendimento |
+| Mídia paga | Compra programática, servidor de anúncios, redes sociais e busca, verificação |
+| Medição | Analytics, atribuição, modelo de mix de marketing, testes de incrementalidade |
+| Governança e operação | Catálogo de dados, privacidade, acessos, monitoramento, custos |
+
+Pinte cada capacidade pelo estado: atendida, atendida por mais de uma
+plataforma, atendida em parte, não atendida. O mapa pintado é a página
+que a audiência mais lembra.
+
+#### 3. Escala de maturidade
+
+Declare a escala e os critérios antes de dar qualquer nota. A mesma
+evidência precisa levar dois avaliadores à mesma nota.
+
+| Nota | Nome | Critério geral |
+| --- | --- | --- |
+| 1 | Inicial | A capacidade não existe ou depende de trabalho manual e de uma pessoa. |
+| 2 | Em formação | Existe em uma área ou canal, sem integração e sem dono definido. |
+| 3 | Definida | Tem dono, processo e integração com os dados principais. O uso é irregular. |
+| 4 | Gerida | É usada em rotina, medida por indicadores e revisada. |
+| 5 | Otimizada | Melhora por teste contínuo e alimenta as outras capacidades. |
+
+Dimensões: dados e identidade, ativação e jornadas, mídia e adtech,
+medição, conteúdo, operação e governança, pessoas e processos.
+
+Para cada dimensão, escreva o critério específico de cada nota e a
+evidência que sustenta a nota dada: uma entrevista, um dado de uso, um
+documento. Nota sem evidência é opinião e não entra. Só compare com
+outras empresas quando houver uma fonte citável.
+
+#### 4. Sobreposição, lacuna e subuso
+
+Uma matriz de capacidades (linhas) por plataformas (colunas). Marque o
+que cada plataforma faz hoje e o que poderia fazer com a licença já
+paga. Três leituras saem dela:
+
+- sobreposição: duas ou mais plataformas pagas para a mesma capacidade;
+- lacuna: capacidade necessária que nenhuma atende;
+- subuso: capacidade licenciada e não usada.
+
+Subuso costuma render mais do que troca de plataforma. Mostre o custo
+da licença parada com o número do contrato.
+
+#### 5. Fluxo do dado
+
+O caminho de um dado de cliente da coleta à ativação e à medição, com o
+ponto em que o consentimento é verificado, os pontos de cópia manual e o
+tempo entre o evento e o uso. É um diagrama de fluxo. Escolha um ou dois
+casos reais, como carrinho abandonado ou exclusão de clientes de uma
+campanha de aquisição, e siga o dado de ponta a ponta.
+
+#### 6. Cadeia de mídia e taxas
+
+Para adtech: o caminho de um real investido até a impressão. Agência,
+mesa de operação, plataforma de compra, dados de terceiros, verificação,
+plataforma de venda e veículo. Cada elo com a taxa e com quem detém o
+contrato e os dados. É um gráfico de cascata.
+
+Pergunte de quem são as contas das plataformas, os dados de campanha e
+as audiências. Em muitos casos pertencem à agência, e isso muda a
+recomendação.
+
+#### 7. Identidade e sinais
+
+Como a empresa reconhece uma pessoa entre canais e o que acontece com a
+restrição de cookies de terceiros e de identificadores de dispositivo.
+Itens a avaliar: taxa de usuários identificados, base com consentimento
+por finalidade, envio de conversões pelo servidor, uso de dados próprios
+na compra de mídia, salas limpas de dados.
+
+#### 8. Custo total e uso
+
+Por plataforma: licença, serviços de implantação, integração, operação
+interna e de parceiros. Ao lado, o uso: usuários ativos sobre licenças
+pagas, volume usado sobre volume contratado, recursos usados sobre
+recursos licenciados. A página mostra o custo por capacidade usada.
+
+#### 9. Decisão por plataforma
+
+Uma das cinco, com o motivo e a evidência: manter, consolidar,
+substituir, desligar, contratar. A decisão considera a data de renovação
+do contrato, que define a janela em que a mudança é possível.
+
+#### 10. Casos de uso, roadmap e caso de negócio
+
+Priorize casos de uso de negócio, e não plataformas, em uma matriz de
+valor e esforço. Organize o caminho em ondas, cada uma com entrega que a
+audiência reconhece. O caso de negócio separa custo evitado (licenças,
+taxas, operação) de receita incremental, mostra as premissas e traz um
+cenário conservador.
+
+### Esqueletos de storyline
+
+Pontos de partida. A storyline de cada entregável é escrita para a
+audiência dele e aprovada pelo consultor.
+
+#### Leitura executiva do assessment
+
+1. Capa
+2. Resumo: a conclusão, o custo de não agir e o pedido
+3. O que a empresa quer do marketing e o que a arquitetura entrega hoje
+4. O mapa de capacidades pintado: onde há sobra, falta e subuso
+5. O achado principal, com o número que o prova
+6. O segundo achado
+7. O terceiro achado
+8. O que isso custa por ano
+9. A arquitetura alvo em uma página
+10. O caminho em ondas e o que cada onda entrega
+11. O caso de negócio, com as premissas
+12. O pedido: decisões, donos e datas
+13. Apêndice: escala de maturidade, inventário, método e fontes
+
+#### Arquitetura alvo
+
+1. Os princípios que guiaram o desenho, cada um ligado a um achado
+2. O mapa de capacidades alvo
+3. A decisão por plataforma
+4. O fluxo do dado depois da mudança, no mesmo caso real do diagnóstico
+5. O que muda para cada área
+6. Riscos e dependências
+7. O pedido
+
+#### Roadmap e caso de negócio
+
+1. Resumo com o valor, o investimento e o prazo de retorno
+2. Os casos de uso priorizados
+3. As ondas
+4. Custo evitado e receita incremental, com as premissas
+5. O cenário conservador
+6. O que precisa ser decidido agora, por causa das datas de renovação
+7. O pedido
+
+### Evidência que cada afirmação pede
+
+| Afirmação | Fonte aceitável |
+| --- | --- |
+| Custo de uma plataforma | Contrato, fatura ou extrato de compras |
+| Uso de uma plataforma | Relatório de uso da própria plataforma ou do administrador |
+| Sobreposição de capacidade | Inventário validado pelos donos das duas plataformas |
+| Nota de maturidade | Critério declarado mais entrevista, documento ou dado de uso |
+| Tempo entre evento e ativação | Medição em um caso real, com data |
+| Taxa na cadeia de mídia | Contrato ou relatório da agência e das plataformas |
+| Comparação com o mercado | Estudo citável, com nome, autor e ano |
+| Valor de um caso de uso | Premissas escritas, com a origem de cada uma |
+
+### Armadilhas
+
+- Começar pelos nomes dos produtos. A audiência executiva decide sobre
+  capacidades e custo, e os produtos aparecem depois.
+- Dar nota de maturidade sem critério declarado.
+- Recomendar a troca de uma plataforma quando o problema é de processo,
+  de dados ou de time. Uma plataforma nova herda os três.
+- Chamar de redundância o que é uso legítimo por regiões ou marcas com
+  necessidades diferentes. Pergunte antes de contar.
+- Ignorar as datas de renovação. Uma recomendação fora da janela do
+  contrato espera um ano.
+- Apresentar o caso de negócio só com receita incremental. O financeiro
+  acredita primeiro no custo evitado.
+- Tratar privacidade como apêndice. Consentimento e base legal decidem o
+  que a arquitetura pode ativar.
+- Mostrar o diagrama de arquitetura completo em uma página projetada.
+  Ele vai para o apêndice ou para o documento de leitura. A página
+  projetada mostra o recorte que prova o título.
+- Citar o nome de um fornecedor como recomendação sem um processo de
+  escolha. O assessment define requisitos, e a escolha é outro trabalho.
+
+## Roteiros de entrevista
+
+Uma entrevista dura de 45 a 60 minutos. Comece pelo trabalho da pessoa e
+deixe as plataformas para a segunda metade. Registre a entrevista no
+intake com o tipo `entrevista` e leve cada achado ao registro de
+evidências com o nome da área e a data. Uma fala só é citada com nome
+quando a pessoa autoriza.
+
+Peça sempre um exemplo recente. Uma campanha contada do pedido ao
+resultado mostra mais da arquitetura do que uma lista de ferramentas.
+
+### Diretoria de marketing
+
+- Que resultado o marketing precisa entregar neste ano e no próximo?
+- O que a equipe quer fazer e hoje não consegue?
+- Qual foi a última campanha que demorou mais do que devia? Por quê?
+- Que decisão sobre plataformas está na sua mesa e com que prazo?
+- Que número você leva à diretoria e de onde ele vem?
+- O que faria este assessment ter valido a pena?
+
+### CRM e relacionamento
+
+- Como nasce uma campanha, do pedido ao envio? Quanto tempo leva?
+- De onde vêm as audiências e quem as monta?
+- Que dados de cliente faltam ou chegam atrasados?
+- O que é feito à mão que deveria ser automático?
+- Quais recursos da plataforma vocês pagam e não usam? Por quê?
+- Como vocês sabem se uma jornada funcionou?
+
+### Mídia e performance
+
+- Quem opera cada plataforma de mídia: a equipe, a agência ou os dois?
+- De quem são as contas, os dados de campanha e as audiências?
+- Como os dados próprios entram na compra de mídia hoje?
+- Como vocês excluem quem já é cliente de uma campanha de aquisição?
+- Que taxas incidem entre o valor investido e a impressão?
+- Como a perda de cookies e de identificadores afetou os resultados?
+
+### Dados e analytics
+
+- Onde fica o dado de cliente que o marketing usa? Há uma fonte única?
+- Como uma pessoa é reconhecida entre canais?
+- Quanto tempo passa entre um evento e o uso dele em uma campanha?
+- Que modelos estão em produção e quem os mantém?
+- Como a atribuição é feita e quem confia nela?
+- Que pedidos do marketing ficam na fila e por quanto tempo?
+
+### Tecnologia e arquitetura
+
+- Que princípios de arquitetura valem para as plataformas de marketing?
+- Quais integrações quebram com mais frequência?
+- Que plataformas foram contratadas sem passar por tecnologia?
+- Quais são os planos para o armazém de dados e para a nuvem?
+- O que impede desligar uma plataforma antiga?
+- Como são tratados acessos, ambientes e monitoramento?
+
+### Privacidade e jurídico
+
+- Como o consentimento é coletado, guardado e consultado na ativação?
+- Que finalidades estão cobertas e quais não estão?
+- Como um pedido de exclusão percorre as plataformas?
+- Que dados saem da empresa para parceiros de mídia e com que contrato?
+- Houve incidente ou apontamento de auditoria nos últimos dois anos?
+
+### Compras e financeiro
+
+- Quais contratos vencem nos próximos 18 meses e com que aviso prévio?
+- Como o custo das plataformas é rateado entre as áreas?
+- Que cláusulas de volume ou de permanência existem?
+- Quem aprova a contratação de uma plataforma nova?
+- Que retorno o financeiro espera ver em um caso de negócio?
+
+### Agências e parceiros
+
+- Que plataformas vocês operam em nome do cliente?
+- Que relatórios e dados o cliente recebe e com que frequência?
+- O que o cliente precisaria para operar parte disso internamente?
+- Onde o processo com o cliente trava?
+
+## Procedimento do pacote martech-adtech
+
+Quando: em projeto de assessment de arquitetura de martech e adtech, ao pedir dados e marcar entrevistas, ao montar o briefing e a storyline de um entregável do assessment, ao dar nota de maturidade, ao recomendar manter, consolidar, substituir, desligar ou contratar uma plataforma e ao revisar o material.
+
+O conteúdo do pacote está em
+`entregaveis/_harness/pacotes/martech-adtech/`. Esta skill diz que parte
+abrir em cada momento. As skills do fluxo continuam valendo.
+
+1. No início do projeto, faça ao consultor as perguntas da seção "O que
+   perguntar ao consultor no início" de `PACOTE.md`, junto com as de
+   `iniciar-projeto`.
+2. No intake, parta de `pedido-de-dados.tsv`. Leve para
+   `_intake/pedido-de-dados.md` os itens essenciais e os que as análises
+   previstas usam. Marque as entrevistas com os roteiros de
+   `entrevistas.md`, um por tipo de interlocutor.
+3. No briefing, confira o entregável na tabela "Entregáveis típicos":
+   veículo, formato e audiência que decide. A diretoria decide sobre
+   capacidades e custo. Os donos das plataformas decidem sobre o
+   detalhe.
+4. Na storyline, parta do esqueleto do entregável em "Esqueletos de
+   storyline" e reescreva cada título como frase com o achado deste
+   projeto. O esqueleto traz a ordem, e os títulos saem da evidência.
+5. Na análise, aplique os frameworks na ordem em que dependem um do
+   outro: inventário, mapa de capacidades, sobreposição e subuso, fluxo
+   do dado, cadeia de mídia, custo total, decisão por plataforma, casos
+   de uso e roadmap.
+6. Antes de qualquer nota de maturidade, escreva a escala e o critério
+   de cada dimensão no apêndice e registre a evidência de cada nota.
+7. Cada afirmação usa a fonte que a tabela "Evidência que cada
+   afirmação pede" aceita. O que não tem essa fonte é escrito como
+   suposição ou vira pedido de dados.
+8. O inventário e as matrizes vão para a planilha. A página mostra o
+   recorte que prova o título.
+9. Na revisão, passe pela lista de "Armadilhas" além da rubrica, e
+   registre em `revisao.md` as que o material evitou ou corrigiu.
+10. Não recomende um fornecedor pelo nome sem um processo de escolha. O
+    nome de uma plataforma que o cliente já usa aparece como está nos
+    materiais dele.
+
+## Termos do pacote
+
+~~~text
+# Termos do domínio de martech e adtech. Ao ativar o pacote, as linhas entram no glossário do projeto.
+# A coluna evitar fica vazia: o projeto decide que variantes proibir, conforme o vocabulário do cliente.
+termo	definicao	evitar	idioma
+martech	O conjunto de plataformas que o marketing usa para dados, conteúdo, campanhas e medição		pt
+adtech	O conjunto de plataformas usadas para comprar, entregar e medir mídia paga		pt
+CDP	Plataforma de dados de clientes: junta os dados de uma pessoa em um perfil e o entrega aos canais		pt
+CRM	Gestão do relacionamento com o cliente: a base de clientes e as plataformas que a usam		pt
+DMP	Plataforma de gestão de dados de audiência, em geral anônimos e de terceiros, para mídia		pt
+DSP	Plataforma de compra de mídia programática, do lado do anunciante		pt
+SSP	Plataforma de venda de espaço publicitário, do lado do veículo		pt
+servidor de anúncios	Sistema que entrega os anúncios e conta impressões e cliques		pt
+CMP	Plataforma de gestão de consentimento: coleta e guarda a escolha da pessoa por finalidade		pt
+CMS	Sistema de gestão de conteúdo de sites e aplicativos		pt
+DAM	Gestão de ativos digitais: o acervo de imagens, vídeos e peças		pt
+ESP	Provedor de envio de e-mail em escala		pt
+MMP	Parceiro de medição de aplicativos: atribui instalações e eventos a campanhas		pt
+MMM	Modelo de mix de marketing: estima a contribuição de cada canal com dados agregados		pt
+MTA	Atribuição multitoque: divide o crédito da conversão entre os contatos de uma pessoa		pt
+incrementalidade	O resultado que só aconteceu por causa da campanha, medido com grupo de controle		pt
+dados próprios	Dados que a empresa coleta diretamente de clientes e visitantes, com consentimento		pt
+resolução de identidade	O processo de reconhecer a mesma pessoa em canais e dispositivos diferentes		pt
+sala limpa de dados	Ambiente em que duas empresas cruzam dados sem que uma veja os dados individuais da outra		pt
+coleta pelo servidor	Envio de eventos do servidor da empresa para as plataformas, sem depender do navegador		pt
+orquestração de jornadas	Definição e execução da sequência de contatos com uma pessoa entre canais		pt
+CDP componível	Arquitetura em que o armazém de dados da empresa faz o papel do perfil de cliente e ferramentas menores cuidam da ativação		pt
+custo total de propriedade	Licença, implantação, integração e operação de uma plataforma ao longo do contrato		pt
+caso de uso	Uma ação de negócio que a arquitetura precisa permitir, descrita pelo resultado para o cliente		pt
+~~~
+
+## Pedido de dados
+
+~~~text
+# Lista padrão de pedido de dados para um assessment de martech e adtech.
+# A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que alguma análise da storyline usa.
+# prioridade: essencial (sem ele não há assessment), importante (melhora um achado) ou complementar.
+item	para_que	formato	quem_costuma_ter	prioridade
+Lista de plataformas de marketing e mídia contratadas ou construídas	Inventário de plataformas	Planilha	Arquitetura ou compras	essencial
+Contratos e aditivos das plataformas, com datas de início, fim e aviso de renovação	Custo total e janela de decisão	PDF ou planilha de contratos	Compras ou jurídico	essencial
+Custo anual por plataforma: licença, serviços e operação	Custo total e uso	Planilha	Financeiro ou compras	essencial
+Relatórios de uso das plataformas: usuários ativos, volumes e recursos habilitados	Subuso e custo por capacidade usada	Exportação da plataforma	Administrador de cada plataforma	essencial
+Diagrama de arquitetura e de integrações atual	Mapa de capacidades e fluxo do dado	Qualquer formato	Arquitetura	essencial
+Organograma de marketing, mídia, dados e tecnologia, com os donos das plataformas	Dono por plataforma e dimensão de pessoas	PDF ou planilha	Recursos humanos ou diretoria	essencial
+Plano de marketing e objetivos de negócio do ano	Ligação entre capacidades e resultado	Apresentação	Diretoria de marketing	essencial
+Lista de casos de uso em produção e em fila	Priorização de casos de uso	Planilha	CRM, mídia e dados	importante
+Calendário de campanhas dos últimos 12 meses, com prazos de produção	Tempo do pedido ao envio	Planilha	CRM e mídia	importante
+Tamanho da base de clientes, com identificados e com consentimento por finalidade	Identidade e sinais	Planilha	Dados ou CRM	essencial
+Política de privacidade, registro de consentimento e fluxo de pedidos de titulares	Governança e consentimento	Documento	Privacidade ou jurídico	importante
+Dicionário de dados e modelo do perfil de cliente	Dados e identidade	Documento ou planilha	Dados	importante
+Investimento de mídia por canal e por plataforma, nos últimos 12 meses	Cadeia de mídia e taxas	Planilha	Mídia ou agência	essencial
+Contratos e escopo das agências e dos parceiros de mídia	De quem são contas, dados e audiências	PDF	Compras ou mídia	importante
+Taxas de tecnologia e de serviço na compra de mídia	Cascata do valor investido à impressão	Planilha ou relatório	Agência e plataformas	importante
+Relatórios de atribuição, de mix de marketing e de testes de incrementalidade	Dimensão de medição	Apresentação ou painel	Dados ou mídia	importante
+Indicadores de CRM: entregabilidade, abertura, conversão e descadastro por canal	Dimensão de ativação	Exportação da plataforma	CRM	complementar
+Lista de integrações, com frequência, volume e falhas	Fluxo do dado e riscos	Planilha	Tecnologia	importante
+Projetos de tecnologia e de dados em andamento ou aprovados	Dependências do roadmap	Apresentação	Tecnologia e dados	importante
+Apontamentos de auditoria e incidentes de segurança ou privacidade	Riscos	Documento	Segurança ou jurídico	complementar
+Estudos de mercado e avaliações de fornecedores que o cliente já comprou	Comparação com fonte citável	PDF	Diretoria ou compras	complementar
+Acesso de leitura às plataformas principais, quando o cliente autorizar	Conferir uso e configuração	Acesso nominal	Administrador de cada plataforma	complementar
+~~~

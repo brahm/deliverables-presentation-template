@@ -1,0 +1,564 @@
+# Modelos
+
+Arquivo de conhecimento do harness de entregáveis, versão 0.7.0. Gerado por empacotar.py: não edite à mão.
+
+Cada modelo é a forma de uma seção do registro do projeto ou de uma parte de um entregável. PREENCHER marca o que ainda precisa ser escrito.
+
+## Entregável
+
+### briefing.md
+
+~~~text
+---
+id: PREENCHER
+titulo: PREENCHER
+tipo: PREENCHER
+veiculo: PREENCHER
+formato: PREENCHER
+idiomas: PREENCHER
+duracao_min:
+prazo:
+origem:
+fase:
+estado: briefing
+---
+# Briefing do entregável
+
+Campos do cabeçalho. `tipo`: apresentacao, documento, proposta, planilha
+ou treinamento. `veiculo`: projetado (alguém apresenta), leitura (deck
+lido sem apresentador), documento, planilha ou workshop. `formato`: pptx,
+docx, pdf, xlsx ou html. `origem`: o arquivo já existente, quando o entregável
+foi adotado de um projeto em andamento. `fase`: a fase do projeto em que
+o entregável nasceu. `estado`: briefing, storyline,
+storyboard, redacao, revisao ou entregue.
+
+## Audiência
+
+PREENCHER: quem vai ler ou ouvir, qual subgrupo decide e o que esse
+subgrupo já sabe, quer e teme.
+
+## De e para
+
+| De (em que acreditam e como agem hoje) | Para (em que devem acreditar e o que devem fazer depois) |
+| --- | --- |
+| PREENCHER | PREENCHER |
+
+## Grande ideia
+
+PREENCHER: uma frase completa com o ponto de vista e o que está em jogo.
+
+## Chamada para ação
+
+| Ação | Dono | Prazo | Papel (executa, libera recursos, influencia ou propõe) |
+| --- | --- | --- | --- |
+| PREENCHER | | | |
+
+## Resistências
+
+| Tipo (lógica, emocional ou prática) | Resistência esperada | Como o material responde |
+| --- | --- | --- |
+| PREENCHER | | |
+
+## Veículo e momento
+
+Quando e onde o material será usado, quanto tempo há, o que vai antes
+(pré-leitura) e o que vai depois (follow-up).
+~~~
+
+### storyline.md
+
+~~~text
+---
+aprovada: nao
+aprovada_por:
+aprovada_em:
+---
+# Storyline
+
+A história inteira antes de qualquer página. Só o consultor aprova: depois do
+sim dele, registre `aprovada: sim`, a data e as palavras que ele usou.
+
+## Abertura
+
+| Elemento | Texto |
+| --- | --- |
+| Situação (o que a audiência já sabe e aceita) | PREENCHER |
+| Complicação (o que mudou ou está errado) | PREENCHER |
+| Pergunta (a que isso levanta) | PREENCHER |
+| Resposta (a grande ideia) | PREENCHER |
+
+## Resumo executivo
+
+PREENCHER: a história em poucas frases, com a conclusão primeiro.
+
+## Sequência
+
+Os títulos, lidos em ordem, contam a história sem o corpo das páginas.
+Tipos de página: capa, agenda, secao, resumo, texto, dados, diagrama,
+citacao, imagem, frase, pedido, apendice, encerramento.
+
+| N | Seção | Título de ação | Tipo | Evidência |
+| --- | --- | --- | --- | --- |
+| 1 | | PREENCHER | | |
+
+## Recursos planejados
+
+O momento memorável, a metáfora que amarra o material e as frases de
+efeito. Um recurso retórico só entra no texto se estiver planejado aqui.
+~~~
+
+### storyboard.md
+
+~~~text
+# Storyboard
+
+Uma ideia por página. Para cada página: o que ela precisa provar, como
+vai mostrar e que evidência usa. Uma evidência que não existe vira um
+pedido de dados no registro de intake.
+
+| N | Título de ação | Tipo | O que a página mostra (diagrama, gráfico, tabela, texto) | Evidência (E-nnn) | Falta |
+| --- | --- | --- | --- | --- | --- |
+| 1 | PREENCHER | | | | |
+~~~
+
+### conteudo.md
+
+~~~text
+# Conteúdo
+
+Uma página por título de nível 2, no formato `## N. Título de ação`. A
+linha de comentário logo abaixo traz os campos da página. O que vem
+depois de `Notas:` são as notas de quem apresenta e não conta como texto
+da página.
+
+## 1. PREENCHER
+<!-- tipo: capa; secao: ; fonte: ; recurso: -->
+
+Notas:
+~~~
+
+### documento.md
+
+~~~text
+# PREENCHER: título do documento
+
+PREENCHER: o primeiro parágrafo diz a conclusão e o pedido.
+
+## PREENCHER: primeira seção
+
+Cite a evidência no texto com o id do registro, por exemplo [E-001].
+~~~
+
+### planilha.md
+
+~~~text
+# Planilha
+
+A especificação da planilha antes de gerá-la. Os dados ficam em `dados/`.
+
+## Perguntas que a planilha responde
+
+PREENCHER
+
+## Abas
+
+| Aba | O que contém | Origem dos dados (E-nnn) | Data dos dados |
+| --- | --- | --- | --- |
+| PREENCHER | | | |
+
+## Dicionário de dados
+
+| Aba | Coluna | Definição | Unidade | Regra de cálculo |
+| --- | --- | --- | --- | --- |
+| PREENCHER | | | | |
+
+## Gráficos e análises
+
+| Gráfico ou análise | Pergunta que responde | Achado que o título deve dizer |
+| --- | --- | --- |
+| PREENCHER | | |
+~~~
+
+### revisao.md
+
+~~~text
+---
+conteudo_revisado:
+revisado_em:
+---
+# Revisão
+
+Preencha depois de aplicar a rubrica de `_harness/metodo/rubrica.md`.
+Um critério reprovado tem a correção feita ou um item em
+`_projeto/adiados.tsv`. Ao terminar, rode `validar.py --carimbar ID`.
+
+| Critério | Veredito (passa ou reprova) | Onde (página ou seção) | Correção feita |
+| --- | --- | --- | --- |
+| PREENCHER | | | |
+
+## O que ficou pendente
+
+PREENCHER: escreva "Nada ficou pendente" quando for verdade.
+~~~
+
+## Projeto
+
+### brief.md
+
+~~~text
+---
+projeto: PREENCHER
+cliente: PREENCHER
+tipo: PREENCHER
+pacotes:
+consultor: PREENCHER
+idioma_dos_relatorios: pt-BR
+idiomas_dos_entregaveis: PREENCHER
+classificacao: PREENCHER
+marcacao_obrigatoria:
+fase: 1
+iniciado: nao
+---
+# Brief do projeto
+
+Os campos acima: `tipo` é o tipo de trabalho (transformação de marketing,
+assessment de martech e adtech, mídia, retail media, processos agênticos,
+proposta, treinamento ou outro). `classificacao` é o nível de sigilo dos
+materiais. `marcacao_obrigatoria` é o texto que toda capa precisa trazer,
+quando há um. `fase` é o número da fase em que o projeto está, e a
+história das fases fica em `fases.md`. `iniciado` vira `sim` quando o
+consultor confirma este brief.
+
+## O que é o projeto
+
+PREENCHER: em poucas frases, o que foi contratado e para quem.
+
+## A decisão que o projeto precisa provocar
+
+PREENCHER: o que alguém precisa decidir ou fazer ao fim do trabalho.
+
+## Escopo e o que fica fora
+
+PREENCHER
+
+## Entregáveis previstos
+
+| Id | Tipo | Formato | Audiência | Prazo |
+| --- | --- | --- | --- | --- |
+| PREENCHER | | | | |
+
+## Prazos e marcos
+
+PREENCHER
+
+## Restrições
+
+PREENCHER: o que o agente não pode fazer, ler ou citar neste projeto.
+~~~
+
+### fases.md
+
+~~~text
+# Fases do projeto
+
+Um projeto muda de natureza sem deixar de ser o mesmo projeto: a proposta
+vendida vira o trabalho contratado, e uma extensão vendida abre outro
+tipo de trabalho. Cada mudança dessas é uma fase. A fase nova herda as
+decisões, as evidências, o glossário, a marca, a audiência, as lições, o
+domínio e os entregáveis das anteriores. Nenhuma linha daqui é apagada.
+
+Quem abre uma fase é a skill `evoluir-projeto`, com
+`python3 entregaveis/_harness/scripts/fase.py`. O brief de cada fase
+encerrada e a página de passagem ficam em `entregaveis/_projeto/fases/`.
+
+| Fase | Início | Fim | Tipo | Pacotes | Origem | Estado |
+| --- | --- | --- | --- | --- | --- | --- |
+~~~
+
+### audiencia.md
+
+~~~text
+# Audiência do projeto
+
+Quem decide, quem influencia e quem executa. Cada entregável escolhe
+daqui o subgrupo para o qual é escrito.
+
+| Pessoa ou grupo | Papel na decisão | O que quer | O que teme | Como prefere receber informação |
+| --- | --- | --- | --- | --- |
+| | | | | |
+
+## O que temos em comum com essa audiência
+
+Experiências, objetivos e credenciais que aproximam quem apresenta de
+quem ouve.
+~~~
+
+### marca.md
+
+~~~text
+# Marca, modelos e padrões visuais
+
+O harness é distribuído sem marca. Esta página guarda o que o projeto
+usa, a partir dos materiais recebidos. Cada linha aponta o arquivo de
+origem no registro de intake.
+
+| Item | Valor | Origem (M-nnn) |
+| --- | --- | --- |
+| Modelo de apresentação | | |
+| Modelo de documento | | |
+| Modelo de planilha | | |
+| Fontes | | |
+| Cores principais | | |
+| Cores de destaque em gráficos | | |
+| Uso do logotipo | | |
+| Rodapé e marcação obrigatória | | |
+| Tom de voz | | |
+
+## Layouts do modelo
+
+O gerador escolhe o layout de cada tipo de página pelo nome e pelos
+campos dos layouts do modelo de apresentação. Preencha uma linha só
+quando a escolha dele não servir.
+`python3 entregaveis/_harness/scripts/gerar.py --layouts` lista os
+nomes e os números. Na coluna Layout vale um ou outro.
+
+| Tipo de página | Layout |
+| --- | --- |
+| | |
+
+## Conflitos e lacunas
+
+O que os materiais não dizem, ou onde dois materiais se contradizem. Cada
+item é uma pergunta para o consultor.
+~~~
+
+### regras-de-material.md
+
+~~~text
+# Regras para materiais de cliente e padrões de projeto
+
+As regras da sua organização e do cliente sobre o que pode ser lido,
+guardado, citado e compartilhado. O agente as pede no início do projeto e
+segue o que estiver escrito aqui.
+
+## Onde os materiais podem ficar
+
+PREENCHER
+
+## O que o agente pode e não pode ler
+
+PREENCHER
+
+## O que pode e não pode aparecer em um entregável
+
+PREENCHER
+
+## Padrões de projeto exigidos
+
+PREENCHER: nomes de arquivo, versionamento, aprovações, revisões obrigatórias.
+~~~
+
+### decisoes.md
+
+~~~text
+# Decisões do projeto
+
+Toda decisão fica aqui e nunca é apagada. Uma decisão do consultor tem o
+estado `Vigente`. O que o agente decidiu porque o consultor deixou em aberto
+tem o estado `Vigente (assumida)`, e o consultor confirma ou troca. Uma decisão
+trocada vira `Substituída por D-nnn`.
+
+| Id | Data | Decisão | Motivo | Estado |
+| --- | --- | --- | --- | --- |
+~~~
+
+### licoes.md
+
+~~~text
+# Lições
+
+Quando o consultor corrige o agente, ou um erro se repete, a lição entra aqui
+com a guarda que a impede de voltar. A ordem de preferência das guardas:
+uma checagem em script, uma linha em uma skill, uma regra mais precisa e,
+por último, uma regra nova.
+
+| Id | Data | O que deu errado | Causa | Guarda e onde ela está | Estado |
+| --- | --- | --- | --- | --- | --- |
+~~~
+
+### evidencias.tsv
+
+~~~text
+# Todo número e todo achado usado em um entregável tem uma linha aqui.
+# tipo: fato, estimativa ou suposicao. confianca: alta, media ou baixa.
+id	afirmacao	valor	fonte	data	tipo	confianca	onde_usada
+~~~
+
+### glossario.tsv
+
+~~~text
+# Um termo por conceito. A coluna 'evitar' lista as variantes que não devem aparecer, separadas por ponto e vírgula.
+# A checagem de termos reprova uma variante da coluna 'evitar' e avisa de sigla que não está aqui.
+termo	definicao	evitar	idioma
+~~~
+
+### adiados.tsv
+
+~~~text
+# O que foi pedido e não foi feito, ou foi movido. Nada some em silêncio.
+# estado: aberto ou feito.
+id	item	motivo	para_quando	estado
+~~~
+
+### limites.tsv
+
+~~~text
+# Troca os limites de palavras das checagens de densidade. Deixe vazio para usar os padrões.
+# veiculo: projetado, workshop, leitura ou documento. limite: titulo, corpo_aviso, corpo_erro, marcadores, paragrafo_aviso, frase_aviso.
+veiculo	limite	valor
+~~~
+
+## Fase
+
+### passagem.md
+
+~~~text
+---
+da_fase: PREENCHER
+para_a_fase: PREENCHER
+data: PREENCHER
+origem: PREENCHER
+---
+# Passagem de fase
+
+Esta página diz o que a fase nova herda da anterior. Ela é escrita uma
+vez, na abertura da fase, e depois só é lida. O brief da fase encerrada
+está ao lado, em `brief.md`.
+
+## O que mudou
+
+PREENCHER: o que foi vendido ou decidido, por quem e quando, com as
+palavras do consultor.
+
+## O que a fase anterior prometeu
+
+Os compromissos que a fase nova herda: escopo, entregáveis, prazos,
+equipe, premissas e o que ficou fora. Cada linha diz de onde veio.
+
+| Compromisso | Origem (entregável, página ou material) | Vale na fase nova |
+| --- | --- | --- |
+| PREENCHER | | |
+
+## O que continua valendo e o que deixa de valer
+
+PREENCHER: as decisões, as evidências, os termos e as regras do domínio
+que seguem, e o que deixa de valer, com o motivo.
+
+## Entregáveis em aberto
+
+| Entregável | Etapa | Destino (termina como está, passa para a fase nova ou é adiado) |
+| --- | --- | --- |
+
+## O que a fase nova ainda não sabe
+
+PREENCHER: as perguntas ao consultor e os materiais a pedir.
+~~~
+
+## Materiais
+
+### registro.tsv
+
+~~~text
+# Materiais pedidos e recebidos. Os arquivos ficam em _intake/materiais/, fora do git.
+# tipo: modelo, marca, referencia, escopo, dados, entrevista, benchmark, regra ou voz.
+# estado: pedido, recebido, em falta ou dispensado. Material que já estava no projeto: registre o caminho onde ele está.
+id	material	tipo	pedido_a	pedido_em	prazo	estado	caminho	observacao
+~~~
+
+## Domínio
+
+### dominio.md
+
+~~~text
+---
+estado: PREENCHER
+calibrado_em: PREENCHER
+materiais: PREENCHER
+---
+# Domínio do projeto
+
+Campos do cabeçalho. `estado`: rascunho (você montou e o consultor ainda não
+viu) ou confirmado (o consultor leu e concordou). `materiais`: os
+identificadores do intake que serviram de base, como M-003. Cada item
+desta página diz de onde veio: o material, a fala do consultor ou uma
+suposição sua, que então também entra em `_projeto/decisoes.md`.
+
+## Contexto e objetivo
+
+PREENCHER: a situação do cliente, a decisão que o projeto precisa
+provocar e o que conta como resultado.
+
+## Métodos e frameworks
+
+PREENCHER: um bloco por método. Para cada um: quando usar, os passos, o
+que entra, o que sai e em que entregável aparece. Descreva com as suas
+palavras e cite o material de origem.
+
+## Critérios de qualidade
+
+PREENCHER: o que um entregável deste projeto precisa mostrar para ser
+aceito por quem decide. Cada critério que pode ser checado por regra
+ganha uma linha em `checagens.tsv`. Os demais entram na revisão.
+
+## Evidência exigida
+
+PREENCHER: que prova cada tipo de afirmação pede neste domínio, e com
+que confiança.
+
+## Armadilhas
+
+PREENCHER: os erros que este tipo de trabalho costuma cometer e como
+cada um aparece em um entregável.
+
+## Roteiros e pedidos
+
+PREENCHER: as perguntas de entrevista por interlocutor e os dados a
+pedir. Os pedidos também entram em `_intake/registro.tsv`.
+
+## Revisão própria do projeto
+
+PREENCHER: os critérios que só uma pessoa julga. A skill
+`revisar-entregavel` os aplica junto com a rubrica do harness.
+
+| Critério | Passa quando |
+| --- | --- |
+| PREENCHER | PREENCHER |
+~~~
+
+### checagens.tsv
+
+~~~text
+# Regras do domínio deste projeto. Uma por linha. O template traz só o formato.
+# tipo: proibido (o padrão não pode aparecer), obrigatorio (precisa aparecer ao menos uma vez),
+#       junto ('A => B': onde A aparece, B aparece na mesma página ou parágrafo), ordem ('A => B': B só depois de A).
+# aplica: * ou tipo, veículo, formato ou id de entregável, separados por vírgula.
+# onde: titulos, conteudo, storyline, briefing ou tudo.
+# padrao: expressão regular, sem diferença entre maiúsculas e minúsculas.
+# mensagem: o que corrigir, em uma frase. nivel: erro ou aviso. origem: o material, a fala do consultor ou a decisão.
+# Cada regra precisa de dois casos em casos.tsv: um que ela acusa e um que ela deixa passar.
+# Formato de uma linha, com dados fictícios:
+# D-001	junto	apresentacao	conteudo	nota de maturidade => crit[ée]rio	Toda nota de maturidade vem com o critério que a justifica.	erro	M-003
+id	tipo	aplica	onde	padrao	mensagem	nivel	origem
+~~~
+
+### casos.tsv
+
+~~~text
+# Casos de teste das regras do domínio. Para cada regra, ao menos um texto que ela acusa e um que ela deixa passar.
+# espera: acusa ou passa. texto: use \n para quebra de linha. Uma linha em branco (\n\n) separa páginas ou parágrafos.
+# Escreva os casos com frases que poderiam estar em um entregável deste projeto, sem dado real do cliente.
+# Formato, com dados fictícios:
+# D-001	acusa	A nota de maturidade da frente de dados é 2.
+# D-001	passa	A nota de maturidade da frente de dados é 2. O critério: não há identificador único de cliente.
+checagem	espera	texto
+~~~

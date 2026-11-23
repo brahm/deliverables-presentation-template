@@ -18,6 +18,7 @@
 | `scripts/fase.py` | Mostra as fases do projeto e abre uma fase nova, guardando o brief da anterior e criando a página de passagem | Quando o projeto muda de natureza |
 | `scripts/levantar.py` | Levanta o que já existe em um projeto em andamento | Na adoção |
 | `scripts/gerar.py` | Gera PowerPoint, Word, PDF e Excel a partir da fonte em Markdown, sobre o modelo do projeto. Pede `python-pptx`, `python-docx` e `openpyxl` | Depois da redação e a cada correção da fonte |
+| `scripts/empacotar.py` | Monta o pacote de instruções e de conhecimento para Claude desktop, ChatGPT desktop e Microsoft Copilot, com ou sem os registros do projeto | Quando o trabalho vai para outro ambiente e depois de mudar o método ou uma skill |
 | `scripts/repositorio.py` | Diz se o remoto do git é local, privado ou público, e registra a confirmação do consultor | No início do projeto, a cada gravação de registro e a cada envio |
 | `scripts/dominio.py` | Aplica as regras do domínio do projeto e roda os casos de teste delas | A cada gravação, na validação e quando uma regra muda |
 | `scripts/conferir_interativo.js` | Abre um HTML interativo em um navegador sem interface, bloqueia a rede, lista os erros e grava as imagens. Opcional, pede Node e Playwright | Antes de entregar uma peça interativa |

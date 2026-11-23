@@ -38,6 +38,7 @@ que você abre quando a tarefa pede.
    | Algo pedido não será feito agora | `adiar-trabalho` |
    | O consultor corrige você, ou um erro se repete | `registrar-licao` |
    | Qualquer relatório ao consultor | `relatar-ao-consultor` |
+   | O consultor leva o trabalho ao Claude desktop, ao ChatGPT ou ao Copilot, ou traz de lá o que foi feito | `usar-outro-ambiente` |
    | O harness tem uma versão nova | `atualizar-harness` |
 
    Um pacote ativo traz a sua própria skill, `pacote-NOME`, que se

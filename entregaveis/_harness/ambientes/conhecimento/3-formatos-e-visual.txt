@@ -1,0 +1,417 @@
+# Formatos, visual e HTML interativo
+
+Arquivo de conhecimento do harness de entregáveis, versão 0.7.0. Gerado por empacotar.py: não edite à mão.
+
+## Veículos, formatos e idiomas
+
+O veículo é como a audiência recebe o material. O formato é o arquivo
+que sai. Os dois são definidos no briefing, antes da storyline.
+
+### Veículos e seus limites
+
+| Veículo | Quando usar | Título | Corpo da página |
+| --- | --- | --- | --- |
+| `projetado` | Alguém apresenta e a audiência olha a tela | Até 14 palavras | Recomendado até 40 palavras. Acima de 80, reprova |
+| `workshop` | Sessão de trabalho com exercícios e discussão | Até 14 palavras | Recomendado até 60 palavras. Acima de 110, reprova |
+| `leitura` | Deck lido sem apresentador, antes ou depois da reunião | Até 22 palavras | Recomendado até 150 palavras. Acima de 250, reprova |
+| `documento` | Relatório, memorando, proposta escrita, apostila | Sem limite fixo | Aviso para parágrafo acima de 130 palavras e frase acima de 40 |
+| `planilha` | Bases de dados, tabelas grandes, análises e gráficos | Não se aplica | Não se aplica |
+
+O consultor troca qualquer limite em `entregaveis/_projeto/limites.tsv`.
+
+Um material feito para ser projetado e também lido depois são dois
+materiais: o que se projeta e o documento de leitura. Escreva a storyline
+uma vez e gere os dois.
+
+### Formatos de saída
+
+| Formato | Para quê | Fonte no harness |
+| --- | --- | --- |
+| PowerPoint (`pptx`) | Apresentações e decks de leitura | `conteudo.md` |
+| Word (`docx`) e PDF | Relatórios, propostas escritas, apostilas, pré-leituras | `documento.md` |
+| Excel (`xlsx`) | Informação em massa, bases de dados, gráficos e análises | `planilha.md` e a pasta `dados/` |
+| HTML interativo (`html`) | Peça de apoio que a audiência percorre, gira ou simula, em 2D ou 3D | `interativos/NOME.html`, que já é o arquivo final |
+
+A fonte em Markdown é a verdade do entregável. O arquivo final é gerado a
+partir dela, sobre o modelo registrado em `entregaveis/_projeto/marca.md`,
+e fica em `saida/`. Uma correção feita só no arquivo final se perde na
+próxima geração: corrija a fonte e gere de novo.
+
+### Gerar o arquivo
+
+`python3 entregaveis/_harness/scripts/gerar.py ID` gera o arquivo no
+formato do briefing. O gerador recusa o entregável sem briefing completo
+e storyline aprovada, e o que reprova nas checagens. Com `--rascunho`
+ele gera assim mesmo e carimba a marca de rascunho em todas as páginas.
+
+| Opção | O que faz |
+| --- | --- |
+| `--formato pptx`, `docx`, `pdf` ou `xlsx` | Gera em outro formato |
+| `--idioma es` | Gera a versão de `conteudo.es.md` ou `documento.es.md` |
+| `--pdf` | Gera também o PDF |
+| `--imagens` | Gera uma imagem por página em `saida/conferencia/`, para conferir |
+| `--modelo ARQUIVO` | Usa este modelo em vez do registrado |
+| `--layouts` | Lista os layouts do modelo de apresentação, com os campos de cada um |
+
+O gerador pede pacotes de fora, um por formato: `python-pptx`,
+`python-docx` e `openpyxl`. O PDF e as imagens pedem o LibreOffice, e as
+imagens também o `pdftoppm`. Sem eles, o script diz o que falta e o
+agente gera o arquivo com as ferramentas que tiver.
+
+O que entra em cada formato:
+
+- PowerPoint. Cada página de `conteudo.md` vira um slide em um layout
+  do modelo, escolhido pelo campo `tipo`. As páginas de exemplo do
+  modelo saem. Parágrafos e listas vão para o campo de texto, as notas
+  para as notas de quem apresenta, uma tabela Markdown vira tabela, uma
+  imagem citada entra ajustada à área e um bloco `grafico` vira gráfico
+  nativo. A página que cita evidência ganha a linha de fonte, com a
+  origem e a data do registro.
+- Word e PDF. `documento.md` vira um documento com os estilos do
+  modelo: título, títulos de seção, listas, tabelas, citações e imagens.
+  O texto de exemplo do modelo sai, e ficam o cabeçalho e o rodapé. As
+  evidências citadas como `[E-001]` formam a seção de fontes no fim. Um
+  bloco `grafico` entra como tabela: para uma figura, gere a imagem e
+  cite-a.
+- Excel. `planilha.md` e os arquivos `.csv` ou `.tsv` de `dados/` viram
+  uma planilha com a aba de leitura, uma aba por arquivo com cabeçalho
+  fixo, filtro e números como números, o dicionário de dados e os
+  gráficos nativos dos blocos `grafico`.
+
+Um gráfico é descrito na fonte, dentro de um bloco de código com o nome
+`grafico`. Em apresentação, os dados vão no bloco ou em um arquivo de
+`dados/`:
+
+~~~text
+```grafico
+tipo: barras
+destaque: E-mail
+dados:
+Função | Plataformas
+E-mail | 2
+Dados | 1
+```
+~~~
+
+`tipo` aceita `barras`, `colunas`, `linhas` e `pizza`. `destaque` é a
+categoria ou a série que o título cita: ela leva a cor de destaque e o
+resto fica em cinza. `arquivo: dados/NOME.csv` substitui a tabela do
+bloco. O título do gráfico é o título da página, e por isso o campo
+`titulo` é opcional. Em planilha, o bloco aponta para os dados de uma
+aba, com os campos `aba`, `categorias` e `valores`.
+
+O layout de cada tipo de página é escolhido pelo nome e pelos campos
+dos layouts do modelo, em todos os slides mestres. Quando a escolha não
+serve, fixe o layout por tipo na seção "Layouts do modelo" de
+`_projeto/marca.md`, ou em uma página só, com o campo `layout` no
+comentário da página. Vale o nome do layout ou o número que
+`gerar.py --layouts` mostra, que resolve o modelo com nomes repetidos.
+O título que não cabe no campo do layout sai com a letra menor, até 60%
+do tamanho do modelo. Se nem assim couber, o script avisa: encurte o
+título ou troque o layout. As cores de
+destaque e de apoio dos gráficos vêm da linha "Cores de destaque em
+gráficos" da mesma página, em código hexadecimal.
+
+Antes de entregar um arquivo gerado, abra o resultado e olhe página por
+página. Texto que estoura a caixa, gráfico cortado e fonte trocada só
+aparecem no arquivo renderizado.
+
+### HTML interativo
+
+Uma peça interativa apoia a leitura de um entregável e não o
+substitui. É um arquivo só, sem biblioteca nem recurso externo, e fica
+em `interativos/` dentro da pasta do entregável. Qualquer entregável
+pode ter uma, depois da storyline aprovada. Quando fazer, como desenhar
+e o que a checagem cobra estão em [interativo.md](interativo.md).
+
+### Quando a planilha é o entregável certo
+
+- A audiência vai filtrar, ordenar ou recalcular os dados.
+- A tabela tem mais linhas do que cabem em uma página.
+- O número de uma apresentação precisa de uma base que possa ser
+  auditada.
+
+Uma planilha de entrega tem uma aba de leitura com o que ela responde, a
+origem e a data dos dados. Tem também um dicionário de dados, com a
+definição e a unidade de cada coluna. Os gráficos seguem
+[visual.md](visual.md): título que diz o achado, destaque no que importa.
+
+### Idiomas
+
+- O brief do projeto lista os idiomas dos entregáveis. Cada entregável
+  pode usar um subconjunto.
+- O primeiro idioma do campo `idiomas` é o principal. O conteúdo é
+  escrito e aprovado nele.
+- As versões ficam ao lado da principal, com o código do idioma no nome:
+  `conteudo.es.md`, `documento.en.md`.
+- Uma versão é reescrita para o leitor daquele idioma. Tradução palavra
+  por palavra carrega a sintaxe do original.
+- Os números, as fontes e os títulos de ação dizem o mesmo em todas as
+  versões. O glossário tem uma linha por termo e por idioma.
+- Cada versão passa pelas checagens de texto do seu idioma.
+
+### Nomes de arquivo
+
+Siga o padrão registrado em `entregaveis/_projeto/regras-de-material.md`.
+Sem padrão definido: `cliente_entregavel_idioma_AAAA-MM-DD_vN`.
+
+## Páginas, diagramas e dados
+
+Como escolher o tipo de página, transformar palavras em diagramas e
+mostrar dados. Vale para slides, para figuras de documentos e para
+gráficos de planilhas.
+
+### Tipos de página
+
+O campo `tipo` de cada página usa um destes valores.
+
+| Tipo | Para que serve |
+| --- | --- |
+| `capa` | Título do material, audiência, data e a marcação exigida. |
+| `agenda` | Onde a audiência está no material. Repita com o marcador de posição a cada seção. |
+| `secao` | Abertura de uma seção. |
+| `resumo` | A história inteira em uma página, com a conclusão primeiro. |
+| `texto` | Um argumento em poucas linhas. |
+| `dados` | Um gráfico ou uma tabela que prova o título. Sempre com fonte e data. |
+| `diagrama` | Uma relação entre itens: fluxo, estrutura, comparação. |
+| `citacao` | Uma fala de alguém, com nome e origem. Uma por página, até 30 palavras. |
+| `imagem` | Uma foto ou ilustração que mostra o que palavras não mostram. |
+| `frase` | Uma palavra ou frase curta em tipo grande, para marcar um momento. |
+| `pedido` | A chamada para ação: quem faz o quê e até quando. |
+| `apendice` | Detalhe de apoio, usado nas perguntas. |
+| `encerramento` | O que fica na tela no fim: o pedido ou o contato. |
+
+### O teste dos três segundos
+
+A audiência lê a página ou ouve quem fala, e não faz as duas coisas ao
+mesmo tempo. Um slide projetado precisa ser entendido em cerca de três
+segundos, como um outdoor.
+
+Em um deck de leitura, o teste vale para o título e o elemento em
+destaque. O corpo pode ter mais texto, porque o leitor controla o tempo.
+
+Para passar no teste:
+
+- Uma ideia por página. Se a página tem duas, faça duas páginas.
+- Cada elemento da página tem um motivo para estar ali.
+- O que serve de lembrete para quem fala vai para as notas.
+
+### De palavras para diagramas
+
+Uma lista de marcadores esconde a relação entre os itens. Quando os itens
+se relacionam, escolha o diagrama pela relação.
+
+| Relação | Diagramas | Exemplo |
+| --- | --- | --- |
+| Rede | Centro e raios, anel | As áreas que precisam trabalhar juntas em uma iniciativa |
+| Segmento | Rosca, partes de um todo | Como as ferramentas formam um conjunto |
+| Junção | Encaixe, sobreposição | O que duas plataformas fazem em duplicidade |
+| Fluxo | Linear, paralelo, ciclo, fusão e divisão | O caminho do dado da coleta à ativação |
+| Pilha | Camadas verticais ou horizontais, círculos concêntricos | As camadas de uma arquitetura |
+
+Para converter uma lista: marque os substantivos e os verbos, veja como
+se ligam e escolha a relação.
+
+### Como arrumar a página
+
+- Fluxo: o olho atravessa a página em um movimento, do ponto de entrada
+  ao ponto final.
+- Contraste: o que importa se destaca por tamanho, cor ou posição.
+- Espaço em branco: o vazio isola o que importa. Preencher a página
+  dilui a mensagem.
+- Hierarquia: o leitor sabe o que ler primeiro, segundo e terceiro.
+- Unidade: tipos, cores, tratamento de imagem e posição dos elementos
+  são os mesmos em todo o material.
+
+Use o modelo, as fontes e as cores de `entregaveis/_projeto/marca.md`.
+Sem modelo definido: uma família de fonte, até três cores e dois neutros.
+
+### Dados
+
+- Decida o que a audiência deve lembrar do dado e destaque só isso. O
+  resto fica em cinza. Linhas de grade, bordas e rótulos perdem peso.
+- O título do gráfico diz o achado. "Receita por canal" é um rótulo.
+  "A loja própria passou o marketplace em receita em 2026" é um título.
+- Diga a verdade. Nada de efeito 3D. O eixo de barras começa no zero. A
+  proporção dos eixos não exagera nem achata a variação.
+- Escolha o gráfico pela pergunta.
+
+| Pergunta | Gráfico |
+| --- | --- |
+| Como algo variou no tempo? | Linha |
+| Qual item é maior? | Barras ordenadas |
+| Como o todo se divide? | Barra empilhada ou rosca com poucas fatias |
+| Como dois grupos se comparam em várias dimensões? | Matriz ou barras lado a lado |
+| O que explica a diferença entre dois totais? | Cascata |
+| Onde cada item fica em dois critérios? | Dispersão ou matriz dois por dois |
+| Um único número conta a história? | O número, grande, sem gráfico |
+
+- Toda página com dado traz a fonte e a data do dado.
+- A base grande, a tabela completa e as análises ficam na planilha. A
+  página mostra o recorte que prova o título e aponta para a planilha.
+
+### Imagens
+
+Descarte a primeira imagem que vier à cabeça: é a que todos usam. Alvo
+para objetivo, aperto de mãos para parceria e cadeado para segurança são
+os exemplos mais gastos. Pense em várias opções até achar uma que esta
+audiência não tenha visto.
+
+### Animação
+
+Só quando ela explica algo: a ordem de um fluxo, as partes de um
+conjunto, uma mudança de estado. Uma lista que aparece item a item ajuda
+quem apresenta a controlar o ritmo. Efeito sem função distrai.
+
+Quando a audiência precisa mexer para entender, a animação deixa a
+página e vira uma peça própria: um HTML interativo de arquivo único,
+descrito em [interativo.md](interativo.md).
+
+## HTML interativo e animado
+
+Um HTML interativo é uma peça de apoio. Ele ajuda a audiência a entender
+e a ler o material de entrega: percorrer um fluxo, girar uma
+arquitetura, testar uma premissa. A decisão continua sendo provocada
+pela apresentação, pela proposta ou pelo documento.
+
+A peça é um arquivo só. Abre com dois cliques em qualquer navegador, sem
+internet, sem pasta de apoio e sem biblioteca externa. Vai por e-mail e
+funciona dentro da rede do cliente.
+
+### Quando uma peça interativa se paga
+
+Faça uma peça quando a audiência entende melhor mexendo do que lendo:
+
+| A audiência precisa | Peça | Modelo de partida |
+| --- | --- | --- |
+| Seguir uma sequência e ver onde está o problema | Fluxo guiado em 2D | `fluxo` |
+| Ver como as partes de um sistema se empilham e se ligam | Camadas em 3D | `camadas-3d` |
+| Testar premissas e ver o efeito no resultado | Simulador | `simulador` |
+| Comparar o que é com o que poderia ser | Antes e depois, sobre um dos três modelos | o que servir melhor |
+
+Não faça quando uma página estática já prova o título, quando o material
+só vai ser impresso ou quando a interação seria enfeite. Uma peça que
+ninguém precisa tocar para entender é uma imagem, e imagem vai na
+página.
+
+### A peça segue a história
+
+- A peça nasce depois da storyline aprovada, como qualquer página. O
+  harness bloqueia a gravação antes disso.
+- Ela tem uma mensagem, escrita no cabeçalho do arquivo, e a mensagem é
+  uma das mensagens da storyline. O título da peça diz o achado.
+- O campo `apoia` diz qual página ou seção do entregável ela ajuda a
+  ler. Uma peça sem página para apoiar não tem lugar no material.
+- Todo número e todo achado da peça têm linha em `evidencias.tsv`, e o
+  campo `fontes` lista os identificadores. A fonte e a data aparecem na
+  tela. Dado de exemplo é marcado como exemplo.
+- O texto visível segue [texto.md](texto.md) e passa pelas mesmas
+  checagens das páginas.
+
+O cabeçalho é um comentário logo depois da primeira linha do arquivo:
+
+```html
+<!-- interativo
+titulo: nome curto da peça
+mensagem: a frase que a audiência deve levar
+apoia: página ou seção do entregável
+fontes: E-012, E-015
+idioma: pt-BR
+-->
+```
+
+### Como desenhar a peça
+
+1. A página está completa ao abrir. Quem não clica em nada já lê a
+   mensagem e vê o estado que importa. A interação aprofunda.
+2. O movimento explica uma mudança: de onde veio, para onde foi, o que
+   cresceu. Movimento que só decora sai.
+3. Um destaque por tela. O que a mensagem cita leva a cor de destaque e
+   o resto fica em cinza, como em [visual.md](visual.md).
+4. Barras, áreas e distâncias são desenhadas em escala. Quando duas
+   medidas dividem um eixo, a peça diz isso.
+5. A forma carrega informação. Estado e categoria são marcados por
+   forma e rótulo além da cor, para que a leitura não dependa de
+   enxergar a cor.
+6. Os dados ficam separados do código, em um bloco JSON dentro do
+   próprio arquivo. Trocar o dado não exige mexer no desenho.
+7. As cores são variáveis declaradas uma vez, com valores para tema
+   claro e tema escuro. As cores e as fontes vêm de
+   `_projeto/marca.md`. Sem marca registrada, use o desenho neutro dos
+   modelos e a fonte do sistema.
+8. A peça funciona na tela do computador e na do celular, com margem
+   lateral de pelo menos 16 px e sem rolagem para o lado.
+9. Todo controle funciona pelo teclado e mostra o foco. O que muda na
+   tela é anunciado para leitor de tela.
+10. Quem pede menos movimento ao sistema recebe a peça sem animação e
+    com o mesmo conteúdo. Animação contínua tem botão de pausa e para
+    quando a aba sai de vista.
+11. A peça tem uma versão para o papel, que mostra todos os estados de
+    uma vez, e um texto para quem abre o arquivo sem script.
+
+### 2D ou 3D
+
+Use 2D sempre que o plano der conta. Use 3D quando a terceira dimensão
+carrega informação: camadas que se sobrepõem, profundidade de uma pilha,
+um volume que se compara. Girar uma peça plana no espaço não acrescenta
+nada.
+
+Toda peça em 3D tem na mesma página a leitura em 2D do que ela mostra:
+a lista das camadas, a legenda, os números. Quem não consegue girar a
+cena ainda recebe a mensagem.
+
+### A escada de técnicas, sem biblioteca
+
+Suba um degrau só quando o anterior não resolve.
+
+| Degrau | Serve para |
+| --- | --- |
+| HTML e CSS, com transições | Fluxos, passos, abas, antes e depois, barras |
+| SVG desenhado no arquivo | Diagramas, gráficos, mapas de relação, ícones |
+| Transformações 3D do CSS | Camadas, pilhas, cartões no espaço |
+| Canvas 2D | Muitos pontos, partículas, gráficos com centenas de marcas |
+| WebGL escrito à mão | Cena 3D de verdade, com malha e luz. Raro |
+
+Imagem entra embutida no arquivo, como SVG ou em base64. Fonte externa
+não entra: use a fonte do sistema ou embuta a fonte da marca quando a
+licença permite. Nenhum pedido sai do arquivo, nem para medir acesso.
+
+### O que a checagem cobra
+
+A checagem `interativo` reprova:
+
+- recurso fora do arquivo: script, folha de estilo, fonte, imagem,
+  vídeo, quadro embutido ou chamada de rede;
+- arquivo sem `doctype`, idioma, codificação, `viewport` ou título;
+- animação sem o tratamento de `prefers-reduced-motion`;
+- evidência citada que não existe no registro;
+- peça gravada sem storyline aprovada;
+- arquivo acima de 15 MB.
+
+E avisa quando falta o cabeçalho, o texto para quem está sem script, a
+versão de impressão, a descrição de um `canvas`, a pausa de uma
+animação contínua ou a fonte visível. Na revisão, os avisos de
+cabeçalho viram reprovação.
+
+### Conferir renderizado
+
+A peça só está pronta depois de aberta. Confira no computador e no
+celular, no tema claro e no escuro, com o teclado, com movimento
+reduzido e na visualização de impressão. Onde há Node e Playwright,
+`node entregaveis/_harness/scripts/conferir_interativo.js ARQUIVO.html`
+faz essa conferência, bloqueia qualquer pedido de rede, lista os erros e
+grava as imagens. Um problema visto na tela é corrigido no arquivo e
+conferido de novo.
+
+### Entregar
+
+- O arquivo fica em `interativos/` dentro da pasta do entregável e vai
+  junto com o material que ele apoia, com uma linha que diz para que
+  serve e como abrir.
+- A página do entregável que a peça apoia traz uma imagem do estado
+  principal. O material precisa se sustentar sem a peça.
+- Alguns serviços de e-mail barram anexo `.html`. Nesse caso, envie em
+  um arquivo compactado ou pelo repositório de arquivos do projeto.
+- Publicar a peça em um serviço de páginas é uma saída do projeto. O
+  consultor decide, e a peça precisa respeitar
+  `_projeto/regras-de-material.md`.

@@ -84,6 +84,11 @@ arquivo externo e as regras do domínio do projeto.
 Em outros agentes que leem `AGENTS.md` e rodam comandos, valem as
 regras, as skills e as checagens, sem os hooks.
 
+No Claude desktop, no ChatGPT desktop e no Microsoft Copilot, o método
+chega como um texto de instruções para colar e arquivos de conhecimento
+para enviar, sem travas nem checagens automáticas. O passo a passo está
+em [ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md).
+
 ## Onde ler mais
 
 | Para saber | Leia |
@@ -93,14 +98,13 @@ regras, as skills e as checagens, sem os hooks.
 | As práticas de texto | [texto.md](entregaveis/_harness/metodo/texto.md) |
 | Formatos, veículos e idiomas | [formatos.md](entregaveis/_harness/metodo/formatos.md) |
 | HTML interativo em arquivo único | [interativo.md](entregaveis/_harness/metodo/interativo.md) |
+| O uso no Claude desktop, no ChatGPT e no Copilot | [ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md) |
 | Os pacotes por tipo de projeto | [LEIA-ME.md](entregaveis/_harness/pacotes/LEIA-ME.md) |
 | As peças do kit, as checagens e os créditos | [kit.md](entregaveis/_harness/kit.md) |
 | O que mudou em cada versão | [HISTORY.md](HISTORY.md) |
 
 ## O que esta versão ainda não tem
 
-- Os pacotes de instruções para Claude desktop, ChatGPT desktop e
-  Microsoft Copilot.
 - Um exemplo completo, do brief à entrega.
 
 ## Testar o kit
