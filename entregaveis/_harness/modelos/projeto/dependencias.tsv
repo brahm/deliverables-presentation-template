@@ -1,0 +1,5 @@
+# O que condiciona as entregas e não está na mão da equipe: acesso, dado, decisão de outra área, entrega de terceiro.
+# lado: cliente, consultoria ou terceiro. pedido_em e prazo: AAAA-MM-DD. prazo é a data em que o item é necessário.
+# afeta: ids de entregáveis e ações que esperam por ela, separados por vírgula. É daqui que a lista do dia tira o que trava o quê.
+# estado: aberta, atendida ou cancelada. O prazo só muda com rotina.py --remarcar.
+id	item	de_quem	lado	pedido_em	prazo	afeta	estado	origem	movida_em	observacao

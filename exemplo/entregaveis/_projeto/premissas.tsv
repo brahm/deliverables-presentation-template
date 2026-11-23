@@ -1,0 +1,5 @@
+# Premissas e restrições em que o plano se apoia. Uma premissa falsa aponta os entregáveis que dependiam dela.
+# estado: a confirmar, confirmada ou falsa. validar_ate: AAAA-MM-DD. afeta: ids de entregáveis e ações, separados por vírgula.
+# origem: A-nnn quando veio de uma ata, o material (M-nnn) ou consultor.
+id	premissa	origem	validador	validar_ate	estado	impacto_se_falsa	afeta	observacao
+PR-001	A migração das duas plataformas termina em três meses	D-005	Diretor de tecnologia	2026-12-15	a confirmar	O custo evitado do primeiro ano cai, porque os contratos antigos seguem pagos por mais tempo	leitura-executiva	Vale até a área de tecnologia entregar o cronograma

@@ -44,6 +44,7 @@ que você abre quando a tarefa pede.
    | O consultor corrige você, ou um erro se repete | `registrar-licao` |
    | Qualquer relatório ao consultor | `relatar-ao-consultor` |
    | O consultor leva o trabalho ao Claude desktop, ao ChatGPT ou ao Copilot, ou traz de lá o que foi feito | `usar-outro-ambiente` |
+   | O brief foi fechado, o projeto foi adotado, o porte mudou ou o consultor pede, tira ou muda um material de governança | `definir-governanca` |
    | O harness tem uma versão nova | `atualizar-harness` |
 
    Um pacote ativo traz a sua própria skill, `pacote-NOME`, que se
@@ -147,10 +148,27 @@ que você abre quando a tarefa pede.
     ou não é mais necessário. Um prazo só muda com
     `python3 entregaveis/_harness/scripts/rotina.py --remarcar`, que
     guarda a data anterior. Uma dispensa nunca é presumida.
+20. O dia chega em uma lista. `rotina.py --lista` monta a caixa de
+    entrada, as próximas ações, o que aguarda o cliente, a agenda e o
+    que há a confirmar. No topo sobem no máximo três itens: vencido sem
+    data nova, item que trava outros ou é ameaçado por um risco de
+    exposição alta, prazo com menos folga e item que espera o cliente
+    há mais tempo sem cobrança. O trabalho que depende de aprovação,
+    dado ou decisão do cliente só segue com a confirmação, que o
+    consultor informa ou você pergunta pelo follow-up. Cada pergunta tem
+    a sua frequência em `entregaveis/_projeto/perguntas.tsv`. Nunca
+    pergunte por horas trabalhadas.
+21. O nível de governança escolhe o que é emitido, e os registros
+    existem em qualquer nível. Premissas, issues, dependências,
+    mudanças, papéis, linha de base e versões são mantidos por você a
+    cada evento. O nível é do consultor: sugira pelo porte, mostre a
+    lista de materiais e grave a escolha. Pedido fora do combinado
+    passa por `entregaveis/_projeto/mudancas.tsv`. O aceite vem do
+    cliente.
 
 ## Relatório e idioma
 
-20. Relate ao consultor no idioma dele, com o resultado primeiro. Depois diga
+22. Relate ao consultor no idioma dele, com o resultado primeiro. Depois diga
     o que foi checado, o que você assumiu e o que ficou por fazer.
-21. As instruções e os registros do harness ficam em português. Os
+23. As instruções e os registros do harness ficam em português. Os
     entregáveis ficam nos idiomas definidos no brief do projeto.

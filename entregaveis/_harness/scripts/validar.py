@@ -38,6 +38,8 @@ def validar(pastas: list[Path], so: set[str] | None = None, rigoroso: bool = Fal
         achados.extend(checagens.repositorio_do_projeto())
     if gerais and (not so or "prazos" in so):
         achados.extend(checagens.prazos())
+    if gerais and (not so or "governanca" in so):
+        achados.extend(checagens.governanca_do_projeto())
     if gerais and (not so or "dominio" in so):
         achados.extend(checagens.dominio_do_projeto())
     for pasta in pastas:

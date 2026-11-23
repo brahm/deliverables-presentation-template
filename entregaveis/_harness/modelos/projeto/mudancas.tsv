@@ -1,0 +1,4 @@
+# Pedidos fora do combinado. Nenhum pedido de escopo é atendido sem passar por aqui.
+# estado: proposta (espera o sim do consultor), em analise, aprovada ou rejeitada. Datas em AAAA-MM-DD.
+# A mudança aprovada que move data ou esforço pede uma versão nova da linha de base: governanca.py --linha-de-base.
+id	pedido	solicitante	pedido_em	impacto_prazo	impacto_esforco	impacto_escopo	estado	decisao	decidido_em	origem	observacao

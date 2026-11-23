@@ -9,6 +9,7 @@ idiomas_dos_entregaveis: PREENCHER
 classificacao: PREENCHER
 marcacao_obrigatoria:
 fase: 1
+governanca:
 iniciado: nao
 ---
 # Brief do projeto
@@ -18,7 +19,9 @@ assessment de martech e adtech, mídia, retail media, processos agênticos,
 proposta, treinamento ou outro). `classificacao` é o nível de sigilo dos
 materiais. `marcacao_obrigatoria` é o texto que toda capa precisa trazer,
 quando há um. `fase` é o número da fase em que o projeto está, e a
-história das fases fica em `fases.md`. `iniciado` vira `sim` quando o
+história das fases fica em `fases.md`. `governanca` é o nível de
+governança (enxuto, padrao, completo ou personalizado), gravado pelo
+`governanca.py --nivel`. `iniciado` vira `sim` quando o
 consultor confirma este brief.
 
 ## O que é o projeto

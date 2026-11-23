@@ -36,8 +36,49 @@ def copiar_modelos(origem: Path, destino: Path) -> list[str]:
     return criados
 
 
+# Registros de configuração: uma linha por sinal ou pergunta. Uma versão nova do kit pode trazer linhas novas.
+CHAVES = {"cadencias.tsv": "sinal", "perguntas.tsv": "pergunta"}
+
+
+def completar_registros() -> list[str]:
+    """Leva a um registro que já existe as colunas e as linhas de configuração que uma versão nova do kit trouxe.
+
+    As colunas novas entram no fim do cabeçalho. Nenhuma linha do projeto é alterada.
+    """
+    feitos = []
+    for modelo in sorted((comum.MODELOS / "projeto").glob("*.tsv")):
+        alvo = comum.PROJETO / modelo.name
+        do_modelo = [l for l in comum.ler(modelo).splitlines() if l.strip() and not l.startswith("#")]
+        linhas = comum.ler(alvo).splitlines()
+        posicao = next((i for i, l in enumerate(linhas) if l.strip() and not l.startswith("#")), None)
+        if posicao is None or not do_modelo:
+            continue
+        colunas_do_modelo = [c.strip() for c in do_modelo[0].split("\t")]
+        colunas = [c.strip() for c in linhas[posicao].split("\t")]
+        novas = [c for c in colunas_do_modelo if c not in colunas]
+        if novas:
+            linhas[posicao] = "\t".join(colunas + novas)
+            colunas += novas
+            feitos.append(f"{comum.relativo(alvo)} (colunas novas: {', '.join(novas)})")
+        chave = CHAVES.get(modelo.name)
+        if chave in colunas:
+            presentes = {(l.split("\t") + [""] * len(colunas))[colunas.index(chave)].strip() for l in linhas[posicao + 1:] if l.strip() and not l.startswith("#")}
+            acrescidas = []
+            for linha in do_modelo[1:]:
+                valores = dict(zip(colunas_do_modelo, linha.split("\t")))
+                if valores.get(chave, "") not in presentes:
+                    acrescidas.append("\t".join(valores.get(c, "") for c in colunas))
+            if acrescidas:
+                linhas += acrescidas
+                feitos.append(f"{comum.relativo(alvo)} ({len(acrescidas)} linha(s) nova(s))")
+        if any(f.startswith(comum.relativo(alvo) + " ") for f in feitos):
+            alvo.write_text("\n".join(linhas) + "\n", encoding="utf-8")
+    return feitos
+
+
 def preparar_projeto() -> list[str]:
     criados = copiar_modelos(comum.MODELOS / "projeto", comum.PROJETO)
+    criados += completar_registros()
     criados += copiar_modelos(comum.MODELOS / "intake", comum.INTAKE)
     criados += copiar_modelos(comum.MODELOS / "dominio", comum.BASE / "_dominio")
     materiais = comum.INTAKE / "materiais"

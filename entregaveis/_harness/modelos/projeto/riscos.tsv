@@ -1,4 +1,7 @@
 # Riscos, problemas e preocupações do projeto.
 # estado: proposto (veio de uma ata e espera o sim do consultor), aberto ou fechado.
 # origem: A-nnn quando veio de uma ata, T-nnn quando veio de uma terceira remarcação, ou consultor.
-id	risco	causa	efeito	dono	estado	origem	revisado_em
+# probabilidade e impacto: alta, media ou baixa. A exposição é alta quando uma é alta e a outra é pelo menos média.
+# ameaca: ids dos itens que o risco ameaça (T-nnn, M-nnn, DP-nnn ou entregável), separados por vírgula. A lista do dia sobe esses itens.
+# resposta: o que está sendo feito para evitar ou reduzir.
+id	risco	causa	efeito	dono	estado	origem	revisado_em	probabilidade	impacto	ameaca	resposta

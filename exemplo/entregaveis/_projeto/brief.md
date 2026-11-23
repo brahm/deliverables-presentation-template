@@ -9,6 +9,7 @@ idiomas_dos_entregaveis: pt-BR
 classificacao: exemplo público, com dados inventados
 marcacao_obrigatoria: Exemplo fictício
 fase: 1
+governanca: enxuto
 iniciado: sim
 ---
 # Brief do projeto

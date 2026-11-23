@@ -16,3 +16,4 @@ trocada vira `Substituída por D-nnn`.
 | D-007 | 2026-10-21 | A storyline da leitura executiva está aprovada, com o custo antes da maturidade | "Aprovada. Só ponha o custo antes da nota de maturidade" | Vigente |
 | D-008 | 2026-11-05 | A diretoria desliga as plataformas B de e-mail e de automação de campanhas no vencimento de março de 2027. A de análise de dados fica para a renovação de novembro de 2027 | Decisão da reunião de leitura executiva | Vigente |
 | D-009 | 2026-11-05 | A análise de subuso das licenças fica para depois da chegada dos relatórios de uso | Os relatórios (M-007) não chegaram a tempo. Item B-001 | Vigente |
+| D-010 | 2026-11-06 | A governança do projeto segue o nível enxuto, com sete materiais emitidos e o status semanal para a diretora de marketing | O projeto tem oito semanas, uma frente e nenhum comitê formal. O agente sugeriu e a consultora confirmou | Vigente |

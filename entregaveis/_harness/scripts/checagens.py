@@ -539,6 +539,66 @@ def prazos() -> list[Achado]:
     return achados
 
 
+# --- Governança -----------------------------------------------------------
+
+_ESTADOS_DE_GOVERNANCA = {
+    "premissas.tsv": {"a confirmar", "confirmada", "falsa"},
+    "issues.tsv": {"aberta", "resolvida"},
+    "dependencias.tsv": {"aberta", "atendida", "cancelada"},
+    "mudancas.tsv": {"proposta", "em analise", "aprovada", "rejeitada"},
+}
+
+
+def governanca_do_projeto() -> list[Achado]:
+    """Nível e estados fora do combinado, dependência que aponta para o vazio e trabalho concluído à frente do cliente."""
+    import afazeres
+    import governanca
+
+    achados: list[Achado] = []
+    nivel = governanca.nivel_atual()
+    if nivel and nivel not in governanca.NIVEIS + ["personalizado"]:
+        achados.append(Achado("erro", "governanca", comum.relativo(comum.PROJETO / "brief.md"), 0, f"O nível de governança '{nivel}' não existe. Vale enxuto, padrao, completo ou personalizado. Grave com governanca.py --nivel."))
+    for nome, validos in _ESTADOS_DE_GOVERNANCA.items():
+        for linha in comum.ler_tsv(comum.PROJETO / nome):
+            if comum.normalizar(linha.get("estado", "")) not in validos:
+                achados.append(Achado("erro", "governanca", comum.relativo(comum.PROJETO / nome), 0, f"{linha.get('id', '?')}: o estado '{linha.get('estado', '')}' não existe. Vale {', '.join(sorted(validos))}."))
+    riscos = comum.relativo(comum.PROJETO / "riscos.tsv")
+    for linha in comum.ler_tsv(comum.PROJETO / "riscos.tsv"):
+        for campo in ("probabilidade", "impacto"):
+            if linha.get(campo, "") and comum.normalizar(linha[campo]) not in afazeres.GRAU:
+                achados.append(Achado("erro", "governanca", riscos, 0, f"{linha.get('id', '?')}: '{campo}' é alta, media ou baixa, e não '{linha[campo]}'."))
+    codigos = {m["codigo"] for m in governanca.catalogo()}
+    for linha in comum.ler_tsv(comum.PROJETO / "governanca.tsv"):
+        codigo = linha.get("codigo", "")
+        if codigo not in codigos and not re.fullmatch(r"SM-\d+", codigo):
+            achados.append(Achado("erro", "governanca", comum.relativo(comum.PROJETO / "governanca.tsv"), 0, f"O material '{codigo}' não está no catálogo. Um material próprio entra com governanca.py --sob-medida."))
+    # Quem depende de quem: um id que não existe quebra a lista do dia em silêncio.
+    acoes = comum.ler_tsv(comum.PROJETO / "acoes.tsv")
+    conhecidos = {l.get("id", "") for l in acoes} | {l.get("id", "") for l in comum.ler_tsv(comum.INTAKE / "registro.tsv")}
+    conhecidos |= {l.get("id", "") for l in comum.ler_tsv(comum.PROJETO / "dependencias.tsv")} | {p.name for p in comum.entregaveis()}
+    apontam = [("acoes.tsv", l.get("id", "?"), campo, l.get(campo, "")) for l in acoes for campo in ("depende_de", "entregavel")]
+    apontam += [("riscos.tsv", l.get("id", "?"), "ameaca", l.get("ameaca", "")) for l in comum.ler_tsv(comum.PROJETO / "riscos.tsv")]
+    apontam += [("dependencias.tsv", l.get("id", "?"), "afeta", l.get("afeta", "")) for l in comum.ler_tsv(comum.PROJETO / "dependencias.tsv")]
+    for nome, ident, campo, valor in apontam:
+        for alvo in afazeres.ids(valor):
+            if alvo not in conhecidos:
+                achados.append(Achado("aviso", "governanca", comum.relativo(comum.PROJETO / nome), 0, f"{ident}: o campo '{campo}' cita {alvo}, que não existe nos registros."))
+    abertos = afazeres.itens_abertos()
+    for linha in acoes:
+        if comum.normalizar(linha.get("estado", "")) != "concluida":
+            continue
+        for alvo in afazeres.ids(linha.get("depende_de", "")):
+            if alvo in abertos and abertos[alvo].lado != "consultoria":
+                achados.append(Achado("aviso", "governanca", comum.relativo(comum.PROJETO / "acoes.tsv"), 0, f"{linha.get('id', '?')} foi concluída, mas dependia de {alvo}, que ainda espera o cliente. Confirme com rotina.py --cobrado {alvo}."))
+    if nivel:
+        aprova = {l.get("item", ""): l.get("aprova", "") for l in comum.ler_tsv(comum.PROJETO / "papeis.tsv")}
+        for pasta in comum.entregaveis():
+            aberto = comum.ETAPAS[comum.etapa(_meta(pasta))] != "entregue"
+            if aberto and comum.fase_do_entregavel(_meta(pasta)) == comum.fase_atual() and not aprova.get(pasta.name, ""):
+                achados.append(Achado("aviso", "governanca", comum.relativo(comum.PROJETO / "papeis.tsv"), 0, f"O entregável '{pasta.name}' não tem quem aprova. Pergunte ao consultor e preencha a linha dele."))
+    return achados
+
+
 # --- HTML interativo ------------------------------------------------------
 
 # O que faz um HTML depender de algo fora dele. Cada item: onde procurar

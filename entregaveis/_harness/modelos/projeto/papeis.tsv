@@ -1,0 +1,4 @@
+# Quem executa, quem aprova, quem é consultado e quem é informado, por entregável e por decisão.
+# item: o id do entregável, ou o nome da decisão. Em cada coluna, a pessoa ou o cargo. Só uma pessoa aprova cada item.
+# prazo_de_resposta: dias úteis que o aprovador tem para responder, quando foi combinado.
+item	executa	aprova	consultado	informado	prazo_de_resposta	observacao

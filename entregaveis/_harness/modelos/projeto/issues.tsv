@@ -1,0 +1,4 @@
+# Problemas que já ocorreram e pedem correção. O que ainda pode ocorrer é risco e fica em riscos.tsv.
+# estado: aberta ou resolvida. escalada: sim ou nao. prazo: AAAA-MM-DD. afeta: ids de entregáveis e ações, separados por vírgula.
+# origem: A-nnn quando veio de uma ata, T-nnn quando uma ação travou, ou consultor.
+id	problema	impacto	dono	acao	prazo	escalada	estado	origem	afeta	observacao

@@ -3,6 +3,49 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.9.0
+
+- Nível de governança. Depois do brief, o agente lê o porte do projeto
+  e sugere o nível enxuto, padrão ou completo. O consultor escolhe e
+  pode tirar, incluir ou pedir um material sob medida. O catálogo dos
+  materiais está em `_harness/governanca/catalogo.tsv`, a escolha fica em
+  `_projeto/governanca.tsv` e o estado mostra o nível. A skill nova é a
+  `definir-governanca`, e o comando é `scripts/governanca.py`.
+- Registros que existem em qualquer nível: `premissas.tsv`,
+  `issues.tsv`, `dependencias.tsv`, `mudancas.tsv`, `papeis.tsv`,
+  `linha-de-base.tsv`, `versoes.tsv`, `cobrancas.tsv` e `esforco.tsv`.
+  O esforço não gera pergunta nem aviso. As ações ganharam as colunas
+  `depende_de` e `entregavel`, e os riscos ganharam probabilidade,
+  impacto, o item ameaçado e a resposta.
+- Lista do dia. `scripts/rotina.py --lista` monta a caixa de entrada, as
+  próximas ações, o que aguarda o cliente, a agenda e o que há a
+  confirmar, e grava em `_projeto/afazeres.md`. No topo sobem no máximo
+  três itens: o vencido sem data nova, o que trava outros ou é ameaçado
+  por um risco de exposição alta, o prazo com menos folga e o que espera
+  o cliente há mais tempo sem cobrança.
+- Follow-up com o cliente. O trabalho que depende de aprovação, dado ou
+  decisão do cliente só segue com a confirmação. O consultor informa, ou
+  o agente pergunta se o follow-up foi feito, e cada cobrança fica em
+  `_projeto/cobrancas.tsv`. A resposta entra com
+  `scripts/rotina.py --cobrado ID`.
+- Perguntas por frequência. Cada pergunta da lista é diária, semanal ou
+  de marco, em `_projeto/perguntas.tsv`. O agente nunca pergunta por
+  horas trabalhadas.
+- Linha de base, desvios, versões e aceite, com
+  `scripts/governanca.py --linha-de-base`, `--desvios`, `--versao` e
+  `--aceite`. Uma versão nova da linha de base pede o motivo.
+- A checagem "Governança" acusa nível ou estado inválido, material fora
+  do catálogo, id citado que não existe e ação concluída antes da
+  confirmação do cliente.
+- O exemplo ganhou o nível enxuto, a linha de base, um risco, uma
+  premissa e uma cobrança.
+
+O que o projeto precisa fazer: atualize com `--atualizar`. Ele cria os
+registros novos em branco e acrescenta as colunas e as linhas de
+configuração novas aos registros que o projeto já tem, sem mudar
+nenhuma linha sua. Depois o estado pede o nível de governança: o agente
+sugere pelo porte e você confirma.
+
 ## 0.8.0
 
 - Atas pela pasta. O consultor salva atas e transcrições em

@@ -70,6 +70,9 @@ sem esperar que ele dite cada passo.
    `Vigente`, e as suas `Vigente (assumida)`.
 10. Crie a pasta de cada entregável previsto com
    `preparar.py --entregavel ID --tipo T --veiculo V --formato F --idiomas I`.
+   Depois defina a governança com `definir-governanca`: o nível pelo
+   porte, os materiais que o projeto emite, quem aprova cada entregável
+   e a linha de base.
 11. Se o repositório foi criado a partir do template, apague os arquivos
     que só servem ao kit (a lista está em `_harness/kit.md`) e escreva
     um README do projeto.

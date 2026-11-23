@@ -1,0 +1,4 @@
+# As versões de cada entregável, com o que mudou, a quem foi enviada e o aceite. Quem grava é o governanca.py --versao e --aceite.
+# marca: o resumo do conteúdo no momento da versão. aceite: quem aceitou, quando e com que ressalvas.
+entregavel	versao	data	marca	o_que_mudou	enviada_a	aceite
+leitura-executiva	v1	2026-11-05	6c254b9970a96edd	Versão apresentada à diretoria	Diretoria da Lojas Exemplo	

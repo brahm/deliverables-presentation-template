@@ -1,6 +1,6 @@
 # Modelos
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.8.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.9.0. Gerado por empacotar.py: não edite à mão.
 
 Cada modelo é a forma de uma seção do registro do projeto ou de uma parte de um entregável. PREENCHER marca o que ainda precisa ser escrito.
 
@@ -19,6 +19,7 @@ idiomas: PREENCHER
 duracao_min:
 prazo:
 origem:
+depende_de:
 fase:
 estado: briefing
 ---
@@ -29,8 +30,9 @@ ou treinamento. `veiculo`: projetado (alguém apresenta), leitura (deck
 lido sem apresentador), documento, planilha ou workshop. `formato`: pptx,
 docx, pdf, xlsx ou html. `origem`: o arquivo já existente, quando o entregável
 foi adotado de um projeto em andamento. `fase`: a fase do projeto em que
-o entregável nasceu. `estado`: briefing, storyline,
-storyboard, redacao, revisao ou entregue.
+o entregável nasceu. `depende_de`: os ids que precisam terminar antes
+(`T-nnn`, `M-nnn`, `DP-nnn` ou outro entregável), separados por vírgula.
+`estado`: briefing, storyline, storyboard, redacao, revisao ou entregue.
 
 ## Audiência
 
@@ -217,6 +219,7 @@ idiomas_dos_entregaveis: PREENCHER
 classificacao: PREENCHER
 marcacao_obrigatoria:
 fase: 1
+governanca:
 iniciado: nao
 ---
 # Brief do projeto
@@ -226,7 +229,9 @@ assessment de martech e adtech, mídia, retail media, processos agênticos,
 proposta, treinamento ou outro). `classificacao` é o nível de sigilo dos
 materiais. `marcacao_obrigatoria` é o texto que toda capa precisa trazer,
 quando há um. `fase` é o número da fase em que o projeto está, e a
-história das fases fica em `fases.md`. `iniciado` vira `sim` quando o
+história das fases fica em `fases.md`. `governanca` é o nível de
+governança (enxuto, padrao, completo ou personalizado), gravado pelo
+`governanca.py --nivel`. `iniciado` vira `sim` quando o
 consultor confirma este brief.
 
 ## O que é o projeto
@@ -428,7 +433,9 @@ veiculo	limite	valor
 # estado: proposta (espera o sim do consultor), aberta, concluida ou cancelada.
 # origem: A-nnn quando veio de uma ata, com o trecho em observacao, ou consultor. movida_em: a última vez em que o item andou.
 # O prazo só muda com rotina.py --remarcar, que guarda a data anterior em prazos.tsv.
-id	tipo	item	dono	lado	inicio	prazo	base	estado	origem	movida_em	observacao
+# depende_de: ids que precisam terminar antes (T-nnn, M-nnn, DP-nnn ou entregável), separados por vírgula. entregavel: o entregável que a ação serve.
+# A ação que depende de aprovação, dado ou decisão do cliente só segue com a confirmação: rotina.py --cobrado ID --resposta aprovou.
+id	tipo	item	dono	lado	inicio	prazo	base	estado	origem	movida_em	observacao	depende_de	entregavel
 ~~~
 
 ### riscos.tsv
@@ -437,7 +444,10 @@ id	tipo	item	dono	lado	inicio	prazo	base	estado	origem	movida_em	observacao
 # Riscos, problemas e preocupações do projeto.
 # estado: proposto (veio de uma ata e espera o sim do consultor), aberto ou fechado.
 # origem: A-nnn quando veio de uma ata, T-nnn quando veio de uma terceira remarcação, ou consultor.
-id	risco	causa	efeito	dono	estado	origem	revisado_em
+# probabilidade e impacto: alta, media ou baixa. A exposição é alta quando uma é alta e a outra é pelo menos média.
+# ameaca: ids dos itens que o risco ameaça (T-nnn, M-nnn, DP-nnn ou entregável), separados por vírgula. A lista do dia sobe esses itens.
+# resposta: o que está sendo feito para evitar ou reduzir.
+id	risco	causa	efeito	dono	estado	origem	revisado_em	probabilidade	impacto	ameaca	resposta
 ~~~
 
 ### reunioes.tsv
@@ -483,6 +493,9 @@ ata_depois_da_reuniao	1	Dias úteis para a ata de uma reunião do calendário ch
 propostas_sem_resposta	3	Dias úteis que uma proposta de ata espera o sim antes de voltar ao resumo como aviso
 entrada_sem_classificar	1	Dias úteis que um arquivo pode ficar na pasta de entrada
 projeto_sem_evento	3	Dias úteis sem nenhum registro antes de a rotina perguntar se o projeto está pausado
+cobrar_depois_de	2	Dias úteis sem follow-up antes de a lista do dia perguntar se o cliente foi cobrado
+dia_do_status	5	Dia da semana do status, de 1 (segunda) a 5 (sexta). As perguntas semanais aparecem na véspera
+tolerancia_de_prazo	5	Dias úteis de desvio da linha de base que o consultor resolve sozinho. Acima disso, o desvio sobe
 pausa_ate		Data até a qual os avisos ficam em silêncio. Quem grava é o rotina.py --pausar
 ~~~
 
@@ -496,6 +509,113 @@ Uma linha por dia de trabalho, gravada no fechamento do dia pela skill
 
 | Data | O que aconteceu |
 | --- | --- |
+~~~
+
+### governanca.tsv
+
+~~~text
+# Os materiais de governança que este projeto emite. O nível fica no campo governanca do brief. Quem grava é o governanca.py.
+# situacao: mantido ou tirado. origem: nivel, incluido ou sob medida. O que o nível não emite continua como registro interno.
+codigo	material	cadencia	destinatario	situacao	origem	traz	fontes	observacao
+~~~
+
+### papeis.tsv
+
+~~~text
+# Quem executa, quem aprova, quem é consultado e quem é informado, por entregável e por decisão.
+# item: o id do entregável, ou o nome da decisão. Em cada coluna, a pessoa ou o cargo. Só uma pessoa aprova cada item.
+# prazo_de_resposta: dias úteis que o aprovador tem para responder, quando foi combinado.
+item	executa	aprova	consultado	informado	prazo_de_resposta	observacao
+~~~
+
+### premissas.tsv
+
+~~~text
+# Premissas e restrições em que o plano se apoia. Uma premissa falsa aponta os entregáveis que dependiam dela.
+# estado: a confirmar, confirmada ou falsa. validar_ate: AAAA-MM-DD. afeta: ids de entregáveis e ações, separados por vírgula.
+# origem: A-nnn quando veio de uma ata, o material (M-nnn) ou consultor.
+id	premissa	origem	validador	validar_ate	estado	impacto_se_falsa	afeta	observacao
+~~~
+
+### issues.tsv
+
+~~~text
+# Problemas que já ocorreram e pedem correção. O que ainda pode ocorrer é risco e fica em riscos.tsv.
+# estado: aberta ou resolvida. escalada: sim ou nao. prazo: AAAA-MM-DD. afeta: ids de entregáveis e ações, separados por vírgula.
+# origem: A-nnn quando veio de uma ata, T-nnn quando uma ação travou, ou consultor.
+id	problema	impacto	dono	acao	prazo	escalada	estado	origem	afeta	observacao
+~~~
+
+### dependencias.tsv
+
+~~~text
+# O que condiciona as entregas e não está na mão da equipe: acesso, dado, decisão de outra área, entrega de terceiro.
+# lado: cliente, consultoria ou terceiro. pedido_em e prazo: AAAA-MM-DD. prazo é a data em que o item é necessário.
+# afeta: ids de entregáveis e ações que esperam por ela, separados por vírgula. É daqui que a lista do dia tira o que trava o quê.
+# estado: aberta, atendida ou cancelada. O prazo só muda com rotina.py --remarcar.
+id	item	de_quem	lado	pedido_em	prazo	afeta	estado	origem	movida_em	observacao
+~~~
+
+### mudancas.tsv
+
+~~~text
+# Pedidos fora do combinado. Nenhum pedido de escopo é atendido sem passar por aqui.
+# estado: proposta (espera o sim do consultor), em analise, aprovada ou rejeitada. Datas em AAAA-MM-DD.
+# A mudança aprovada que move data ou esforço pede uma versão nova da linha de base: governanca.py --linha-de-base.
+id	pedido	solicitante	pedido_em	impacto_prazo	impacto_esforco	impacto_escopo	estado	decisao	decidido_em	origem	observacao
+~~~
+
+### linha-de-base.tsv
+
+~~~text
+# A referência aprovada de prazo e esforço. Quem grava é o governanca.py --linha-de-base. Nenhuma linha é apagada.
+# Cada versão é uma fotografia dos prazos dos entregáveis, dos marcos e das ações com base: sim. A mudança aprovada gera uma versão nova.
+# tipo: entregavel, marco ou acao. data_base: AAAA-MM-DD. esforco_base: em horas ou dias, quando o consultor informa.
+versao	item	tipo	descricao	data_base	esforco_base	aprovada_em	aprovada_por	motivo
+~~~
+
+### versoes.tsv
+
+~~~text
+# As versões de cada entregável, com o que mudou, a quem foi enviada e o aceite. Quem grava é o governanca.py --versao e --aceite.
+# marca: o resumo do conteúdo no momento da versão. aceite: quem aceitou, quando e com que ressalvas.
+entregavel	versao	data	marca	o_que_mudou	enviada_a	aceite
+~~~
+
+### cobrancas.tsv
+
+~~~text
+# Cada follow-up feito com o cliente sobre um item que aguarda aprovação, dado ou decisão. Quem grava é o rotina.py --cobrado.
+# item: T-nnn, M-nnn ou DP-nnn. resposta: cobrado, aprovou ou dispensada.
+item	cobrado_em	quem	resposta	nota
+~~~
+
+### perguntas.tsv
+
+~~~text
+# As perguntas que a lista do dia faz ao consultor e a frequência de cada uma. Troque a frequência para ajustar o projeto.
+# frequencia: diaria, semanal (na véspera do status), marco (quando um marco é concluído ou um entregável é aceito) ou nunca.
+# respondida_em: quem grava é o rotina.py --respondida. As perguntas sobre item vencido, follow-up e proposta saem dos registros e não ficam aqui.
+pergunta	frequencia	texto	respondida_em	observacao
+reuniao	diaria	Houve reunião ou conversa que não está registrada?		Sim: conte o que houve, e a skill processar-ata registra
+dispensa	diaria	Algo deixou de ser necessário ou de depender de aprovação?		Sim: a skill registrar-dispensa registra
+riscos	semanal	Os três riscos principais continuam valendo, com a mesma probabilidade e o mesmo impacto?		
+retorno	semanal	O cliente deu retorno sobre o que foi enviado?		Só aparece quando há versão enviada sem aceite
+premissas	semanal	Alguma destas premissas foi confirmada ou caiu?		Só aparece quando há premissa a confirmar
+algum_dia	semanal	Algum item adiado volta ao plano ou sai de vez?		Só aparece quando há item adiado em aberto
+satisfacao	marco	Como o cliente avaliou este marco? Uma nota e uma frase bastam.		
+beneficio	marco	O benefício esperado deste marco já apareceu?		
+materiais	marco	Algum material de governança deixou de ser lido?		Sim: a skill definir-governanca tira o material ou desce o nível
+nivel	semanal	Os sinais do projeto pedem um nível de governança acima do atual. Sobe o nível?		Só aparece quando os sinais passam do nível atual. Troque a frequência para nunca se o nível fica como está
+horas	nunca	Horas trabalhadas		O consultor lança em esforco.tsv quando quiser. Nenhuma pergunta e nenhum aviso
+~~~
+
+### esforco.tsv
+
+~~~text
+# Esforço lançado, quando o consultor informa por conta própria. O harness não pergunta por horas e não avisa quando falta lançamento.
+# data: AAAA-MM-DD. horas: número, com ponto ou vírgula.
+data	pessoa	frente	entregavel	horas	observacao
 ~~~
 
 ## Fase
@@ -641,4 +761,64 @@ id	tipo	aplica	onde	padrao	mensagem	nivel	origem
 # R-001	acusa	A nota de maturidade da frente de dados é 2.
 # R-001	passa	A nota de maturidade da frente de dados é 2. O critério: não há identificador único de cliente.
 checagem	espera	texto
+~~~
+
+## Catálogo de materiais de governança
+
+### catalogo.tsv
+
+~~~text
+# Catálogo dos materiais de governança. O nível do projeto escolhe quais são emitidos. Os registros internos existem em qualquer nível.
+# nivel: enxuto, padrao ou completo. Cada nível soma os materiais dele aos do nível anterior.
+# momento: inicio, rotina, entregaveis, controle ou encerramento. substitui: o material mais leve que este troca quando o nível sobe.
+# fontes: os registros de _projeto/ de onde o material sai. Nada é digitado duas vezes.
+codigo	material	nivel	momento	cadencia	destinatario	substitui	traz	fontes
+abertura	Página de abertura e plano	enxuto	inicio	uma vez, no início	patrocinador		Objetivo, escopo e fora de escopo, entregáveis e marcos, quem decide e quem aprova, critérios de aceite, cadência combinada e premissas. Serve também de material de kickoff	brief.md, papeis.tsv, premissas.tsv, ritos.tsv, linha-de-base.tsv
+status-semanal	Status semanal de uma página	enxuto	rotina	toda semana, no dia do status	gerente do cliente		Semáforo com o motivo, feito e a fazer, marcos, até três riscos ou issues, decisões pedidas, pendências do cliente com as cobranças feitas, datas deslocadas e desvio de esforço quando houver. É também a pauta da reunião	acoes.tsv, riscos.tsv, issues.tsv, prazos.tsv, cobrancas.tsv, linha-de-base.tsv, diario.md
+nota-de-reuniao	Nota de decisões e ações	enxuto	rotina	depois de cada reunião que decide algo	participantes		Decisões e ações com dono e prazo, em cerca de cinco linhas, por mensagem	reunioes.tsv, decisoes.md, acoes.tsv
+pedidos-ao-cliente	Lista de pedidos ao cliente	enxuto	controle	no início, e as atualizações seguem no status	gerente do cliente		Item, finalidade, dono no cliente e prazo	registro.tsv do intake, dependencias.tsv, acoes.tsv
+aceite	Confirmação de aceite	enxuto	entregaveis	a cada entregável	aprovador		Entregável, versão, ressalvas, quem aceitou e quando. Uma mensagem basta. Leva o aviso de faturamento quando o pagamento é por marco	versoes.tsv, papeis.tsv
+encerramento	Página de encerramento	enxuto	encerramento	uma vez, no fim	patrocinador		Entregue contra combinado, aceite final, pendências e próximos passos, repasse ao cliente, lições e uma pergunta de satisfação	linha-de-base.tsv, versoes.tsv, adiados.tsv, licoes.md, mudancas.tsv
+mudanca	Solicitação de mudança	enxuto	controle	só quando surge um pedido fora do combinado	quem aprova a mudança		Pedido, impacto em prazo e esforço, e a decisão. Um parágrafo	mudancas.tsv, linha-de-base.tsv
+termo-de-abertura	Termo de abertura do projeto	padrao	inicio	no início, reemitido a cada mudança aprovada	patrocinador e gestores	abertura	Problema, objetivos, escopo e fora de escopo, entregáveis, critérios de sucesso, organização e alçadas	brief.md, papeis.tsv, premissas.tsv
+plano-integrado	Plano integrado do projeto	padrao	inicio	aprovado antes da produção principal, revisto por fase	gestores dos dois lados		Escopo, cronograma, recursos, governança, comunicação, qualidade, riscos, mudança e encerramento	brief.md, acoes.tsv, linha-de-base.tsv, ritos.tsv, riscos.tsv, governanca.tsv
+raci	Matriz de papéis (RACI)	padrao	inicio	no início e a cada entregável novo	equipe e cliente		Por entregável e por decisão: quem executa, quem aprova, quem é consultado e quem é informado	papeis.tsv
+plano-de-comunicacao	Plano de comunicação	padrao	inicio	no início e a cada entregável novo	gestores		Público, mensagem, material, canal, frequência e emissor	governanca.tsv, audiencia.md, ritos.tsv
+kickoff	Material de kickoff	padrao	inicio	uma vez, no início	patrocinador, gestores e equipe		Objetivos, escopo, abordagem, cronograma, equipe, governança, pedidos iniciais e próximos passos	brief.md, papeis.tsv, ritos.tsv, registro.tsv do intake
+descricao-do-entregavel	Descrição do entregável	padrao	entregaveis	a cada entregável, antes de produzir	aprovador do entregável		Propósito, audiência, composição, formato, critérios de qualidade, revisores, aprovador e prazo	briefing.md do entregável, papeis.tsv
+status-executivo	Status executivo para o comitê	padrao	rotina	por marco ou mensal	patrocinador e comitê		O projeto está no compromisso, o que foi entregue, o prognóstico, os riscos que ameaçam e o que precisa ser decidido	linha-de-base.tsv, versoes.tsv, riscos.tsv, acoes.tsv, mudancas.tsv
+pauta	Pauta e pré-leitura	padrao	rotina	antes de cada reunião que decide	participantes		Objetivo, decisões esperadas, tempos e material de leitura	ritos.tsv, acoes.tsv, riscos.tsv
+ata-formal	Ata formal de reunião	padrao	rotina	até um dia útil depois da reunião	participantes	nota-de-reuniao	Data, presentes, decisões, ações com dono e prazo e pontos em aberto	reunioes.tsv, decisoes.md, acoes.tsv
+relatorio-de-excecao	Relatório de exceção	padrao	rotina	quando uma tolerância estoura	patrocinador ou comitê		Desvio, causa, impacto, opções, recomendação e prazo para decidir	linha-de-base.tsv, prazos.tsv, issues.tsv, cadencias.tsv
+revisao-de-fase	Revisão de fase com decisão registrada	padrao	rotina	ao fim de cada etapa	gestores e aprovadores		Condições de saída, evidências e a decisão: aprovado, aprovado com ressalvas ou não aprovado	fases.md, versoes.tsv, decisoes.md
+pulso-do-cliente	Pulso de satisfação do cliente	padrao	rotina	por marco	patrocinador e gerente do cliente		De três a cinco perguntas, nota, comentário e ação	perguntas.tsv, diario.md
+nota-de-entrega	Nota de entrega	padrao	entregaveis	em cada envio	destinatário do envio		Itens, versão, pendências conhecidas, o que se espera do cliente e até quando	versoes.tsv, papeis.tsv
+termo-de-aceite	Termo de aceite do entregável	padrao	entregaveis	em cada aceite	aprovador	aceite	Entregável, versão, critérios atendidos, ressalvas, aprovador e data	versoes.tsv, papeis.tsv
+ciclo-de-aprovacao	Ciclo de aprovação com prazos	padrao	entregaveis	no planejamento e a cada envio	aprovadores		Aprovador por entregável, ordem, prazo de resposta e regra para o silêncio	papeis.tsv, versoes.tsv, cobrancas.tsv
+registros-abertos	Riscos, issues e decisões abertos ao cliente	padrao	controle	a cada status	gestores dos dois lados		Os três registros em versão para o cliente, sem as notas internas	riscos.tsv, issues.tsv, decisoes.md
+aviso-de-faturamento	Aviso de pronto para faturar	padrao	controle	por marco de pagamento	gestor e financeiro		Marco, condição, evidência de aceite e situação	versoes.tsv, acoes.tsv
+aditivos	Registro de aditivos	padrao	controle	quando uma mudança é aprovada	gestores e jurídico		Mudança, efeito em escopo, prazo e preço, e o documento	mudancas.tsv, linha-de-base.tsv
+relatorio-de-encerramento	Relatório de encerramento	padrao	encerramento	uma vez, no fim	patrocinador e direção	encerramento	Resultado contra objetivos, escopo realizado, prazo e esforço reais contra a linha de base, mudanças e pendências	linha-de-base.tsv, versoes.tsv, mudancas.tsv, adiados.tsv, esforco.tsv
+aceite-final	Aceite final do projeto	padrao	encerramento	depois da apresentação final	patrocinador		Entregáveis aceitos, ressalvas, pendências e o destino de cada uma	versoes.tsv, adiados.tsv
+transferencia	Transferência de conhecimento e transição	padrao	encerramento	na reta final	time do cliente		Materiais, responsáveis, orientações, sessões de repasse e riscos que ficam	versoes.tsv, riscos.tsv, papeis.tsv
+licoes-aprendidas	Relatório de lições aprendidas	padrao	encerramento	no fim	consultoria e, em parte, cliente		Acertos, dificuldades, causas e recomendações	licoes.md, diario.md
+pesquisa-de-satisfacao	Pesquisa de satisfação final	padrao	encerramento	no fim	patrocinador e gerente do cliente		Nota, o que funcionou, o que melhorar e permissão de referência	perguntas.tsv, diario.md
+governanca-em-niveis	Modelo de governança em níveis	completo	inicio	no início, revisto quando alguém muda	todos os envolvidos		Comitê, patrocinador, gestores dos dois lados, frentes, fóruns, alçadas e caminho de escalonamento	papeis.tsv, ritos.tsv, cadencias.tsv
+plano-de-engajamento	Plano de engajamento de stakeholders	completo	inicio	mensal	uso interno		Pessoa, objetivo, ação, frequência, dono e último contato	audiencia.md, reunioes.tsv
+acordo-de-trabalho	Acordo de trabalho da equipe	completo	inicio	no início, ajustado por lições	equipe		Canais, tempo de resposta, nomenclatura, ferramentas e padrão de revisão	regras-de-material.md, licoes.md
+onboarding	Plano de mobilização, onboarding e acessos	completo	inicio	no início e a cada pessoa nova	equipe e TI do cliente		Sigilo assinado, acessos, ferramentas, leitura obrigatória e contatos	regras-de-material.md, dependencias.tsv
+status-diario	Nota de status diário	completo	rotina	diário	equipe e, se combinado, gerente do cliente		O que foi feito, o que vem, bloqueios e pedidos ao cliente que vencem	afazeres.md, diario.md, acoes.tsv
+nota-ao-patrocinador	Nota semanal ao patrocinador	completo	rotina	semanal	patrocinador		De três a cinco linhas: onde estamos, o que preocupa e o que é preciso dele	acoes.tsv, riscos.tsv, cobrancas.tsv
+painel	Painel executivo de uma página	completo	rotina	mensal ou sob pedido	patrocinador		Semáforo, três fatos, três riscos e a próxima decisão	linha-de-base.tsv, riscos.tsv, acoes.tsv
+relatorio-de-fase	Relatório de fase ou de marco	completo	rotina	ao fim de cada fase	patrocinador e gestores		Entregue contra planejado, desvios, riscos, lições e plano da próxima fase	fases.md, linha-de-base.tsv, versoes.tsv, licoes.md
+matriz-de-riscos	Matriz de riscos	completo	rotina	a cada status executivo	comitê		Riscos posicionados por probabilidade e impacto, com os cinco principais em destaque	riscos.tsv
+revisao-interna	Revisão interna do engajamento	completo	rotina	mensal	direção da consultoria		Saúde da entrega, satisfação, riscos, equipe e oportunidades	linha-de-base.tsv, riscos.tsv, esforco.tsv, perguntas.tsv
+revisao-independente	Revisão independente de entregável de alto risco	completo	entregaveis	antes do envio	direção		Escopo da revisão, revisor que não participou do trabalho e achados	versoes.tsv, papeis.tsv
+ensaio	Ensaio de apresentação	completo	entregaveis	antes de apresentar	apresentadores		Roteiro, papéis, perguntas previstas e tempo	briefing.md do entregável, papeis.tsv
+beneficios	Plano e registro de realização de benefícios	completo	controle	nos marcos, com medições depois do projeto	patrocinador e dono do benefício		Benefício, indicador, linha de base, meta, dono, data de medição e realizado	premissas.tsv, perguntas.tsv, evidencias.tsv
+obrigacoes-contratuais	Registro de obrigações contratuais	completo	controle	mensal	gestores		Cláusula, obrigação, parte, prazo e situação	acoes.tsv, dependencias.tsv
+terceiros	Gestão de terceiros	completo	controle	semanal, quando existem	gestor		Escopo, entregas, prazos, nível de serviço e sigilo de cada terceiro	dependencias.tsv, acoes.tsv
+comunicados	Comunicados do projeto	completo	controle	nos marcos	áreas afetadas		O que foi entregue, o que muda, próximos passos e perguntas frequentes	versoes.tsv, decisoes.md
+caso	Caso e credencial	completo	encerramento	depois do aceite	consultoria		Desafio, abordagem, resultado e permissão de citação	brief.md, versoes.tsv, licoes.md
+revisao-de-beneficios	Revisão de benefícios depois do projeto	completo	encerramento	de três a seis meses depois	patrocinador e dono do benefício		Benefício previsto contra realizado, causas e ações	premissas.tsv, perguntas.tsv
 ~~~

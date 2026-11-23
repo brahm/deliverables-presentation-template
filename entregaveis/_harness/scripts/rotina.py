@@ -15,6 +15,11 @@ Uso:
     rotina.py --concluir ID            a ação foi concluída
     rotina.py --andando ID             a ação está andando: registra o movimento de hoje
     rotina.py --dispensar ID --motivo TXT
+    rotina.py --lista                  a lista do dia, em seis listas, com o que pede atenção primeiro
+    rotina.py --lista --abrir          grava a lista em _projeto/afazeres.md e registra os avisos
+    rotina.py --cobrado ID [--resposta aprovou|cobrei|nao-cobrei|dispensada] [--nota TXT]
+                                       o follow-up de um item que espera o cliente
+    rotina.py --respondida PERGUNTA    a pergunta da lista foi respondida hoje
     rotina.py --datas                  as datas deslocadas, para o status
     rotina.py --pausar AAAA-MM-DD      silencia os avisos até a retomada
     rotina.py --retomar
@@ -24,7 +29,8 @@ Os avisos seguem o cronograma. Um item com prazo passa por três fases:
 parece parado dentro do prazo (aviso leve, uma vez), prazo próximo e
 vencido. O vencido pede resposta: concluído, nova data ou não é mais
 necessário. Toda data nova guarda a anterior em _projeto/prazos.tsv.
-ID é uma ação (T-nnn), um pedido de material (M-nnn) ou um entregável.
+ID é uma ação (T-nnn), um pedido de material (M-nnn), uma dependência
+(DP-nnn) ou um entregável.
 """
 from __future__ import annotations
 
@@ -52,6 +58,7 @@ DIAS = ["segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-
 PADROES = {
     "parado_fracao": 0.33, "parado_minimo": 2, "proximo_fracao": 0.2, "proximo_minimo": 1, "proximo_maximo": 5,
     "ata_depois_da_reuniao": 1, "propostas_sem_resposta": 3, "entrada_sem_classificar": 1, "projeto_sem_evento": 3,
+    "cobrar_depois_de": 2, "dia_do_status": 5, "tolerancia_de_prazo": 5,
 }
 CICLOS = {"semanal": 7, "quinzenal": 14}
 
@@ -180,6 +187,11 @@ def itens_com_prazo() -> list[Item]:
         if comum.normalizar(l.get("estado", "")) in ("pedido", "em falta") and prazo:
             pedido = data(l.get("pedido_em", ""))
             itens.append(Item(l.get("id", "?"), "pedido de material", l.get("material", ""), l.get("pedido_a", ""), pedido, prazo, movimento(l.get("id", ""), pedido)))
+    for l in comum.ler_tsv(comum.PROJETO / "dependencias.tsv"):
+        prazo = data(l.get("prazo", ""))
+        if comum.normalizar(l.get("estado", "")) == "aberta" and prazo:
+            pedido = data(l.get("pedido_em", ""))
+            itens.append(Item(l.get("id", "?"), "dependência", l.get("item", ""), l.get("de_quem", ""), pedido, prazo, movimento(l.get("id", ""), data(l.get("movida_em", "")) or pedido)))
     fase = inicio_da_fase()
     for pasta in comum.entregaveis():
         meta, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))
@@ -386,14 +398,16 @@ def registrar_sem_ata(args, hoje: datetime.date) -> int:
 
 
 def localizar(ident: str) -> tuple[str, Path]:
-    """De que registro é o item: 'acao', 'material' ou 'entregavel'."""
+    """De que registro é o item: 'acao', 'material', 'dependencia' ou 'entregavel'."""
     if re.fullmatch(r"T-\d+", ident):
         return "acao", comum.PROJETO / "acoes.tsv"
+    if re.fullmatch(r"DP-\d+", ident):
+        return "dependencia", comum.PROJETO / "dependencias.tsv"
     if re.fullmatch(r"M-\d+", ident):
         return "material", comum.INTAKE / "registro.tsv"
     if (comum.BASE / ident / "briefing.md").is_file() and not ident.startswith(("_", ".")):
         return "entregavel", comum.BASE / ident / "briefing.md"
-    raise SystemExit(f"Não achei o item '{ident}'. Vale uma ação (T-nnn), um pedido de material (M-nnn) ou a pasta de um entregável.")
+    raise SystemExit(f"Não achei o item '{ident}'. Vale uma ação (T-nnn), um pedido de material (M-nnn), uma dependência (DP-nnn) ou a pasta de um entregável.")
 
 
 def mudar_linha(caminho: Path, ident: str, mudancas: dict, acrescentar: str = "") -> dict:
@@ -438,7 +452,7 @@ def remarcar(ident: str, nova: str, motivo: str, quem: str, hoje: datetime.date)
     if vezes >= 3:
         print("Terceira remarcação ou mais: registre um risco em _projeto/riscos.tsv e pergunte ao consultor se é caso de escalar.")
     if base:
-        print("Este prazo é da linha de base ou do contrato: a data nova pede o acordo do cliente. Registre a mudança com a skill registrar-decisao e avise o consultor.")
+        print("Este prazo é da linha de base ou do contrato: a data nova pede o acordo do cliente. Abra a mudança em _projeto/mudancas.tsv, registre a decisão com a skill registrar-decisao e, com a mudança aprovada, grave a versão nova com governanca.py --linha-de-base.")
     return 0
 
 
@@ -448,16 +462,25 @@ def responder(ident: str, resposta: str, motivo: str, hoje: datetime.date) -> in
         print("Diga o motivo em uma linha (--motivo).")
         return 2
     if onde == "entregavel" or (onde == "material" and resposta != "dispensar"):
-        print("Este comando vale para ações (T-nnn). Um material muda de estado com a skill receber-materiais, e um entregável com adiar-trabalho ou registrar-dispensa.")
+        print("Este comando vale para ações (T-nnn) e dependências (DP-nnn). Um material muda de estado com a skill receber-materiais, e um entregável com adiar-trabalho ou registrar-dispensa.")
         return 2
+    if resposta in ("concluir", "andando") and onde == "acao":
+        import afazeres
+
+        presos = afazeres.espera_do_cliente(ident)
+        if presos:
+            # O trabalho que espera o cliente só segue com a confirmação dele.
+            print(f"{ident} depende de " + ", ".join(f"{i.ident} ({i.tipo}, {i.dono or 'sem dono'})" for i in presos) + ", que ainda espera o cliente.")
+            print("Confirme primeiro: rotina.py --cobrado ID --resposta aprovou quando o cliente respondeu, ou --resposta dispensada --motivo \"...\" quando não depende mais dele.")
+            return 1
     if resposta == "concluir":
-        mudar_linha(caminho, ident, {"estado": "concluida", "movida_em": str(hoje)})
+        mudar_linha(caminho, ident, {"estado": "atendida" if onde == "dependencia" else "concluida", "movida_em": str(hoje)})
         print(f"{ident} concluída em {hoje}.")
     elif resposta == "andando":
         mudar_linha(caminho, ident, {"movida_em": str(hoje)})
         print(f"{ident}: movimento registrado em {hoje}.")
     else:
-        estado = "cancelada" if onde == "acao" else "dispensado"
+        estado = "dispensado" if onde == "material" else "cancelada"
         mudar_linha(caminho, ident, {"estado": estado, "movida_em": str(hoje)}, f"Dispensado em {hoje}: {motivo}")
         print(f"{ident} dispensado. Os avisos ligados a ele param. Registre a decisão com a skill registrar-dispensa.")
     return 0
@@ -645,7 +668,7 @@ def linha_de_estado() -> list[str]:
     nomes = [("chegou", "arquivo(s) novo(s) em atas e entrada"), ("sim", "proposta(s) à espera do sim"), ("vencido", "vencido(s) sem resposta"),
              ("proximo", "com prazo próximo"), ("parado", "parecendo parado(s)"), ("cadencia", "aviso(s) de cadência")]
     partes = [f"{len(secoes[c])} {nome}" for c, nome in nomes if secoes[c]]
-    return ["Rotina do dia: " + ", ".join(partes) + ". Aplique a skill rotina-diaria (scripts/rotina.py --abrir)."] if partes else []
+    return ["Rotina do dia: " + ", ".join(partes) + ". Aplique a skill rotina-diaria (scripts/rotina.py --lista --abrir)."] if partes else []
 
 
 def main() -> int:
@@ -667,6 +690,11 @@ def main() -> int:
     analisador.add_argument("--dispensar", metavar="ID")
     analisador.add_argument("--motivo", default="")
     analisador.add_argument("--quem", default="consultor")
+    analisador.add_argument("--lista", action="store_true", help="a lista do dia, em seis listas")
+    analisador.add_argument("--cobrado", metavar="ID", help="o follow-up de um item que espera o cliente")
+    analisador.add_argument("--resposta", default="", help="aprovou, cobrei, nao-cobrei ou dispensada")
+    analisador.add_argument("--nota", default="")
+    analisador.add_argument("--respondida", metavar="PERGUNTA", help="a pergunta da lista foi respondida hoje")
     analisador.add_argument("--datas", action="store_true", help="as datas deslocadas, para o status")
     analisador.add_argument("--pausar", metavar="DATA")
     analisador.add_argument("--retomar", action="store_true")
@@ -680,6 +708,19 @@ def main() -> int:
         return registrar_ata(args, hoje)
     if args.sem_ata:
         return registrar_sem_ata(args, hoje)
+    if args.cobrado or args.respondida or args.lista:
+        import afazeres
+
+        if args.cobrado:
+            return afazeres.cobrado(args.cobrado, args.resposta, args.nota, args.motivo, args.quem, hoje)
+        if args.respondida:
+            return afazeres.responder_pergunta(args.respondida, hoje)
+        lista = afazeres.montar(hoje)
+        print(afazeres.texto_da_lista(hoje, lista))
+        if args.abrir:
+            registrar_avisos(hoje, resumo(hoje))
+            print(f"\nLista gravada em {comum.relativo(afazeres.gravar(hoje, lista))}.")
+        return 0
     if args.remarcar:
         return remarcar(args.remarcar[0], args.remarcar[1], args.motivo, args.quem, hoje)
     for resposta in ("concluir", "andando", "dispensar"):

@@ -21,9 +21,10 @@ que deixa de ser feito é registrado como decisão, nunca apagado.
 | Um material não é mais necessário | `rotina.py --dispensar M-nnn --motivo "..."` | Feche as lacunas que só esperavam por ele |
 | Um entregável ou uma análise sai do plano | Uma linha em `_projeto/adiados.tsv` | Cancele as ações que só serviam a ele |
 | O item cancelado estava no contrato | O mesmo, e avise o consultor | A mudança pede o acordo do cliente |
-| Algo não depende mais de aprovação | A decisão, e `rotina.py --concluir` na ação de aprovação | Pare as cobranças ligadas a ela |
+| Algo não depende mais de aprovação | `rotina.py --cobrado ID --resposta dispensada --motivo "..."` | As cobranças param e o que esperava volta às próximas ações |
 | A aprovação dispensada era aceite do contrato | O mesmo, e um risco em `_projeto/riscos.tsv` | Pergunte se a dispensa está mantida |
-| Um risco ou uma dependência não existe mais | Estado `fechado` em `riscos.tsv`, com o motivo | Libere o que estava travado |
+| Um risco ou uma dependência não existe mais | Estado `fechado` em `riscos.tsv`, ou `rotina.py --dispensar DP-nnn --motivo "..."` | Libere o que estava travado |
+| Um material de governança não é mais lido | `governanca.py --tirar CODIGO --motivo "..."` | O registro interno continua |
 | Uma reunião ou um rito acabou | A data em `ate`, em `_projeto/ritos.tsv` | A rotina para de esperar as atas dele |
 | O prazo mudou | `rotina.py --remarcar ID DATA --motivo "..."` | A data anterior fica em `prazos.tsv` |
 | O projeto parou por um tempo | `rotina.py --pausar AAAA-MM-DD` | Os avisos voltam na data de retomada |

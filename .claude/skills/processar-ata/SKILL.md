@@ -27,13 +27,16 @@ extraídos entram nos registros, cada um com a reunião de origem.
 | Tarefa com dono e prazo | `acoes.tsv`, tipo `tarefa` | `aberta`. Tarefa do cliente leva `lado: cliente` |
 | Tarefa sem dono ou sem prazo | `acoes.tsv` | `proposta`, com o dono e o prazo que você sugere |
 | Marco, meta ou prazo novo | `acoes.tsv`, tipo `marco` | Prazo que muda usa `rotina.py --remarcar` |
-| Pedido novo de escopo | `acoes.tsv` e `_projeto/adiados.tsv` | `proposta`, com o efeito no plano |
-| Risco, problema ou preocupação | `_projeto/riscos.tsv` | `proposto`, com causa e efeito |
+| Pedido novo de escopo | `_projeto/mudancas.tsv` | `proposta`, com o impacto em prazo, esforço e escopo |
+| Risco ou preocupação | `_projeto/riscos.tsv` | `proposto`, com causa, efeito, probabilidade e impacto |
+| Problema que já ocorreu | `_projeto/issues.tsv` | `aberta`, com o impacto e quem resolve |
+| Premissa confirmada ou derrubada | `_projeto/premissas.tsv` | A premissa falsa aponta os entregáveis que dependiam dela |
+| O que depende de outra área ou de terceiro | `_projeto/dependencias.tsv` | Com o prazo e o que ela afeta |
 | Dado prometido ou entregue | `_intake/registro.tsv` | Prazo novo, ou `recebido` com `receber-materiais` |
-| Pessoa nova ou papel que mudou | `_projeto/audiencia.md` | Com a reação registrada |
+| Pessoa nova ou papel que mudou | `_projeto/audiencia.md` e `papeis.tsv` | Com a reação registrada |
 | Compromisso da consultoria | `acoes.tsv`, `lado: consultoria` | Com dono na equipe |
 | Comentário sobre um entregável | A pasta do entregável | Correção com `redigir-conteudo`, ou `adiar-trabalho` |
-| Aprovação dita em reunião | `decisoes.md` | Como aceite verbal. Proponha pedir a confirmação por escrito |
+| Aprovação dita em reunião | `decisoes.md` | Aceite verbal. Proponha a confirmação por escrito, e só então `rotina.py --cobrado` |
 | Fato ou número citado | `_projeto/evidencias.tsv` | Confiança `baixa`, com a reunião como fonte, a confirmar |
 
 4. Ata gerada por IA erra nomes, troca quem disse o quê e inventa
@@ -46,8 +49,9 @@ extraídos entram nos registros, cada um com a reunião de origem.
      aceite e qualquer mensagem ao cliente;
    - a aprovação de uma storyline só vale quando vem do consultor.
 5. Os ids seguem o registro: ações `T-nnn`, riscos `RS-nnn`, decisões
-   `D-nnn`. Em toda ação, `inicio` é o dia em que ela nasceu e
-   `movida_em` é hoje.
+   `D-nnn`, premissas `PR-nnn`, issues `IS-nnn`, dependências `DP-nnn` e
+   mudanças `MU-nnn`. Em toda ação, `inicio` é o dia em que ela nasceu,
+   `movida_em` é hoje e `depende_de` traz o que precisa terminar antes.
 6. Registre a ata processada:
    `rotina.py --ata ARQUIVO --data AAAA-MM-DD --reuniao "NOME" --rito "R"
    --fonte "FERRAMENTA" --participantes "..." --resultado "2 decisões, 3
