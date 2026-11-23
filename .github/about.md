@@ -6,14 +6,14 @@ Settings, ou no ícone de engrenagem ao lado de "About".
 ## Descrição
 
 Harness para agentes de IA produzirem entregáveis de consultoria com
-método: apresentações, propostas, documentos, planilhas, treinamentos e
-HTML interativo, com storyline aprovada, checagens automáticas e
-domínio escrito em cada projeto.
+método: apresentações, propostas, documentos e planilhas com storyline
+aprovada, checagens automáticas, governança por nível, rotina diária e
+segundo cérebro do projeto.
 
 ## Tags
 
 ```text
-claude-code ai-agents agent-skills agent-harness project-template consulting presentations storytelling proposals marketing martech adtech retail-media interactive-html pt-br
+claude-code ai-agents agent-skills agent-harness project-template consulting presentations storytelling proposals project-governance second-brain marketing martech adtech retail-media media pt-br
 ```
 
 ## Template

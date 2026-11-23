@@ -100,34 +100,26 @@ estão em [INSTALL.md](INSTALL.md).
    modelo, com o que foi checado, o que foi assumido e o que ficou por
    fazer. Quem envia ao cliente é você.
 
-No dia a dia, salve as atas das reuniões em `entregaveis/_atas/`. O
-agente lê cada uma, atualiza os registros com a reunião de origem e
-mostra no resumo do dia o que mudou. Os avisos seguem o cronograma: um
-item parado dentro do prazo, um prazo próximo e um prazo vencido, que
-pede uma de três respostas: concluído, nova data ou não é mais
-necessário. A data anterior fica guardada.
+No dia a dia, você só conta o que aconteceu. O agente cuida do resto:
 
-A lista do dia traz no topo até três itens: o vencido, o que trava
-outros ou é ameaçado por um risco alto, o prazo com menos folga e o que
-espera o cliente há mais tempo sem cobrança. O que depende de aprovação
-do cliente só segue com a confirmação, que você informa ou o agente
-pergunta pelo follow-up. O agente também sugere o nível de governança
-pelo porte do projeto, enxuto, padrão ou completo, e você escolhe os
-materiais que serão emitidos. O status, a pauta e o aceite saem dos
-registros como rascunho, e você revisa e envia. Um envio abre o prazo de
-resposta do aprovador, e um pedido fora do combinado espera a decisão.
-Os pacotes de tipo de projeto trazem os controles de governança próprios
-do tipo, que só fecham com evidência.
-
-O que o projeto aprende vai para o segundo cérebro, em notas de Markdown
-dentro de `entregaveis/_cerebro/`. O agente atualiza a nota do assunto a
-cada ação do projeto, com o id do registro de onde vem cada afirmação, e
-busca nas notas e nos registros antes de escrever. Não é preciso
-instalar nenhum programa.
-
-Quando o projeto muda de natureza, diga o que aconteceu: a proposta foi
-vendida, uma extensão foi contratada. O agente abre uma fase nova, que
-herda as decisões, as evidências e tudo o que foi produzido.
+- **Atas.** Salve a ata em `entregaveis/_atas/`. O agente atualiza os
+  registros e mostra o que mudou.
+- **Prazos e lista do dia.** Os avisos seguem o cronograma. A lista do
+  dia sobe até três itens: o vencido, o que trava outros ou corre risco
+  alto e o que espera o cliente sem cobrança.
+- **Governança.** O agente sugere o nível pelo porte do projeto, enxuto,
+  padrão ou completo, e você escolhe os materiais. Status, pauta e
+  aceite saem dos registros como rascunho, e quem envia é você.
+- **Aprovação e mudança.** Um envio abre o prazo de resposta do
+  aprovador, e o silêncio não vale como aceite. Um pedido fora do
+  combinado espera o impacto e a decisão.
+- **Controles do tipo de projeto.** Cada pacote traz o que precisa ficar
+  registrado e aprovado, e um controle só fecha com evidência.
+- **Segundo cérebro.** O que o projeto aprende vira nota em
+  `entregaveis/_cerebro/`, com a fonte de cada afirmação, e o agente
+  busca nas notas antes de escrever.
+- **Fases.** Diga que a proposta foi vendida ou que uma extensão foi
+  contratada. O agente abre uma fase nova, que herda o histórico.
 
 O [guia de uso](entregaveis/_harness/guia.md) apresenta todos os
 recursos, o que dizer em cada momento e o que fazer quando algo trava.
