@@ -86,8 +86,9 @@ descompacte fora do projeto e troque o endereço pelo caminho da pasta.
 | --- | --- |
 | `PASTA/_harness/` | Criada com as regras, o método, os scripts, os hooks e os modelos. |
 | `PASTA/_projeto/`, `PASTA/_intake/` e `PASTA/_dominio/` | Criadas com os registros e o esqueleto de domínio em branco. Arquivo que já existe fica como está. |
+| `PASTA/_cerebro/` | Criada com as quatro pastas do segundo cérebro, o índice e o registro de atualizações, todos vazios. Nota que já existe fica como está. |
 | `PASTA/_atas/` e `PASTA/_intake/entrada/` | Criadas vazias. O consultor salva as atas na primeira e os arquivos que chegam na segunda. As duas ficam fora do git. |
-| `.claude/skills/` | Recebe as 26 skills do kit. Skill do projeto com o mesmo nome é mantida. |
+| `.claude/skills/` | Recebe as 27 skills do kit. Skill do projeto com o mesmo nome é mantida. |
 | `.claude/settings.json` | Criado, ou mesclado: os hooks e as permissões do harness entram ao lado dos que o projeto já tem. |
 | `AGENTS.md` e `CLAUDE.md` | Criados, ou recebem no fim um bloco entre duas linhas marcadoras. O texto do projeto fica intacto. |
 | `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.windsurfrules` | Recebem o mesmo bloco, só quando já existem. |

@@ -79,8 +79,8 @@ dizem quando avisar. O comando é
     necessário. Trate a resposta com `processar-ata` e
     `registrar-dispensa`, e marque
     `rotina.py --respondida reuniao,dispensa`.
-11. Grave o diário: `rotina.py --fechar "o que chegou, o que mudou e o
-    que ficou à espera"`.
+11. Absorva o que o dia registrou com `manter-cerebro` e grave o
+    diário: `rotina.py --fechar "o que chegou, mudou e ficou à espera"`.
 12. Para um status, `rotina.py --datas` lista as datas deslocadas e
     `governanca.py --desvios` compara com a linha de base.
 

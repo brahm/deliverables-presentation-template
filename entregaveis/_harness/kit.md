@@ -13,12 +13,13 @@
 | `guia.md` | O guia de uso para o consultor, com todos os recursos | Lido pelo consultor, e pelo agente quando ele pergunta como usar |
 | `.claude/skills/` | Um procedimento curto por momento | Aberta pelo agente quando o momento chega |
 | `.claude/settings.json` | Liga os seis hooks | Pelo Claude Code |
-| `hooks/mensagem.py` | Lembra o agente do ponto em que cada entregável está e da skill do momento, quando a mensagem fala de uma mudança de fase, de uma ata, de uma dispensa ou de um follow-up com o cliente | A cada mensagem, no Claude Code |
+| `hooks/mensagem.py` | Lembra o agente do ponto em que cada entregável está e da skill do momento, quando a mensagem fala de uma mudança de fase, de uma ata, de uma dispensa ou de um follow-up com o cliente. Guarda o que o segundo cérebro já tinha por absorver no começo do turno | A cada mensagem, no Claude Code |
 | `scripts/estado.py` | O estado do projeto em poucas linhas | No início da sessão |
 | `scripts/validar.py` | As checagens em script | A cada gravação (hook), antes da revisão e no pull request |
 | `scripts/rotina.py` | A rotina do dia: acha atas e arquivos novos, compara a data de hoje com os prazos do cronograma, guarda o histórico de cada data mudada, monta a lista do dia, registra o follow-up com o cliente e grava o diário | No início e no fim do dia, e quando um prazo muda |
 | `scripts/afazeres.py` | O que a lista do dia usa: os itens abertos, quem trava quem, a exposição dos riscos, as cobranças e as perguntas de cada frequência | Chamado pelo `rotina.py --lista` |
 | `scripts/governanca.py` | Sugere o nível de governança pelo porte, grava a escolha e os materiais, e mantém a linha de base, os desvios, as versões e o aceite | Depois do brief, quando o porte muda e a cada envio |
+| `scripts/cerebro.py` | O segundo cérebro: busca nas notas e nos registros, mostra o que falta absorver, marca o que cada nota absorveu, refaz o índice e confere as notas | A cada ação do projeto e antes de escrever |
 | `governanca/catalogo.tsv` | O catálogo dos materiais de governança, com o nível em que cada um entra, a cadência, o destinatário e os registros de onde sai | Lido pelo `governanca.py` |
 | `scripts/ambiente.py` | Confere se a máquina tem o Python, o Git e os programas do gerador, e diz como instalar o que falta em cada sistema | Antes de instalar e no início do projeto |
 | `scripts/preparar.py` | Cria os registros e as pastas de entregável e ativa pacotes | No início do projeto e a cada entregável novo |
@@ -29,7 +30,7 @@
 | `scripts/repositorio.py` | Diz se o remoto do git é local, privado ou público, e registra a confirmação do consultor | No início do projeto, a cada gravação de registro e a cada envio |
 | `scripts/dominio.py` | Aplica as regras do domínio do projeto e roda os casos de teste delas | A cada gravação, na validação e quando uma regra muda |
 | `scripts/conferir_interativo.js` | Abre um HTML interativo em um navegador sem interface, bloqueia a rede, lista os erros e grava as imagens. Opcional, pede Node e Playwright | Antes de entregar uma peça interativa |
-| `metodo/` | O método, as práticas de texto, o visual, os formatos, o HTML interativo e a rubrica | Aberto quando a tarefa toca no assunto |
+| `metodo/` | O método, as práticas de texto, o visual, os formatos, o HTML interativo, a rubrica e o segundo cérebro | Aberto quando a tarefa toca no assunto |
 | `listas/` | Os padrões das checagens de texto, por idioma | Lidas pelo `validar.py` |
 | `modelos/` | Os modelos dos registros, dos entregáveis e dos HTML interativos | Copiados pelo `preparar.py` |
 | `pacotes/` | A adaptação a cada tipo de projeto | Ativados no início do projeto |
@@ -53,6 +54,7 @@ as mesmas no arquivo que acabou de ser gravado.
 | Domínio | As regras que o projeto escreveu em `_dominio/`, e regra sem caso de teste que acusa e que passa |
 | Repositório | Projeto com conteúdo em remoto público ou não verificado |
 | Prazos | Ação aberta sem dono ou sem prazo, data ou estado inválido, item vencido sem resposta do consultor |
+| Segundo cérebro | Nota com ligação quebrada, id que não existe, sem fonte, sem resumo ou órfã, nota que copia a linha de um registro e item do projeto fora das notas. Só avisa |
 | Governança | Nível ou estado inválido, material fora do catálogo, id citado que não existe, ação concluída antes da confirmação do cliente, entregável sem aprovador |
 
 ## As três travas
@@ -66,6 +68,22 @@ ele recebe e corrige.
 | Fim de turno com conteúdo alterado e sem revisão registrada | `hooks/fim_do_turno.py` |
 | Registro de projeto gravado, ou envio feito, com o remoto público ou não verificado | `hooks/antes_de_gravar.py` e `hooks/antes_de_comando.py` |
 
+## Os gatilhos do segundo cérebro
+
+Cada ação do projeto leva à atualização das notas. Nenhum gatilho
+bloqueia: o de fim de turno segura o turno uma vez por item, e o agente
+pode seguir dizendo que a absorção ficou para o fechamento do dia.
+
+| Gatilho | O que acontece |
+| --- | --- |
+| Gravação de registro, material ou entregável | `hooks/depois_de_gravar.py` diz ao agente o item novo que nenhuma nota guarda, uma vez por item |
+| Gravação de uma nota | O mesmo hook confere a nota e devolve os avisos dela |
+| Fim de turno | `hooks/fim_do_turno.py` pede a absorção do que o turno registrou. O que já estava pendente antes não segura o turno |
+| Início de sessão | `scripts/estado.py` conta as notas e o que falta absorver |
+| Lista do dia | A caixa de entrada mostra o que está fora das notas |
+| Validação | `scripts/validar.py` avisa, sem reprovar |
+| Agente sem hooks | A regra 22 de `REGRAS.md` e o fechamento do dia da skill `rotina-diaria` |
+
 Em outros agentes que leem `AGENTS.md` e rodam comandos, valem as
 regras, as skills e as checagens. Sem hooks, as regras mandam rodar
 `estado.py` no início e `validar.py` antes de entregar.
@@ -77,8 +95,8 @@ uma atualização os substitui. Uma adaptação feita para este projeto fica
 registrada em `_projeto/licoes.md`, para ser reaplicada depois de
 atualizar. A licença do kit está em `LICENCA.txt`.
 
-O que está em `_projeto/`, em `_intake/`, em `_dominio/`, em `_atas/` e
-nas pastas de entregável é do projeto. O kit nunca substitui esses
+O que está em `_projeto/`, em `_intake/`, em `_dominio/`, em `_atas/`,
+em `_cerebro/` e nas pastas de entregável é do projeto. O kit nunca substitui esses
 arquivos.
 
 ## Os registros do dia a dia
@@ -124,7 +142,8 @@ uma organização ou dizer respeito a um cliente, e por isso:
   público e o harness bloqueia a gravação dos registros e o envio;
 - quando o remoto não responde, vale a confirmação do consultor, registrada
   em `_projeto/repositorio.tsv`;
-- nada de `_dominio/` volta ao template, nem como lição proposta.
+- nada de `_dominio/` nem de `_cerebro/` volta ao template, nem como
+  lição proposta.
 
 ## Adaptar o harness ao projeto
 
@@ -182,5 +201,10 @@ criado a partir do template, apague-os ao iniciar:
   avaliação de treinamento de Donald Kirkpatrick, no pacote de
   treinamento. O conteúdo de domínio dos pacotes é prática corrente de
   mercado, escrita com palavras próprias e sem material de terceiros.
+- No segundo cérebro: as quatro pastas PARA e os quatro passos CODE, de
+  Tiago Forte, *Building a Second Brain* (2022), e o índice, o registro
+  de atualizações e a conferência mantidos pelo agente, da nota "LLM
+  wiki", de Andrej Karpathy (2026). As práticas estão descritas com
+  palavras próprias.
 - Processo de trabalho com agentes adaptado de
   <https://github.com/brahm/project-template> (licença MIT).

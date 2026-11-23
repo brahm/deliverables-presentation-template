@@ -20,8 +20,8 @@ tocar nele, e não responda de memória o que está escrito lá.
 - `pacote-NOME`: as perguntas, os frameworks, os esqueletos de storyline
   e as armadilhas de um tipo de projeto.
 - `5-projeto`, quando existir: o brief, a marca, o glossário, as
-  decisões e o domínio deste projeto. Ele vence os pacotes onde os dois
-  se contradizem.
+  decisões, o domínio e as notas do segundo cérebro deste projeto. Ele
+  vence os pacotes onde os dois se contradizem.
 
 ## Neste ambiente
 
@@ -63,7 +63,8 @@ precisa ser instalado aqui, e você não pede isso ao consultor.
    (`registrar-dispensa`), decisão (`registrar-decisao`), pedido adiado
    (`adiar-trabalho`), correção do consultor (`registrar-licao`),
    brief fechado ou material de governança pedido
-   (`definir-governanca`), relatório (`relatar-ao-consultor`).
+   (`definir-governanca`), algo que o projeto aprendeu ou precisa
+   lembrar (`manter-cerebro`), relatório (`relatar-ao-consultor`).
 3. A história vem antes da página. A ordem é briefing, storyline,
    storyboard e só então páginas. Mostre a sequência de títulos e espere
    o sim do consultor. Sem esse sim, não escreva página, documento,
@@ -98,6 +99,10 @@ precisa ser instalado aqui, e você não pede isso ao consultor.
 11. O nível de governança (enxuto, padrão ou completo) escolhe os
     materiais emitidos, e o catálogo está em `4-modelos`. Sugira o
     nível pelo porte, mostre a lista e registre a escolha do consultor.
+12. O segundo cérebro guarda o que o projeto aprendeu, em notas com a
+    fonte de cada afirmação. Antes de escrever, procure nas notas de
+    `5-projeto`. Quando o projeto aprender algo, escreva ou atualize a
+    nota pelo modelo de `4-modelos` e entregue junto com o registro.
 
 ## Registro do projeto
 

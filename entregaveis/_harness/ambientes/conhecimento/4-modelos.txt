@@ -1,6 +1,6 @@
 # Modelos
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.9.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.10.0. Gerado por empacotar.py: não edite à mão.
 
 Cada modelo é a forma de uma seção do registro do projeto ou de uma parte de um entregável. PREENCHER marca o que ainda precisa ser escrito.
 
@@ -821,4 +821,34 @@ terceiros	Gestão de terceiros	completo	controle	semanal, quando existem	gestor	
 comunicados	Comunicados do projeto	completo	controle	nos marcos	áreas afetadas		O que foi entregue, o que muda, próximos passos e perguntas frequentes	versoes.tsv, decisoes.md
 caso	Caso e credencial	completo	encerramento	depois do aceite	consultoria		Desafio, abordagem, resultado e permissão de citação	brief.md, versoes.tsv, licoes.md
 revisao-de-beneficios	Revisão de benefícios depois do projeto	completo	encerramento	de três a seis meses depois	patrocinador e dono do benefício		Benefício previsto contra realizado, causas e ações	premissas.tsv, perguntas.tsv
+~~~
+
+## Nota do segundo cérebro
+
+### nota.md
+
+~~~text
+---
+titulo: PREENCHER
+resumo: PREENCHER
+fontes: PREENCHER
+atualizada:
+---
+# PREENCHER
+
+## Em resumo
+
+PREENCHER: até cinco linhas com o que alguém precisa saber em trinta segundos.
+
+## O que sabemos
+
+- PREENCHER: uma afirmação por linha, com o id do registro de onde ela vem entre parênteses.
+
+## Em aberto
+
+- PREENCHER: o que falta saber ou confirmar, e com quem.
+
+## Ligações
+
+- PREENCHER: a nota vizinha, como ligação de Markdown com caminho relativo, e o motivo da ligação.
 ~~~

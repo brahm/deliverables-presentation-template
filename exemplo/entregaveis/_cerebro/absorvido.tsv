@@ -1,0 +1,40 @@
+# O que o segundo cérebro já leu em cada registro do projeto. Quem escreve é cerebro.py --absorver.
+# item: o id da linha (E-008, D-003, A-001) ou o arquivo (brief.md, ID/briefing.md).
+# marca: o resumo do conteúdo no dia da leitura. Quando a linha muda, o item volta a aparecer em --pendentes.
+# notas: as notas que guardam o que o item ensina, ou nada quando ele não trouxe conhecimento novo.
+item	marca	absorvido_em	notas
+M-003	43579191a551	2026-10-12	3-recursos/materiais-recebidos.md
+M-004	0cd59bee4829	2026-10-12	3-recursos/materiais-recebidos.md
+M-005	8fe632c05342	2026-10-12	3-recursos/materiais-recebidos.md
+M-006	166f57a1d19d	2026-10-12	3-recursos/materiais-recebidos.md
+M-008	2644d4bc3f76	2026-10-12	3-recursos/materiais-recebidos.md
+M-009	5a48b76ae070	2026-10-12	3-recursos/materiais-recebidos.md
+dominio.md	90f2851dec29	2026-10-12	3-recursos/metodo-de-avaliacao.md
+D-001	19d692025bd9	2026-10-12	3-recursos/metodo-de-avaliacao.md
+D-004	403093c934ef	2026-10-12	3-recursos/metodo-de-avaliacao.md
+E-001	ce3656dc2ce0	2026-10-12	2-areas/plataformas-de-marketing.md
+E-002	fc21149d51af	2026-10-12	2-areas/plataformas-de-marketing.md
+E-003	d525fe7214fd	2026-10-12	2-areas/plataformas-de-marketing.md
+E-004	4539bea92335	2026-10-12	2-areas/plataformas-de-marketing.md
+E-005	0926c9f22742	2026-10-12	2-areas/plataformas-de-marketing.md
+brief.md	1df0159e7971	2026-10-19	2-areas/diretoria-da-lojas-exemplo.md
+audiencia.md	8cd023ecfb37	2026-10-19	2-areas/diretoria-da-lojas-exemplo.md
+D-002	e8c2cdc8e061	2026-10-19	2-areas/diretoria-da-lojas-exemplo.md
+D-006	9128c272b682	2026-10-19	2-areas/diretoria-da-lojas-exemplo.md
+leitura-executiva/briefing.md	3306058ced20	2026-10-21	4-arquivo/leitura-executiva.md
+leitura-executiva/storyline.md	2374b631944e	2026-10-21	4-arquivo/leitura-executiva.md
+D-003	c3ae5d9641c2	2026-10-21	4-arquivo/leitura-executiva.md
+D-007	bf1c6ddbfdf3	2026-10-21	4-arquivo/leitura-executiva.md
+E-006	2ca5c8683bd6	2026-11-06	1-projetos/saida-das-duas-plataformas-de-marco.md
+E-007	80792f5dcb3b	2026-11-06	1-projetos/saida-das-duas-plataformas-de-marco.md
+E-008	50428dec65e0	2026-11-06	1-projetos/saida-das-duas-plataformas-de-marco.md
+RS-001	c4cdc6197ce3	2026-11-06	1-projetos/saida-das-duas-plataformas-de-marco.md
+PR-001	b8390e5da366	2026-11-06	1-projetos/saida-das-duas-plataformas-de-marco.md
+D-005	b4fbdee75f3a	2026-11-06	1-projetos/saida-das-duas-plataformas-de-marco.md
+D-008	45ef5498816c	2026-11-06	1-projetos/saida-das-duas-plataformas-de-marco.md
+A-001	d88587e03697	2026-11-06	2-areas/diretoria-da-lojas-exemplo.md
+L-001	fa5c71c78643	2026-11-06	2-areas/diretoria-da-lojas-exemplo.md
+L-002	20de65c306f0	2026-11-06	2-areas/diretoria-da-lojas-exemplo.md
+D-009	d1c63dd1a107	2026-11-06	2-areas/plataformas-de-marketing.md
+leitura-executiva/fechamento.md	6967c1005d18	2026-11-06	4-arquivo/leitura-executiva.md
+D-010	d5460ceb2ffb	2026-11-06	nada

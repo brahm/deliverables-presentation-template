@@ -64,7 +64,10 @@ levante, encaixe e pergunte.
    como nos passos 6 a 9 de `iniciar-projeto`. Os métodos e os padrões
    que o projeto já segue entram no domínio, com a skill
    `calibrar-dominio`.
-10. Marque `iniciado: sim`, rode `validar.py` e relate com
+10. Abra o segundo cérebro com `manter-cerebro`: primeiro as notas do
+    cliente, das pessoas e do que é avaliado. O resto entra por
+    assunto, nos dias seguintes.
+11. Marque `iniciado: sim`, rode `validar.py` e relate com
     `relatar-ao-consultor`: o que você encontrou, onde cada coisa foi
     encaixada, os conflitos, o que o material existente reprova e as
     perguntas.

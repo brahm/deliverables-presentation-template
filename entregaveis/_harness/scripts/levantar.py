@@ -43,6 +43,7 @@ PISTAS = {
     "Possíveis escopos e propostas": r"sow|escopo|proposta|propuesta|proposal|contrato|statement.?of.?work",
     "Possíveis regras de confidencialidade": r"confidenc|nda|sigilo|classifica|data.?handling|lgpd|gdpr",
     "Possíveis pedidos de dados": r"data.?request|pedido.?de.?dados|solicitud.?de.?datos|drl",
+    "Possíveis bases de conhecimento": r"wiki|second.?brain|segundo.?c[ée]rebro|zettel|knowledge|conhecimento|(?<![a-z])notas?(?![a-z])|(?<![a-z])notes?(?![a-z])|mem[oó]ria|memory",
     "Possíveis materiais de governança": r"status|(?<![a-z])atas?(?![a-z])|acta|minuta|cronograma|schedule|raci|riscos?(?![a-z])|risk|kick.?off|abertura|charter|steering|comit|plano.?d[eo].?projeto|aceite|change.?request|mudanca|mudança",
 }
 

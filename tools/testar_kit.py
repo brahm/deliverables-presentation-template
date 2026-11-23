@@ -1953,6 +1953,304 @@ def testar_governanca(tmp: Path) -> None:
     confere("a lista do dia lê o registro de versão anterior", "T-001 (ação): Item antigo" in rodar([PY, "entregaveis/_harness/scripts/rotina.py", "--lista"], antigo).stdout)
 
 
+# --- Segundo cérebro --------------------------------------------------------
+
+
+def testar_cerebro(tmp: Path) -> None:
+    print("Segundo cérebro do projeto")
+    confere("o template não traz segundo cérebro de projeto nenhum", not (RAIZ / "entregaveis/_cerebro").exists())
+    projeto = tmp / "cerebro"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    reg = base / "_projeto"
+    pasta = base / "_cerebro"
+    hoje = "2026-11-10"
+
+    def cer(*args) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/cerebro.py", *args], projeto)
+
+    def a_absorver() -> set:
+        return set(re.findall(r"^- (\S+?)(?: \(|:)", cer("--pendentes").stdout, flags=re.MULTILINE))
+
+    def estado() -> str:
+        return rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout
+
+    def avisos() -> str:
+        return cer("--conferir").stdout
+
+    def acrescentar(arquivo: Path, *campos) -> None:
+        with arquivo.open("a", encoding="utf-8") as f:
+            f.write("\t".join(str(c) for c in campos) + "\n")
+
+    def trocar(arquivo: Path, antes: str, depois: str) -> None:
+        texto = arquivo.read_text(encoding="utf-8")
+        assert antes in texto, antes
+        arquivo.write_text(texto.replace(antes, depois, 1), encoding="utf-8")
+
+    def nota(caminho: str, titulo: str, sabemos: str, ligacoes: str = "", resumo: str = "O que importa sobre o assunto.", fontes: str = "E-001") -> Path:
+        alvo = pasta / caminho
+        alvo.write_text(f"---\ntitulo: {titulo}\nresumo: Resumo de {titulo.lower()}.\nfontes: {fontes}\natualizada:\n---\n# {titulo}\n\n## Em resumo\n\n{resumo}\n\n"
+                        f"## O que sabemos\n\n{sabemos}\n\n## Em aberto\n\n- Nada.\n\n## Ligações\n\n{ligacoes}\n", encoding="utf-8")
+        return alvo
+
+    confere("a instalação cria as quatro pastas, o índice, o registro e o controle", all((pasta / n).exists() for n in ("1-projetos", "2-areas", "3-recursos", "4-arquivo", "indice.md", "registro.md", "absorvido.tsv", "LEIA-ME.md")))
+    confere("projeto que não começou não tem nada a absorver", "Nada a absorver" in cer("--pendentes").stdout and "Segundo cérebro" not in estado())
+    confere("projeto que não começou não recebe aviso do segundo cérebro", "[cerebro]" not in validar(projeto, "--so", "cerebro").stdout)
+
+    montar_exemplo(projeto)
+    confere("as fontes são a evidência, o brief, o briefing completo e a storyline aprovada", a_absorver() == {"E-001", "brief.md", "diag/briefing.md", "diag/storyline.md"}, cer("--pendentes").stdout)
+    confere("o estado conta as notas e o que falta absorver", "Segundo cérebro: 0 nota(s), 4 item(ns) do projeto a absorver" in estado(), estado())
+    trocar(base / "diag/storyline.md", "aprovada: sim", "aprovada: nao")
+    confere("storyline sem aprovação ainda não é fonte", "diag/storyline.md" not in a_absorver())
+    trocar(base / "diag/storyline.md", "aprovada: nao", "aprovada: sim")
+    (base / "diag/fechamento.md").write_text("# Fechamento\n\nPREENCHER: o que a audiência decidiu.\n", encoding="utf-8")
+    confere("arquivo com trecho por preencher ainda não é fonte", "diag/fechamento.md" not in a_absorver())
+    (base / "diag/fechamento.md").write_text("# Fechamento\n\nA diretoria aprovou o pedido.\n", encoding="utf-8")
+    confere("o fechamento escrito é fonte", "diag/fechamento.md" in a_absorver())
+    (base / "diag/fechamento.md").unlink()
+
+    # O que entra e o que fica só nos registros.
+    acrescentar(base / "_intake/registro.tsv", "M-050", "Relatório de uso", "dados", "Cliente", "2026-11-01", "2026-11-20", "pedido", "", "")
+    acrescentar(base / "_intake/registro.tsv", "M-051", "Contratos das plataformas", "dados", "Cliente", "2026-11-01", "2026-11-20", "recebido", "", "")
+    confere("material recebido é fonte, e material só pedido não", "M-051" in a_absorver() and "M-050" not in a_absorver())
+    acrescentar(reg / "acoes.tsv", "T-070", "tarefa", "Cobrar o inventário", "Consultora", "consultoria", "2026-11-03", "2026-11-20", "nao", "aberta", "consultor", "2026-11-03", "", "", "")
+    acrescentar(reg / "prazos.tsv", "T-070", "2026-11-18", "2026-11-18", "2026-11-20", "2026-11-05", "consultor", "Férias do cliente")
+    acrescentar(reg / "cobrancas.tsv", "T-070", "2026-11-06", "consultor", "cobrado", "")
+    confere("tarefa, mudança de data e cobrança não são fonte", not ({"T-070"} & a_absorver()) and len(a_absorver()) == 5, cer("--pendentes").stdout)
+    recusa = cer("--absorver", "T-070", "--nada", "teste")
+    confere("absorver uma tarefa é recusado, com o motivo", recusa.returncode == 2 and "Não é fonte" in recusa.stdout and "T-070" in recusa.stdout, recusa.stdout)
+    acrescentar(reg / "riscos.tsv", "RS-001", "O inventário atrasa", "Depende de uma pessoa", "A leitura sai sem custo", "Consultora", "aberto", "consultor", "2026-11-03", "media", "alta", "", "Cobrar toda semana")
+    with (reg / "decisoes.md").open("a", encoding="utf-8") as f:
+        f.write("| D-001 | 2026-11-03 | A leitura executiva é projetada em reunião | Palavras da consultora | Vigente |\n")
+    confere("risco e decisão são fontes", {"RS-001", "D-001"} <= a_absorver(), cer("--pendentes").stdout)
+
+    # Criar uma nota.
+    criada = cer("--nova", "2", "Plataformas do cliente", "--resumo", "O que o cliente contrata.", "--hoje", hoje)
+    alvo = pasta / "2-areas/plataformas-do-cliente.md"
+    confere("--nova cria a nota na pasta, com o título, o resumo e a data", criada.returncode == 0 and alvo.is_file() and "titulo: Plataformas do cliente" in alvo.read_text(encoding="utf-8") and "resumo: O que o cliente contrata." in alvo.read_text(encoding="utf-8") and f"atualizada: {hoje}" in alvo.read_text(encoding="utf-8"), criada.stdout + criada.stderr)
+    confere("--nova recusa a nota repetida e a pasta que não existe", cer("--nova", "3-recursos", "Plataformas do cliente").returncode == 1 and cer("--nova", "9", "Outra").returncode == 2 and not (pasta / "3-recursos/plataformas-do-cliente.md").exists())
+    confere("nota por preencher é avisada", "plataformas-do-cliente.md: A nota ainda tem trechos por preencher" in avisos(), avisos())
+
+    # Absorver.
+    confere("absorver pede a nota ou o motivo, e não os dois", cer("--absorver", "E-001").returncode == 2 and cer("--absorver", "E-001", "--nota", "2-areas/plataformas-do-cliente.md", "--nada", "x").returncode == 2)
+    confere("absorver em nota que não existe é recusado", cer("--absorver", "E-001", "--nota", "2-areas/nao-existe.md").returncode == 2)
+    crua = cer("--absorver", "E-001", "--nota", "2-areas/plataformas-do-cliente.md", "--hoje", hoje)
+    confere("a nota por preencher não absorve", crua.returncode == 1 and "ainda tem trechos por preencher" in crua.stdout and "E-001" in a_absorver(), crua.stdout)
+    nota("2-areas/plataformas-do-cliente.md", "Plataformas do cliente", "- Os contratos chegaram em novembro (M-051).", fontes="M-051")
+    sem_id = cer("--absorver", "E-001,M-051", "--nota", "2-areas/plataformas-do-cliente.md", "--hoje", hoje)
+    confere("a nota que não cita o item não absorve, e nada é gravado", sem_id.returncode == 1 and "Nenhuma das notas cita E-001" in sem_id.stdout and "\t" + hoje not in (pasta / "absorvido.tsv").read_text(encoding="utf-8") and {"E-001", "M-051"} <= a_absorver(), sem_id.stdout)
+    nota("2-areas/plataformas-do-cliente.md", "Plataformas do cliente", "- O inventário fechou em 14 plataformas (E-001).\n- Os contratos chegaram em novembro e a avaliação usou o roteiro da consultora (M-051).")
+    feito = cer("--absorver", "E-001,M-051", "--nota", "2-areas/plataformas-do-cliente.md", "--o-que", "Inventário e contratos", "--hoje", hoje)
+    controle = (pasta / "absorvido.tsv").read_text(encoding="utf-8")
+    confere("absorver marca os itens com a nota e a data", feito.returncode == 0 and re.search(rf"^E-001\t\w+\t{hoje}\t2-areas/plataformas-do-cliente.md$", controle, flags=re.MULTILINE) is not None and "M-051\t" in controle, feito.stdout + controle)
+    confere("absorver escreve a linha no registro de atualizações", f"- {hoje} | E-001, M-051 | 2-areas/plataformas-do-cliente.md | Inventário e contratos" in (pasta / "registro.md").read_text(encoding="utf-8"))
+    confere("absorver data a nota e refaz o índice", f"atualizada: {hoje}" in alvo.read_text(encoding="utf-8") and "- [Plataformas do cliente](2-areas/plataformas-do-cliente.md): Resumo de plataformas do cliente. Fontes: E-001." in (pasta / "indice.md").read_text(encoding="utf-8"), (pasta / "indice.md").read_text(encoding="utf-8"))
+    confere("o item absorvido sai da lista", not ({"E-001", "M-051"} & a_absorver()) and "Ainda há 5 item(ns)" in feito.stdout, feito.stdout)
+    nada = cer("--absorver", "D-001", "--nada", "Decisão de forma, sem conhecimento novo", "--hoje", hoje)
+    confere("o item que não ensina sai com o motivo no registro", nada.returncode == 0 and "D-001" not in a_absorver() and f"- {hoje} | D-001 | nada | Decisão de forma, sem conhecimento novo" in (pasta / "registro.md").read_text(encoding="utf-8"), nada.stdout)
+
+    # O que muda volta à lista.
+    trocar(reg / "evidencias.tsv", "\talta\tdiag", "\talta\tdiag, status")
+    confere("coluna que não muda o que se sabe não devolve o item", "E-001" not in a_absorver())
+    trocar(reg / "evidencias.tsv", "Plataformas contratadas\t14", "Plataformas contratadas\t15")
+    mudou = cer("--pendentes").stdout
+    confere("o item que mudou volta, com a nota que o guardava", "- E-001 (evidencias.tsv)" in mudou and "Mudou desde a absorção em 2-areas/plataformas-do-cliente.md" in mudou, mudou)
+    trocar(alvo, "14 plataformas", "15 plataformas")
+    cer("--absorver", "E-001", "--nota", "2-areas/plataformas-do-cliente.md", "--hoje", hoje)
+    nota("4-arquivo/diag.md", "Diagnóstico de martech", "- O pedido e a audiência estão no [briefing](../../diag/briefing.md).\n- A sequência aprovada está na [storyline](../../diag/storyline.md).", fontes="diag/briefing.md, diag/storyline.md")
+    cer("--absorver", "diag/briefing.md,diag/storyline.md", "--nota", "4-arquivo/diag.md", "--hoje", hoje)
+    trocar(base / "diag/briefing.md", "estado: redacao", "estado: revisao")
+    confere("a etapa do entregável não devolve o briefing", "diag/briefing.md" not in a_absorver(), cer("--pendentes").stdout)
+    with (base / "diag/briefing.md").open("a", encoding="utf-8") as f:
+        f.write("\nA diretoria pediu o custo por loja.\n")
+    confere("o briefing que mudou no texto volta à lista", "diag/briefing.md" in a_absorver())
+    varios = cer("--absorver", "pendentes", "--nota", "4-arquivo/diag.md", "--hoje", hoje)
+    confere("absorver os pendentes em nota que não cita todos é recusado, com a lista", varios.returncode == 1 and "brief.md" in varios.stdout and "RS-001" in varios.stdout and "RS-001" in a_absorver(), varios.stdout)
+    confere("absorver os pendentes com motivo esvazia a lista", cer("--absorver", "pendentes", "--nada", "Semeadura do teste", "--hoje", hoje).returncode == 0 and "Nada a absorver" in cer("--pendentes").stdout and "Nada a absorver" in cer("--absorver", "pendentes", "--nada", "x").stdout)
+    confere("sem pendência, o estado só conta as notas", "Segundo cérebro: 2 nota(s). Antes de escrever" in estado(), estado())
+
+    # Busca.
+    nota("3-recursos/metodo.md", "Método de avaliação", "- A repetição de plataformas é medida por capacidade (E-001).\n- Plataformas contratadas entram no inventário, com ou sem uso.", "- [Plataformas do cliente](../2-areas/plataformas-do-cliente.md): o resultado.")
+    busca = cer("--buscar", "PLATAFORMAS")
+    ordem = re.findall(r"^- (entregaveis/_cerebro/\S+)", busca.stdout, flags=re.MULTILINE)
+    confere("a busca ignora maiúscula e põe o título antes do corpo", busca.returncode == 0 and ordem[:2] == ["entregaveis/_cerebro/2-areas/plataformas-do-cliente.md", "entregaveis/_cerebro/3-recursos/metodo.md"], busca.stdout)
+    pelo_titulo = re.findall(r"^- (entregaveis/_cerebro/\S+)", cer("--buscar", "avaliacao").stdout, flags=re.MULTILINE)
+    confere("a busca põe a nota que traz o termo no título antes da que só cita", pelo_titulo == ["entregaveis/_cerebro/3-recursos/metodo.md", "entregaveis/_cerebro/2-areas/plataformas-do-cliente.md"], str(pelo_titulo))
+    confere("a busca ignora acento e mostra a linha da nota", "metodo.md" in cer("--buscar", "repeticao").stdout and re.search(r"^\s+\d+: - A repetição", cer("--buscar", "repeticao").stdout, flags=re.MULTILINE) is not None, cer("--buscar", "repeticao").stdout)
+    confere("a busca traz as linhas dos registros", "Registros (" in busca.stdout and "entregaveis/_projeto/evidencias.tsv:" in busca.stdout and "E-001 | Plataformas contratadas | 15" in busca.stdout, busca.stdout)
+    confere("a busca acha a tarefa no registro, que não é nota", "acoes.tsv" in cer("--buscar", "cobrar", "inventario").stdout and "Notas (" not in cer("--buscar", "cobrar", "inventario").stdout)
+    confere("a busca exige todos os termos", "metodo.md" in cer("--buscar", "repetição", "capacidade").stdout and "metodo.md" not in cer("--buscar", "repetição", "contratos").stdout)
+    vazio = cer("--buscar", "girafa")
+    confere("a busca sem resultado diz que não há nada", vazio.returncode == 1 and "Nada no segundo cérebro nem nos registros" in vazio.stdout)
+    por_id = cer("--id", "E-001")
+    confere("--id mostra a linha do registro e as notas que citam", "Registro: entregaveis/_projeto/evidencias.tsv" in por_id.stdout and por_id.stdout.count("Nota: ") == 2, por_id.stdout)
+    confere("--id diz quando nenhuma nota cita", "Nenhuma nota cita RS-001" in cer("--id", "RS-001").stdout)
+
+    # Conferência.
+    trocar(pasta / "4-arquivo/diag.md", "## Ligações\n\n", "## Ligações\n\n- [Método de avaliação](../3-recursos/metodo.md): como foi medido.\n")
+    trocar(alvo, "## Ligações\n\n", "## Ligações\n\n- [Diagnóstico de martech](../4-arquivo/diag.md): o entregável.\n")
+    cer("--indice")
+    confere("notas ligadas, com fonte e resumo curto passam, e um trecho curto igual ao do registro não é cópia", "Segundo cérebro em ordem" in avisos(), avisos())
+    confere("a checagem do segundo cérebro entra no validar", "Nenhum erro e nenhum aviso" in validar(projeto, "--so", "cerebro").stdout)
+
+    def acusa(arquivo: Path, antes: str, depois: str, espera: str, nome: str) -> None:
+        original = arquivo.read_text(encoding="utf-8")
+        assert antes in original, antes
+        arquivo.write_text(original.replace(antes, depois, 1), encoding="utf-8")
+        saida = avisos()
+        arquivo.write_text(original, encoding="utf-8")
+        confere(nome, espera in saida and espera not in avisos(), saida)
+
+    acusa(alvo, "(../4-arquivo/diag.md)", "(../4-arquivo/sumiu.md)", "A ligação para '../4-arquivo/sumiu.md' não leva a lugar nenhum", "conferência: ligação quebrada")
+    acusa(alvo, "(M-051)", "(M-051, E-999)", "Cita E-999, que não existe em nenhum registro", "conferência: id que não existe")
+    acusa(pasta / "4-arquivo/diag.md", "fontes: diag/briefing.md, diag/storyline.md", "fontes:", "A nota não cita nenhuma fonte", "conferência: nota sem fonte")
+    acusa(alvo, "O que importa sobre o assunto.", "Um.\nDois.\nTrês.\nQuatro.\nCinco.\nSeis.", "A seção 'Em resumo' tem 6 linhas", "conferência: resumo longo")
+    cinco = alvo.read_text(encoding="utf-8")
+    alvo.write_text(cinco.replace("O que importa sobre o assunto.", "Um.\nDois.\nTrês.\nQuatro.\nCinco."), encoding="utf-8")
+    confere("conferência: cinco linhas de resumo cabem", "A seção 'Em resumo' tem" not in avisos(), avisos())
+    alvo.write_text(cinco, encoding="utf-8")
+    acusa(alvo, "## Em resumo", "## Síntese", "Falta a seção 'Em resumo'", "conferência: nota sem resumo")
+    acusa(alvo, "titulo: Plataformas do cliente", "titulo:", "Falta 'titulo' no cabeçalho", "conferência: nota sem título")
+    acusa(pasta / "3-recursos/metodo.md", "- [Plataformas do cliente](../2-areas/plataformas-do-cliente.md): o resultado.", "", "plataformas-do-cliente.md: Nenhuma outra nota aponta para esta", "conferência: nota órfã")
+    acrescentar(reg / "evidencias.tsv", "E-002", "Custo anual das três plataformas que repetem uma capacidade atendida por outra", "R$ 1,9 milhão", "Contratos", "2026-11-04", "fato", "alta", "diag")
+    acusa(alvo, "- O inventário fechou", "- Custo anual das três plataformas que repetem uma capacidade atendida por outra: R$ 1,9 milhão (E-002).\n- O inventário fechou", "Repete o texto de E-002", "conferência: nota que copia a linha do registro")
+    trocar(alvo, "- O inventário fechou", "- A repetição custa caro e abre a conversa com o financeiro (E-002).\n- O inventário fechou")
+    confere("conferência: citar o id e dizer o que significa não é cópia", "Repete o texto" not in avisos(), avisos())
+    confere("conferência: avisa do que o projeto registrou e nenhuma nota guarda", "1 item(ns) do projeto ainda fora do segundo cérebro (E-002)" in avisos() and "AVISO [cerebro]" in validar(projeto, "--so", "cerebro").stdout and validar(projeto, "--so", "cerebro").returncode == 0, avisos())
+    cer("--absorver", "E-002", "--nota", "2-areas/plataformas-do-cliente.md", "--hoje", hoje)
+    trocar(alvo, "resumo: Resumo de plataformas do cliente.", "resumo: O que o cliente contrata e quanto custa.")
+    confere("conferência: índice que não reflete as notas", "O índice não reflete as notas" in avisos() and "Índice refeito" in cer("--indice").stdout and "O índice não reflete" not in avisos() and "já estava em dia" in cer("--indice").stdout)
+    nota("1-projetos/diag.md", "Entregável diag", "- Em produção (E-001).", "- [Método de avaliação](../3-recursos/metodo.md): o método.")
+    trocar(pasta / "3-recursos/metodo.md", "## Ligações\n\n", "## Ligações\n\n- [Entregável diag](../1-projetos/diag.md): onde é usado.\n")
+    confere("conferência: nota de entregável em andamento fica nos projetos", "foi entregue" not in avisos(), avisos())
+    trocar(base / "diag/briefing.md", "estado: revisao", "estado: entregue")
+    confere("conferência: nota de entregável entregue vai ao arquivo", "1-projetos/diag.md: O entregável diag foi entregue. Leve a nota ao arquivo" in avisos(), avisos())
+
+    # Mover.
+    (pasta / "4-arquivo/diag.md").rename(pasta / "4-arquivo/diagnostico.md")
+    trocar(alvo, "(../4-arquivo/diag.md)", "(../4-arquivo/diagnostico.md)")
+    trocar(pasta / "4-arquivo/diagnostico.md", "(../3-recursos/metodo.md)", "(./../3-recursos/metodo.md)")
+    (pasta / "1-projetos/frente").mkdir()
+    nota("1-projetos/frente/funda.md", "Nota funda", "- Em produção (E-001).", "- [Método de avaliação](../../3-recursos/metodo.md): o método.")
+    funda = cer("--mover", "1-projetos/frente/funda.md", "arquivo", "--hoje", hoje)
+    confere("--mover refaz as ligações de uma nota que muda de profundidade", funda.returncode == 0 and "(../3-recursos/metodo.md)" in (pasta / "4-arquivo/funda.md").read_text(encoding="utf-8"), funda.stdout + funda.stderr)
+    confere("--mover não reescreve a ligação que não aponta para a nota movida", "(./../3-recursos/metodo.md)" in (pasta / "4-arquivo/diagnostico.md").read_text(encoding="utf-8"))
+    (pasta / "4-arquivo/funda.md").unlink()
+    cer("--indice")
+    movida = cer("--mover", "1-projetos/diag.md", "arquivo", "--hoje", hoje)
+    destino = pasta / "4-arquivo/diag.md"
+    confere("--mover leva a nota à outra pasta", movida.returncode == 0 and destino.is_file() and not (pasta / "1-projetos/diag.md").exists(), movida.stdout + movida.stderr)
+    confere("--mover refaz a ligação de quem apontava para a nota", "(../4-arquivo/diag.md)" in (pasta / "3-recursos/metodo.md").read_text(encoding="utf-8"))
+    confere("--mover refaz as ligações da nota movida", "(../3-recursos/metodo.md)" in destino.read_text(encoding="utf-8") and "não leva a lugar nenhum" not in avisos(), avisos())
+    confere("--mover escreve no registro e refaz o índice", f"- {hoje} | 1-projetos/diag.md | 4-arquivo/diag.md | nota movida" in (pasta / "registro.md").read_text(encoding="utf-8") and "(4-arquivo/diag.md)" in (pasta / "indice.md").read_text(encoding="utf-8"))
+    cer("--mover", "2-areas/plataformas-do-cliente.md", "3-recursos", "--hoje", hoje)
+    alvo = pasta / "3-recursos/plataformas-do-cliente.md"
+    confere("--mover corrige o caminho da nota no controle do que foi absorvido", "\t3-recursos/plataformas-do-cliente.md" in (pasta / "absorvido.tsv").read_text(encoding="utf-8") and "2-areas/plataformas-do-cliente.md" not in (pasta / "absorvido.tsv").read_text(encoding="utf-8"))
+    (pasta / "1-projetos/metodo.md").write_text("# Outra\n", encoding="utf-8")
+    ocupado = cer("--mover", "3-recursos/metodo.md", "projetos")
+    confere("--mover recusa o destino ocupado e a pasta que não existe", ocupado.returncode == 1 and (pasta / "3-recursos/metodo.md").is_file() and (pasta / "1-projetos/metodo.md").read_text(encoding="utf-8") == "# Outra\n" and cer("--mover", "3-recursos/metodo.md", "9").returncode == 2 and cer("--mover", "3-recursos/nao-existe.md", "arquivo").returncode == 2, ocupado.stdout)
+    (pasta / "1-projetos/metodo.md").unlink()
+
+    # Gatilhos: gravação, começo e fim do turno.
+    hooks = base / "_harness/hooks"
+
+    def hook(nome: str, dados: dict) -> subprocess.CompletedProcess:
+        return rodar([PY, hooks / nome], projeto, json.dumps({"cwd": str(projeto), **dados}))
+
+    def gravacao(caminho: str, sessao: str) -> dict:
+        return {"session_id": sessao, "tool_name": "Write", "tool_input": {"file_path": caminho}}
+
+    def contexto(caminho: str, sessao: str) -> str:
+        """O que o hook de depois da gravação devolve ao agente como contexto."""
+        saida = hook("depois_de_gravar.py", gravacao(caminho, sessao))
+        assert saida.returncode == 0, saida.stderr
+        return json.loads(saida.stdout)["hookSpecificOutput"]["additionalContext"] if saida.stdout.strip() else ""
+
+    cer("--absorver", "pendentes", "--nada", "Antes dos gatilhos", "--hoje", hoje)
+    confere("gravação sem nada novo não lembra o segundo cérebro", "Segundo cérebro" not in contexto("entregaveis/_projeto/evidencias.tsv", "c1"))
+    hook("mensagem.py", {"session_id": "c1", "prompt": "registre o achado"})
+    calado = hook("fim_do_turno.py", {"session_id": "c1"})
+    confere("fim do turno: turno que não registrou nada segue", calado.returncode == 0, calado.stderr)
+    acrescentar(reg / "evidencias.tsv", "E-003", "Tempo do carrinho abandonado até a campanha", "2 dias", "Medição", "2026-11-05", "fato", "alta", "diag")
+    lembrete = contexto("entregaveis/_projeto/evidencias.tsv", "c1")
+    confere("gravação de registro com item novo lembra o segundo cérebro", "Segundo cérebro: 1 item(ns) a absorver (E-003)" in lembrete and "manter-cerebro" in lembrete, lembrete)
+    confere("o lembrete da gravação não se repete para o mesmo item", "Segundo cérebro" not in contexto("entregaveis/_projeto/evidencias.tsv", "c1"))
+    confere("gravação fora do projeto não lembra nada", contexto("README.md", "c9") == "")
+    cobrado = hook("fim_do_turno.py", {"session_id": "c1"})
+    confere("fim do turno: cobra o que o turno registrou e nenhuma nota guarda", cobrado.returncode == 2 and "1 item(ns) que o segundo cérebro ainda não guarda (E-003)" in cobrado.stderr and "manter-cerebro" in cobrado.stderr, cobrado.stdout + cobrado.stderr)
+    confere("fim do turno: cobra uma vez por item", hook("fim_do_turno.py", {"session_id": "c1"}).returncode == 0)
+    hook("mensagem.py", {"session_id": "c2", "prompt": "siga"})
+    confere("fim do turno: o que já estava pendente antes do turno não segura o turno", hook("fim_do_turno.py", {"session_id": "c2"}).returncode == 0)
+    acrescentar(reg / "evidencias.tsv", "E-004", "Nota de maturidade em dados", "2 em 5", "Entrevistas", "2026-11-05", "fato", "alta", "diag")
+    confere("fim do turno: não cobra de novo quando o hook já segurou o turno", hook("fim_do_turno.py", {"session_id": "c2", "stop_hook_active": True}).returncode == 0)
+    confere("fim do turno: sem o retrato do começo do turno, não cobra", hook("fim_do_turno.py", {"session_id": "c3"}).returncode == 0)
+    confere("fim do turno: com o retrato, cobra o item novo", hook("fim_do_turno.py", {"session_id": "c2"}).returncode == 2)
+    trocar(alvo, "- O inventário fechou", "- O carrinho demora dois dias e a maturidade é baixa (E-003, E-004).\n- O inventário fechou")
+    cer("--absorver", "E-003,E-004", "--nota", "3-recursos/plataformas-do-cliente.md", "--hoje", hoje)
+    hook("mensagem.py", {"session_id": "c4", "prompt": "siga"})
+    acrescentar(reg / "evidencias.tsv", "E-005", "Contratos que vencem em março", "2", "Contratos", "2026-11-05", "fato", "alta", "diag")
+    trocar(alvo, "(E-003, E-004)", "(E-003, E-004). Dois contratos vencem em março (E-005)")
+    cer("--absorver", "E-005", "--nota", "3-recursos/plataformas-do-cliente.md", "--hoje", hoje)
+    confere("fim do turno: o que foi absorvido no próprio turno não é cobrado", hook("fim_do_turno.py", {"session_id": "c4"}).returncode == 0)
+    limpa = contexto("entregaveis/_cerebro/3-recursos/plataformas-do-cliente.md", "c4")
+    confere("gravação de nota em ordem não devolve aviso", limpa == "", limpa)
+    trocar(alvo, "(E-005)", "(E-005, E-888)")
+    trocar(pasta / "3-recursos/metodo.md", "(E-001)", "(E-001, E-777)")
+    devolvida = contexto("entregaveis/_cerebro/3-recursos/plataformas-do-cliente.md", "c4")
+    confere("gravação de nota com id que não existe devolve o aviso na hora, e só o da nota gravada", "Segundo cérebro, nesta nota" in devolvida and "E-888" in devolvida and "E-777" not in devolvida, devolvida)
+    trocar(alvo, "(E-005, E-888)", "(E-005)")
+    trocar(pasta / "3-recursos/metodo.md", "(E-001, E-777)", "(E-001)")
+    area = rodar([PY, "-c", "import sys; sys.path.insert(0, 'entregaveis/_harness/hooks'); import _base, comum; print(_base.area_de_projeto(comum.BASE / '_cerebro/2-areas/x.md'), _base.area_de_projeto(comum.BASE / '_harness/kit.md'))"], projeto)
+    confere("a trava do repositório público vale para as notas", area.stdout.split() == ["True", "False"], area.stdout + area.stderr)
+
+    # Lista do dia, pacote para outros ambientes e atualização.
+    def lista() -> str:
+        return rodar([PY, "entregaveis/_harness/scripts/rotina.py", "--lista", "--hoje", hoje], projeto).stdout
+
+    confere("lista do dia: sem pendência, o segundo cérebro não aparece", "Segundo cérebro" not in lista(), lista())
+    acrescentar(reg / "evidencias.tsv", "E-006", "Custo evitado por ano", "R$ 1,2 milhão", "Contratos", "2026-11-06", "fato", "alta", "diag")
+    confere("lista do dia: o que falta absorver entra na caixa de entrada", "Segundo cérebro: 1 item(ns) do projeto ainda fora das notas (E-006)" in lista() and "Caixa de entrada" in lista(), lista())
+    pacote = rodar([PY, "entregaveis/_harness/scripts/empacotar.py", "--projeto"], projeto)
+    do_projeto = (base / "_ambiente/5-projeto.txt").read_text(encoding="utf-8") if (base / "_ambiente/5-projeto.txt").is_file() else ""
+    confere("o pacote do projeto leva o índice e as notas", pacote.returncode == 0 and "## Segundo cérebro" in do_projeto and "### 3-recursos/plataformas-do-cliente.md" in do_projeto and "O carrinho demora dois dias" in do_projeto and "# Índice do segundo cérebro" in do_projeto, pacote.stdout + pacote.stderr)
+    conhecimento = HARNESS / "ambientes" / "conhecimento"
+    em_dia = rodar([PY, HARNESS / "scripts" / "empacotar.py", "--conferir"], RAIZ)
+    confere("os outros ambientes recebem o método e o modelo de nota", "em dia" in em_dia.stdout and "Segundo cérebro do projeto" in (conhecimento / "2-metodo-e-texto.txt").read_text(encoding="utf-8") and "Nota do segundo cérebro" in (conhecimento / "4-modelos.txt").read_text(encoding="utf-8") and "manter-cerebro" in (conhecimento / "1-procedimentos.txt").read_text(encoding="utf-8"))
+    antes = {a.relative_to(pasta).as_posix(): a.read_text(encoding="utf-8") for a in sorted(pasta.rglob("*")) if a.is_file()}
+    atualizado = instalar(projeto, "--atualizar")
+    depois = {a.relative_to(pasta).as_posix(): a.read_text(encoding="utf-8") for a in sorted(pasta.rglob("*")) if a.is_file()}
+    confere("--atualizar não toca nas notas, no índice nem no controle", atualizado.returncode == 0 and antes == depois, str(set(antes) ^ set(depois)))
+
+    antigo = tmp / "cerebro-antigo"
+    antigo.mkdir()
+    instalar(antigo)
+    montar_exemplo(antigo)
+    shutil.rmtree(antigo / "entregaveis/_cerebro")
+    sem_pasta = rodar([PY, "entregaveis/_harness/scripts/estado.py"], antigo)
+    confere("projeto de versão anterior, sem a pasta, segue sem erro e sem a linha", sem_pasta.returncode == 0 and "Segundo cérebro" not in sem_pasta.stdout and rodar([PY, "entregaveis/_harness/scripts/cerebro.py", "--pendentes"], antigo).returncode == 2, sem_pasta.stdout + sem_pasta.stderr)
+    confere("a busca funciona nos registros mesmo sem a pasta", "evidencias.tsv" in rodar([PY, "entregaveis/_harness/scripts/cerebro.py", "--buscar", "plataformas"], antigo).stdout)
+    instalar(antigo, "--atualizar")
+    com_pasta = rodar([PY, "entregaveis/_harness/scripts/estado.py"], antigo)
+    confere("--atualizar cria o segundo cérebro em projeto de versão anterior", (antigo / "entregaveis/_cerebro/indice.md").is_file() and "Segundo cérebro: 0 nota(s), 4 item(ns)" in com_pasta.stdout, com_pasta.stdout)
+    rodar([PY, "entregaveis/_harness/scripts/empacotar.py", "--projeto"], antigo)
+    confere("o pacote de um projeto sem notas não traz a seção do segundo cérebro", "## Registros do projeto" in (antigo / "entregaveis/_ambiente/5-projeto.txt").read_text(encoding="utf-8") and "## Segundo cérebro" not in (antigo / "entregaveis/_ambiente/5-projeto.txt").read_text(encoding="utf-8"))
+    (antigo / "wiki").mkdir()
+    (antigo / "wiki/notas-do-projeto.md").write_text("x", encoding="utf-8")
+    levantado = rodar([PY, "entregaveis/_harness/scripts/levantar.py"], antigo)
+    confere("o levantamento aponta uma base de conhecimento que o projeto já tem", "Possíveis bases de conhecimento" in levantado.stdout and "notas-do-projeto.md" in levantado.stdout, levantado.stdout)
+    vazio_ = tmp / "cerebro-vazio"
+    vazio_.mkdir()
+    instalar(vazio_)
+    linha = rodar([PY, "-c", "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import cerebro; print(cerebro.linha_de_estado())"], vazio_)
+    confere("sem nota e sem nada a absorver, o estado não ganha a linha", linha.stdout.strip() == "[]", linha.stdout + linha.stderr)
+    tem = "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import repositorio; print(repositorio.tem_projeto())"
+    sem_nota = rodar([PY, "-c", tem], vazio_).stdout.strip()
+    (vazio_ / "entregaveis/_cerebro/2-areas/cliente.md").write_text("# Cliente\n", encoding="utf-8")
+    confere("uma nota já conta como conteúdo de projeto para a trava do repositório", sem_nota == "False" and rodar([PY, "-c", tem], vazio_).stdout.strip() == "True", sem_nota)
+
+
 # --- Conferência do ambiente ----------------------------------------------
 
 
@@ -2061,6 +2359,14 @@ def testar_exemplo(tmp: Path) -> None:
     confere("o exemplo está dentro da linha de base", "Nenhum desvio contra a linha de base versão 1" in desvios.stdout, desvios.stdout + desvios.stderr)
     marca = rodar([PY, "-c", "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import comum; print(comum.carimbo(comum.BASE / 'leitura-executiva'))"], projeto)
     confere("a versão registrada no exemplo é a do conteúdo atual", marca.stdout.strip() and marca.stdout.strip() in (projeto / "entregaveis/_projeto/versoes.tsv").read_text(encoding="utf-8"), marca.stdout + marca.stderr)
+    cerebro = [PY, "entregaveis/_harness/scripts/cerebro.py"]
+    confere("o estado do exemplo conta as seis notas, sem nada a absorver", "Segundo cérebro: 6 nota(s). Antes de escrever" in estado.stdout, estado.stdout)
+    confere("o segundo cérebro do exemplo absorveu tudo o que o projeto registrou", "Nada a absorver" in rodar(cerebro + ["--pendentes"], projeto).stdout, rodar(cerebro + ["--pendentes"], projeto).stdout)
+    confere("o segundo cérebro do exemplo passa na conferência", "Segundo cérebro em ordem" in rodar(cerebro + ["--conferir"], projeto).stdout, rodar(cerebro + ["--conferir"], projeto).stdout)
+    multa = rodar(cerebro + ["--buscar", "multa"], projeto)
+    confere("a busca do exemplo traz a nota, a evidência e a lição", "1-projetos/saida-das-duas-plataformas-de-marco.md" in multa.stdout and "E-008" in multa.stdout and "L-002" in multa.stdout, multa.stdout)
+    registro = (projeto / "entregaveis/_cerebro/registro.md").read_text(encoding="utf-8")
+    confere("o exemplo mostra a decisão que não virou nota", "| D-010 | nada |" in registro and "D-010" not in "".join(a.read_text(encoding="utf-8") for a in (projeto / "entregaveis/_cerebro").glob("[1-4]-*/*.md")), registro)
     reunioes = (projeto / "entregaveis/_projeto/reunioes.tsv").read_text(encoding="utf-8")
     origens = {l.split("\t")[9] for l in (projeto / "entregaveis/_projeto/acoes.tsv").read_text(encoding="utf-8").splitlines() if l.startswith("T-")}
     confere("toda tarefa do exemplo aponta para uma reunião registrada", origens == {"A-001"} and "\nA-001\t2026-11-05\t" in reunioes, str(origens))
@@ -2119,6 +2425,7 @@ def main() -> int:
         testar_levantamento(tmp)
         testar_rotina(tmp)
         testar_governanca(tmp)
+        testar_cerebro(tmp)
         testar_ambiente(tmp)
         testar_exemplo(tmp)
     finally:

@@ -115,6 +115,12 @@ pergunta pelo follow-up. O agente também sugere o nível de governança
 pelo porte do projeto, enxuto, padrão ou completo, e você escolhe os
 materiais que serão emitidos.
 
+O que o projeto aprende vai para o segundo cérebro, em notas de Markdown
+dentro de `entregaveis/_cerebro/`. O agente atualiza a nota do assunto a
+cada ação do projeto, com o id do registro de onde vem cada afirmação, e
+busca nas notas e nos registros antes de escrever. Não é preciso
+instalar nenhum programa.
+
 Quando o projeto muda de natureza, diga o que aconteceu: a proposta foi
 vendida, uma extensão foi contratada. O agente abre uma fase nova, que
 herda as decisões, as evidências e tudo o que foi produzido.
@@ -134,6 +140,7 @@ python3 entregaveis/_harness/scripts/repositorio.py   # o remoto é local, priva
 python3 entregaveis/_harness/scripts/rotina.py        # o resumo do dia: atas novas, prazos e o que espera o seu sim
 python3 entregaveis/_harness/scripts/rotina.py --lista  # a lista do dia, com o que pede atenção primeiro
 python3 entregaveis/_harness/scripts/governanca.py    # o nível de governança e os materiais emitidos
+python3 entregaveis/_harness/scripts/cerebro.py --buscar TERMO  # o que o projeto sabe sobre um assunto
 python3 entregaveis/_harness/scripts/ambiente.py      # o que a máquina tem e como instalar o que falta
 ```
 

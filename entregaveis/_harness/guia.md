@@ -78,6 +78,7 @@ As frases abaixo são exemplos. Use as suas palavras.
 | Mudar a natureza do projeto | "A proposta foi vendida. Agora começa o diagnóstico." |
 | Levar a outro aplicativo | "Vou continuar isto no Copilot. Monte o pacote." |
 | Saber onde tudo está | "Como está o projeto?" |
+| Lembrar de algo | "O que sabemos sobre a multa de rescisão?" |
 
 ## Os recursos, um por um
 
@@ -242,6 +243,36 @@ fim, grava no diário o que foi feito e o que fica para amanhã. As reuniões qu
 `_projeto/ritos.tsv`, e o agente avisa quando uma delas passa sem ata.
 Em uma pausa do projeto, diga até quando, e os avisos param até essa
 data.
+
+### Segundo cérebro
+
+O segundo cérebro guarda o que o projeto aprendeu, em notas curtas de
+Markdown dentro de `entregaveis/_cerebro/`. Você não precisa pedir: a
+cada registro, ata, material ou entregável que muda, o agente atualiza a
+nota do assunto. Para lembrar de algo, pergunte, e o agente busca nas
+notas e nos registros de uma vez.
+
+As notas ficam em quatro pastas, pela ordem em que são usadas.
+
+| Pasta | O que guarda |
+| --- | --- |
+| `1-projetos/` | O que tem prazo e fim: cada entregável em andamento e cada frente |
+| `2-areas/` | O que é acompanhado sempre: o cliente, as pessoas, as plataformas, os processos |
+| `3-recursos/` | O que serve de consulta: métodos, conceitos e o resumo de cada material |
+| `4-arquivo/` | O que deixou de estar ativo |
+
+Cada nota abre com um resumo de até cinco linhas e cita o id do registro
+de onde vem cada afirmação. O `indice.md` traz uma linha por nota, e o
+`registro.md` diz o que entrou e quando.
+
+Os registros continuam sendo a fonte dos dados, e nada é copiado. Uma
+decisão, uma mudança de data, uma cobrança e uma tarefa ficam só no
+registro de cada uma. A nota diz o que elas mudam no que se sabe, e a
+busca acha todas. O método junta as pastas PARA e os passos CODE, de
+Tiago Forte, com um índice e uma conferência mantidos pelo agente. Tudo
+é Markdown puro e abre em qualquer editor, sem programa extra. A página
+[metodo/segundo-cerebro.md](metodo/segundo-cerebro.md) traz o método
+inteiro.
 
 ### Lista do dia
 
@@ -415,6 +446,7 @@ No Claude Code, três situações bloqueiam o agente. Todas têm saída.
 | Um aviso de prazo não faz mais sentido | Diga se foi concluído, a data nova ou que não é mais necessário. O aviso some com a resposta |
 | Os avisos chegam cedo ou tarde demais para este projeto | Peça ao agente para ajustar os limites em `_projeto/cadencias.tsv` |
 | A lista do dia pergunta demais, ou de menos | Peça ao agente para mudar a frequência da pergunta em `_projeto/perguntas.tsv` |
+| Uma nota do segundo cérebro está errada ou velha | Corrija a nota ou diga ao agente o que mudou. Ele corrige o registro de origem e a nota |
 | O projeto emite material demais para o tamanho dele | Diga qual material tirar e o motivo. O registro por trás dele continua mantido |
 | Uma sessão nova parece não lembrar do projeto | Pergunte "como está o projeto?". O agente lê os registros e retoma |
 
@@ -454,4 +486,6 @@ Rode na raiz do projeto.
 | `python3 entregaveis/_harness/scripts/rotina.py --lista` | A lista do dia, com os três itens que pedem atenção primeiro |
 | `python3 entregaveis/_harness/scripts/governanca.py` | O nível de governança e os materiais que o projeto emite |
 | `python3 entregaveis/_harness/scripts/governanca.py --desvios` | O desvio de cada data contra a linha de base |
+| `python3 entregaveis/_harness/scripts/cerebro.py --buscar TERMOS` | As notas e as linhas dos registros que falam dos termos |
+| `python3 entregaveis/_harness/scripts/cerebro.py --pendentes` | O que o projeto registrou e nenhuma nota guarda ainda |
 | `python3 entregaveis/_harness/scripts/ambiente.py` | O que a máquina tem e o que falta, com o comando de cada falta |
