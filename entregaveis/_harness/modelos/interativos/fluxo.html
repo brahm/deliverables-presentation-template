@@ -1,0 +1,232 @@
+<!doctype html>
+<!-- interativo
+titulo: PREENCHER
+mensagem: PREENCHER
+apoia: PREENCHER
+fontes: PREENCHER
+idioma: pt-BR
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PREENCHER</title>
+<style>
+/* Desenho: um caminho de etapas que a pessoa percorre. O que importa fica na cor de destaque, o resto em cinza. */
+:root {
+  --fundo: #f5f6f8; --superficie: #ffffff; --texto: #17212b; --texto-2: #55626f; --linha: #d3d9df;
+  --cinza: #a9b3bd; --destaque: #0b5cad; --destaque-suave: #dce9f6; --sobre-destaque: #ffffff;
+  --fonte: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --raio: 6px; --tempo: 420ms;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fundo: #10161d; --superficie: #19222c; --texto: #e7ecf1; --texto-2: #a2b0be; --linha: #2d3a48;
+    --cinza: #5c6a78; --destaque: #6fb4f3; --destaque-suave: #17324d; --sobre-destaque: #0b1622; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fundo: #10161d; --superficie: #19222c; --texto: #e7ecf1; --texto-2: #a2b0be; --linha: #2d3a48;
+  --cinza: #5c6a78; --destaque: #6fb4f3; --destaque-suave: #17324d; --sobre-destaque: #0b1622; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--fundo); color: var(--texto); font: 16px/1.5 var(--fonte); }
+.pagina { max-width: 1080px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 24px; }
+.sobre { color: var(--texto-2); font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase; margin: 0; }
+h1 { font-size: clamp(1.4rem, 1rem + 1.8vw, 2.1rem); line-height: 1.2; margin: 4px 0 0; text-wrap: balance; max-width: 26ch; }
+.apoio { color: var(--texto-2); margin: 8px 0 0; max-width: 65ch; }
+
+.caminho { list-style: none; margin: 0; padding: 0; display: flex; align-items: stretch; }
+.etapa { flex: 1 1 0; min-width: 0; display: flex; align-items: center; }
+.etapa:last-child { flex: 0 1 auto; }
+.no { flex: 0 0 auto; width: 100%; max-width: 168px; min-height: 76px; padding: 10px 12px; text-align: left; font: inherit; color: var(--texto-2);
+  background: var(--superficie); border: 1.5px solid var(--linha); border-radius: var(--raio); cursor: pointer;
+  transition: border-color var(--tempo), background var(--tempo), color var(--tempo); }
+.no strong { display: block; color: inherit; font-size: 0.95rem; line-height: 1.25; }
+.no span { display: block; font-size: 0.8125rem; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.no:hover { border-color: var(--cinza); }
+.no:focus-visible, .botao:focus-visible { outline: 3px solid var(--destaque); outline-offset: 2px; }
+.etapa.feita .no { color: var(--texto); border-color: var(--cinza); }
+.etapa.atual .no { color: var(--sobre-destaque); background: var(--destaque); border-color: var(--destaque); }
+.elo { flex: 1 1 24px; min-width: 16px; height: 3px; background: var(--linha); position: relative; overflow: hidden; }
+.elo i { position: absolute; inset: 0; background: var(--destaque); transform: scaleX(0); transform-origin: left center; transition: transform var(--tempo) ease-out; }
+.etapa.feita .elo i { transform: scaleX(1); }
+
+.painel { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio); padding: 20px; display: grid; gap: 6px; min-height: 148px; }
+.painel h2 { font-size: 1.15rem; margin: 0; }
+.painel p { margin: 0; max-width: 65ch; }
+.medida { font-size: 1.9rem; font-weight: 650; line-height: 1.1; color: var(--destaque); font-variant-numeric: tabular-nums; }
+.posicao { color: var(--texto-2); font-size: 0.8125rem; }
+
+.controles { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.botao { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: var(--raio); border: 1.5px solid var(--linha); background: var(--superficie); color: var(--texto); cursor: pointer; }
+.botao:hover:not(:disabled) { border-color: var(--destaque); }
+.botao:disabled { color: var(--cinza); cursor: default; }
+.botao.principal { background: var(--destaque); border-color: var(--destaque); color: var(--sobre-destaque); }
+.dica { color: var(--texto-2); font-size: 0.8125rem; margin-left: auto; }
+
+.rodape { border-top: 1px solid var(--linha); padding-top: 12px; color: var(--texto-2); font-size: 0.8125rem; display: flex; flex-wrap: wrap; gap: 4px 24px; }
+.rodape p { margin: 0; }
+.resumo-estatico { display: none; }
+
+@media (max-width: 720px) {
+  .caminho { flex-direction: column; }
+  .etapa { flex-direction: column; align-items: flex-start; }
+  .no { max-width: none; min-height: 0; }
+  .elo { flex: 0 0 22px; width: 3px; height: 22px; margin-left: 22px; }
+  .elo i { transform: scaleY(0); transform-origin: center top; }
+  .etapa.feita .elo i { transform: scaleY(1); }
+  .dica { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { :root { --tempo: 0ms; } }
+@media print {
+  body { background: #fff; color: #000; }
+  .controles, .painel { display: none; }
+  .resumo-estatico { display: block; }
+  .caminho { flex-direction: column; }
+  .etapa { flex-direction: column; align-items: flex-start; }
+  .no, .etapa.atual .no { max-width: none; background: #fff; color: #000; border-color: #000; }
+  .elo { flex: 0 0 12px; width: 2px; height: 12px; margin-left: 22px; background: #000; }
+}
+</style>
+</head>
+<body>
+<main class="pagina">
+  <header>
+    <p class="sobre">PREENCHER: nome do entregável</p>
+    <h1 id="titulo">PREENCHER: o título diz o achado, com verbo</h1>
+    <p class="apoio">PREENCHER: uma frase que diz o que observar ao percorrer o caminho.</p>
+  </header>
+
+  <ol class="caminho" id="caminho" aria-label="Etapas do fluxo"></ol>
+
+  <section class="painel" aria-live="polite" aria-atomic="true">
+    <p class="posicao" id="posicao"></p>
+    <h2 id="etapa-nome"></h2>
+    <p class="medida" id="etapa-medida"></p>
+    <p id="etapa-detalhe"></p>
+  </section>
+
+  <div class="controles">
+    <button class="botao" id="anterior" type="button">Anterior</button>
+    <button class="botao principal" id="proximo" type="button">Próximo</button>
+    <button class="botao" id="tocar" type="button" aria-pressed="false">Percorrer sozinho</button>
+    <span class="dica">As setas do teclado também avançam e voltam.</span>
+  </div>
+
+  <section class="resumo-estatico" id="resumo-estatico" aria-hidden="true"></section>
+
+  <noscript>
+    <p>PREENCHER: a mensagem da peça e os números principais, para quem abre o arquivo sem script.</p>
+  </noscript>
+
+  <footer class="rodape">
+    <p>Fonte: PREENCHER, com a data do dado.</p>
+    <p>PREENCHER: marcação exigida pelo projeto.</p>
+  </footer>
+</main>
+
+<!-- Os dados ficam aqui, separados do código. Troque pelo conteúdo do projeto. -->
+<script type="application/json" id="dados">
+{
+  "etapas": [
+    { "nome": "Exemplo: coleta", "medida": "Exemplo: 2 h", "detalhe": "Exemplo. Troque pelo que acontece nesta etapa e por que ela importa para a mensagem." },
+    { "nome": "Exemplo: preparo", "medida": "Exemplo: 3 dias", "detalhe": "Exemplo. A etapa em que a mensagem aparece merece o texto mais concreto." },
+    { "nome": "Exemplo: aprovação", "medida": "Exemplo: 5 dias", "detalhe": "Exemplo. Diga quem faz, com que entrada e o que sai daqui." },
+    { "nome": "Exemplo: ativação", "medida": "Exemplo: 1 dia", "detalhe": "Exemplo. A última etapa fecha com a consequência para a audiência." }
+  ]
+}
+</script>
+<script>
+(function () {
+  "use strict";
+  var dados = JSON.parse(document.getElementById("dados").textContent);
+  var etapas = dados.etapas;
+  var lista = document.getElementById("caminho");
+  var atual = 0;
+  var relogio = null;
+  var semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  etapas.forEach(function (etapa, i) {
+    var item = document.createElement("li");
+    item.className = "etapa";
+    var no = document.createElement("button");
+    no.type = "button";
+    no.className = "no";
+    var nome = document.createElement("strong");
+    nome.textContent = etapa.nome;
+    var medida = document.createElement("span");
+    medida.textContent = etapa.medida || "";
+    no.appendChild(nome);
+    no.appendChild(medida);
+    no.addEventListener("click", function () { parar(); mostrar(i); });
+    item.appendChild(no);
+    if (i < etapas.length - 1) {
+      var elo = document.createElement("span");
+      elo.className = "elo";
+      elo.setAttribute("aria-hidden", "true");
+      elo.appendChild(document.createElement("i"));
+      item.appendChild(elo);
+    }
+    lista.appendChild(item);
+  });
+
+  // A versão que vai para o papel mostra todas as etapas de uma vez.
+  var estatico = document.getElementById("resumo-estatico");
+  etapas.forEach(function (etapa, i) {
+    var p = document.createElement("p");
+    p.textContent = (i + 1) + ". " + etapa.nome + (etapa.medida ? " (" + etapa.medida + "): " : ": ") + etapa.detalhe;
+    estatico.appendChild(p);
+  });
+
+  function mostrar(i) {
+    atual = Math.max(0, Math.min(etapas.length - 1, i));
+    Array.prototype.forEach.call(lista.children, function (item, n) {
+      item.classList.toggle("feita", n < atual);
+      item.classList.toggle("atual", n === atual);
+      item.firstChild.setAttribute("aria-current", n === atual ? "step" : "false");
+    });
+    document.getElementById("posicao").textContent = "Etapa " + (atual + 1) + " de " + etapas.length;
+    document.getElementById("etapa-nome").textContent = etapas[atual].nome;
+    document.getElementById("etapa-medida").textContent = etapas[atual].medida || "";
+    document.getElementById("etapa-detalhe").textContent = etapas[atual].detalhe;
+    document.getElementById("anterior").disabled = atual === 0;
+    document.getElementById("proximo").disabled = atual === etapas.length - 1;
+  }
+
+  function parar() {
+    if (relogio) { clearInterval(relogio); relogio = null; }
+    var botao = document.getElementById("tocar");
+    botao.setAttribute("aria-pressed", "false");
+    botao.textContent = "Percorrer sozinho";
+  }
+
+  function tocar() {
+    if (relogio) { parar(); return; }
+    if (atual === etapas.length - 1) { mostrar(0); }
+    var botao = document.getElementById("tocar");
+    botao.setAttribute("aria-pressed", "true");
+    botao.textContent = "Pausar";
+    relogio = setInterval(function () {
+      if (atual >= etapas.length - 1) { parar(); return; }
+      mostrar(atual + 1);
+    }, semMovimento.matches ? 2600 : 2200);
+  }
+
+  document.getElementById("anterior").addEventListener("click", function () { parar(); mostrar(atual - 1); });
+  document.getElementById("proximo").addEventListener("click", function () { parar(); mostrar(atual + 1); });
+  document.getElementById("tocar").addEventListener("click", tocar);
+  document.addEventListener("keydown", function (evento) {
+    if (evento.target.closest && evento.target.closest("input, textarea, select")) { return; }
+    if (evento.key === "ArrowRight") { parar(); mostrar(atual + 1); }
+    if (evento.key === "ArrowLeft") { parar(); mostrar(atual - 1); }
+  });
+  document.addEventListener("visibilitychange", function () { if (document.hidden) { parar(); } });
+
+  // A peça abre na etapa que carrega a mensagem. Troque o índice se não for a primeira.
+  mostrar(0);
+})();
+</script>
+</body>
+</html>

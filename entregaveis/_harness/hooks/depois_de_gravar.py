@@ -11,13 +11,24 @@ import json
 import sys
 
 import _base
+import comum
+import dominio
 import validar
 
 
 def principal() -> int:
     dados = _base.entrada()
     arquivo = _base.arquivo_da_ferramenta(dados)
-    if arquivo is None or arquivo.suffix != ".md":
+    if arquivo is None:
+        return 0
+    if arquivo.parent == comum.BASE / "_dominio" and arquivo.suffix in (".tsv", ".py"):
+        defeitos = dominio.testar()
+        if defeitos:
+            linhas = [a.formatar() for a in defeitos[:15]]
+            print("Regras do domínio do projeto. Corrija a regra ou o caso antes de seguir:\n" + "\n".join(linhas), file=sys.stderr)
+            return 2
+        return 0
+    if arquivo.suffix not in (".md", ".html"):
         return 0
     pasta = _base.entregavel_do_arquivo(arquivo)
     if pasta is None:

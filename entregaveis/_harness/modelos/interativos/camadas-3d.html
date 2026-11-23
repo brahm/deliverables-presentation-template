@@ -1,0 +1,309 @@
+<!doctype html>
+<!-- interativo
+titulo: PREENCHER
+mensagem: PREENCHER
+apoia: PREENCHER
+fontes: PREENCHER
+idioma: pt-BR
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PREENCHER</title>
+<style>
+/* Desenho: uma pilha de camadas em três dimensões ao lado da mesma pilha em lista. A terceira dimensão é a ordem das camadas. */
+:root {
+  --fundo: #f5f6f8; --superficie: #ffffff; --texto: #17212b; --texto-2: #55626f; --linha: #d3d9df;
+  --cinza: #a9b3bd; --cinza-suave: #e6eaee; --destaque: #0b5cad; --destaque-suave: #dce9f6; --sobre-destaque: #ffffff;
+  --sobra: #b45d09; --falta: #b3261e;
+  --fonte: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --raio: 6px; --tempo: 480ms;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fundo: #10161d; --superficie: #19222c; --texto: #e7ecf1; --texto-2: #a2b0be; --linha: #2d3a48;
+    --cinza: #5c6a78; --cinza-suave: #232e3a; --destaque: #6fb4f3; --destaque-suave: #17324d; --sobre-destaque: #0b1622;
+    --sobra: #f0a04b; --falta: #f2867f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fundo: #10161d; --superficie: #19222c; --texto: #e7ecf1; --texto-2: #a2b0be; --linha: #2d3a48;
+  --cinza: #5c6a78; --cinza-suave: #232e3a; --destaque: #6fb4f3; --destaque-suave: #17324d; --sobre-destaque: #0b1622;
+  --sobra: #f0a04b; --falta: #f2867f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--fundo); color: var(--texto); font: 16px/1.5 var(--fonte); }
+.pagina { max-width: 1120px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 20px; }
+.sobre { color: var(--texto-2); font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase; margin: 0; }
+h1 { font-size: clamp(1.4rem, 1rem + 1.8vw, 2.1rem); line-height: 1.2; margin: 4px 0 0; text-wrap: balance; max-width: 28ch; }
+.apoio { color: var(--texto-2); margin: 8px 0 0; max-width: 65ch; }
+
+.grade { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.palco { position: relative; aspect-ratio: 4 / 3; max-width: 100%; perspective: 1300px; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio);
+  overflow: hidden; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.palco:active { cursor: grabbing; }
+.palco:focus-visible, .botao:focus-visible, .camada:focus-visible { outline: 3px solid var(--destaque); outline-offset: 2px; }
+.pilha { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(var(--rx, 58deg)) rotateZ(var(--rz, -34deg)); }
+.pilha.suave { transition: transform var(--tempo) ease-out; }
+.plano { position: absolute; left: 21%; top: 16%; width: 58%; height: 68%; padding: 6%; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 6%;
+  background: var(--cinza-suave); border: 1.5px solid var(--cinza); border-radius: 4px; opacity: 0.9;
+  transform: translateZ(calc(var(--nivel) * var(--vao, 46px))); transition: transform var(--tempo) ease-out, background var(--tempo), border-color var(--tempo), opacity var(--tempo); }
+.plano.atual { background: var(--destaque-suave); border-color: var(--destaque); opacity: 1; }
+.peca { border-radius: 2px; background: var(--cinza); min-height: 6px; }
+.plano.atual .peca { background: var(--destaque); }
+.peca.sobra, .plano.atual .peca.sobra { background: repeating-linear-gradient(45deg, var(--sobra) 0 4px, transparent 4px 7px); outline: 1.5px solid var(--sobra); }
+.peca.parcial, .plano.atual .peca.parcial { background: linear-gradient(90deg, currentColor 50%, transparent 50%); outline: 1.5px solid currentColor; color: var(--cinza); }
+.plano.atual .peca.parcial { color: var(--destaque); }
+.peca.falta, .plano.atual .peca.falta { background: transparent; outline: 1.5px dashed var(--falta); }
+.ajuda-palco { position: absolute; left: 12px; bottom: 10px; margin: 0; color: var(--texto-2); font-size: 0.75rem; pointer-events: none; }
+
+.lado { display: grid; gap: 14px; min-width: 0; }
+.lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.camada { width: 100%; text-align: left; font: inherit; color: var(--texto-2); background: var(--superficie); border: 1.5px solid var(--linha); border-radius: var(--raio); padding: 8px 12px; cursor: pointer;
+  display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.camada:hover { border-color: var(--cinza); }
+.camada[aria-pressed="true"] { background: var(--destaque); border-color: var(--destaque); color: var(--sobre-destaque); font-weight: 600; }
+.camada small { font-size: 0.8125rem; font-weight: 400; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.painel { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio); padding: 16px 18px; display: grid; gap: 8px; }
+.painel h2 { font-size: 1.1rem; margin: 0; }
+.painel p { margin: 0; }
+.itens { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+.itens li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 0.9375rem; }
+.itens .peca { width: 14px; height: 14px; margin-top: 4px; background: var(--cinza); }
+.itens em { font-style: normal; color: var(--texto-2); }
+
+.controles { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.botao { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: var(--raio); border: 1.5px solid var(--linha); background: var(--superficie); color: var(--texto); cursor: pointer; }
+.botao:hover { border-color: var(--destaque); }
+.botao[aria-pressed="true"] { border-color: var(--destaque); color: var(--destaque); }
+.legenda { list-style: none; margin: 0 0 0 auto; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--texto-2); font-size: 0.8125rem; }
+.legenda li { display: flex; align-items: center; gap: 6px; }
+.legenda .peca { width: 12px; height: 12px; display: inline-block; }
+
+.rodape { border-top: 1px solid var(--linha); padding-top: 12px; color: var(--texto-2); font-size: 0.8125rem; display: flex; flex-wrap: wrap; gap: 4px 24px; }
+.rodape p { margin: 0; }
+.resumo-estatico { display: none; }
+
+@media (max-width: 800px) {
+  .grade { grid-template-columns: minmax(0, 1fr); }
+  .palco { aspect-ratio: 1 / 1; }
+  .legenda { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { :root { --tempo: 0ms; } #girar { display: none; } }
+@media print {
+  body { background: #fff; color: #000; }
+  .controles .botao, .lado, .ajuda-palco { display: none; }
+  .grade { grid-template-columns: 1fr; }
+  .palco { max-width: 120mm; border-color: #000; }
+  .resumo-estatico { display: block; }
+  .resumo-estatico h2 { font-size: 1rem; margin: 12px 0 2px; }
+  .resumo-estatico p { margin: 0; }
+}
+</style>
+</head>
+<body>
+<main class="pagina">
+  <header>
+    <p class="sobre">PREENCHER: nome do entregável</p>
+    <h1>PREENCHER: o título diz o achado, com verbo</h1>
+    <p class="apoio">PREENCHER: uma frase que diz em que camada olhar primeiro e por quê.</p>
+  </header>
+
+  <div class="grade">
+    <div class="palco" id="palco" tabindex="0" role="img" aria-label="Pilha de camadas em três dimensões. A lista ao lado traz o mesmo conteúdo. As setas do teclado giram a pilha.">
+      <div class="pilha" id="pilha"></div>
+      <p class="ajuda-palco">Arraste para girar.</p>
+    </div>
+    <div class="lado">
+      <ol class="lista" id="lista" aria-label="Camadas, de cima para baixo"></ol>
+      <section class="painel" aria-live="polite" aria-atomic="true">
+        <h2 id="camada-nome"></h2>
+        <p id="camada-detalhe"></p>
+        <ul class="itens" id="camada-itens"></ul>
+      </section>
+    </div>
+  </div>
+
+  <div class="controles">
+    <button class="botao" id="separar" type="button" aria-pressed="false">Separar as camadas</button>
+    <button class="botao" id="girar" type="button" aria-pressed="false">Girar</button>
+    <button class="botao" id="inicio" type="button">Ângulo inicial</button>
+    <ul class="legenda" aria-label="Legenda">
+      <li><span class="peca"></span>Atendida</li>
+      <li><span class="peca sobra"></span>Em duplicidade</li>
+      <li><span class="peca parcial"></span>Atendida em parte</li>
+      <li><span class="peca falta"></span>Não atendida</li>
+    </ul>
+  </div>
+
+  <section class="resumo-estatico" id="resumo-estatico" aria-hidden="true"></section>
+
+  <noscript>
+    <p>PREENCHER: a mensagem da peça e as camadas com o estado de cada uma, para quem abre o arquivo sem script.</p>
+  </noscript>
+
+  <footer class="rodape">
+    <p>Fonte: PREENCHER, com a data do dado.</p>
+    <p>PREENCHER: marcação exigida pelo projeto.</p>
+  </footer>
+</main>
+
+<!-- Os dados ficam aqui, separados do código. A primeira camada da lista é a de cima.
+     estado de cada item: "ok", "sobra", "parcial" ou "falta". "inicial" é a camada que abre selecionada. -->
+<script type="application/json" id="dados">
+{
+  "inicial": 1,
+  "camadas": [
+    { "nome": "Exemplo: medição", "detalhe": "Exemplo. Troque pelo que esta camada faz e pelo que o diagnóstico achou nela.",
+      "itens": [ { "nome": "Exemplo: painel de resultados", "estado": "ok" }, { "nome": "Exemplo: atribuição", "estado": "parcial" }, { "nome": "Exemplo: testes com grupo de controle", "estado": "falta" } ] },
+    { "nome": "Exemplo: ativação", "detalhe": "Exemplo. A camada que carrega a mensagem abre selecionada.",
+      "itens": [ { "nome": "Exemplo: envio de e-mail", "estado": "sobra" }, { "nome": "Exemplo: jornadas", "estado": "ok" }, { "nome": "Exemplo: mensagens no aplicativo", "estado": "sobra" }, { "nome": "Exemplo: mídia paga", "estado": "ok" } ] },
+    { "nome": "Exemplo: decisão", "detalhe": "Exemplo. Diga o que falta e o que isso impede.",
+      "itens": [ { "nome": "Exemplo: segmentação", "estado": "ok" }, { "nome": "Exemplo: recomendação", "estado": "falta" } ] },
+    { "nome": "Exemplo: dados e identidade", "detalhe": "Exemplo. Uma camada sem achado fica em cinza e não disputa atenção.",
+      "itens": [ { "nome": "Exemplo: perfil de cliente", "estado": "parcial" }, { "nome": "Exemplo: armazém de dados", "estado": "ok" }, { "nome": "Exemplo: consentimento", "estado": "ok" } ] }
+  ]
+}
+</script>
+<script>
+(function () {
+  "use strict";
+  var dados = JSON.parse(document.getElementById("dados").textContent);
+  var camadas = dados.camadas;
+  var rotulos = { ok: "atendida", sobra: "em duplicidade", parcial: "atendida em parte", falta: "não atendida" };
+  var palco = document.getElementById("palco");
+  var pilha = document.getElementById("pilha");
+  var lista = document.getElementById("lista");
+  var inicial = { rx: 58, rz: -34 };
+  var angulo = { rx: inicial.rx, rz: inicial.rz };
+  var atual = Math.min(camadas.length - 1, Math.max(0, dados.inicial || 0));
+  var girando = null;
+  var planos = [];
+  var botoes = [];
+
+  function peca(estado) {
+    var el = document.createElement("span");
+    el.className = "peca" + (estado && estado !== "ok" ? " " + estado : "");
+    return el;
+  }
+
+  camadas.forEach(function (camada, i) {
+    var plano = document.createElement("div");
+    plano.className = "plano";
+    // A camada de cima fica mais perto de quem olha.
+    plano.style.setProperty("--nivel", String((camadas.length - 1) / 2 - i));
+    camada.itens.forEach(function (item) { plano.appendChild(peca(item.estado)); });
+    plano.addEventListener("click", function () { selecionar(i); });
+    pilha.appendChild(plano);
+    planos.push(plano);
+
+    var linha = document.createElement("li");
+    var botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "camada";
+    var achados = camada.itens.filter(function (item) { return item.estado !== "ok"; }).length;
+    var nome = document.createElement("span");
+    nome.textContent = camada.nome;
+    var conta = document.createElement("small");
+    conta.textContent = achados ? achados + " de " + camada.itens.length + " com achado" : "sem achado";
+    botao.appendChild(nome);
+    botao.appendChild(conta);
+    botao.addEventListener("click", function () { selecionar(i); });
+    linha.appendChild(botao);
+    lista.appendChild(linha);
+    botoes.push(botao);
+  });
+
+  // A versão que vai para o papel traz todas as camadas por extenso.
+  var estatico = document.getElementById("resumo-estatico");
+  camadas.forEach(function (camada) {
+    var h = document.createElement("h2");
+    h.textContent = camada.nome;
+    estatico.appendChild(h);
+    var p = document.createElement("p");
+    p.textContent = camada.detalhe + " " + camada.itens.map(function (item) { return item.nome + " (" + rotulos[item.estado] + ")"; }).join("; ") + ".";
+    estatico.appendChild(p);
+  });
+
+  function selecionar(i) {
+    atual = i;
+    planos.forEach(function (plano, n) { plano.classList.toggle("atual", n === i); });
+    botoes.forEach(function (botao, n) { botao.setAttribute("aria-pressed", n === i ? "true" : "false"); });
+    document.getElementById("camada-nome").textContent = camadas[i].nome;
+    document.getElementById("camada-detalhe").textContent = camadas[i].detalhe;
+    var itens = document.getElementById("camada-itens");
+    itens.textContent = "";
+    camadas[i].itens.forEach(function (item) {
+      var li = document.createElement("li");
+      li.appendChild(peca(item.estado));
+      var texto = document.createElement("span");
+      texto.textContent = item.nome + " ";
+      var estado = document.createElement("em");
+      estado.textContent = "(" + rotulos[item.estado] + ")";
+      texto.appendChild(estado);
+      li.appendChild(texto);
+      itens.appendChild(li);
+    });
+  }
+
+  function aplicar(suave) {
+    pilha.classList.toggle("suave", !!suave);
+    pilha.style.setProperty("--rx", angulo.rx + "deg");
+    pilha.style.setProperty("--rz", angulo.rz + "deg");
+  }
+
+  function girarPor(dx, dy) {
+    angulo.rz += dx;
+    angulo.rx = Math.max(20, Math.min(78, angulo.rx + dy));
+    aplicar(false);
+  }
+
+  // Girar com o mouse, com o dedo (só na horizontal, para a página continuar rolando) e com o teclado.
+  var arrasto = null;
+  palco.addEventListener("pointerdown", function (e) { arrasto = { x: e.clientX, y: e.clientY }; palco.setPointerCapture(e.pointerId); pausar(); });
+  palco.addEventListener("pointermove", function (e) {
+    if (!arrasto) { return; }
+    girarPor((e.clientX - arrasto.x) * 0.4, e.pointerType === "touch" ? 0 : (arrasto.y - e.clientY) * 0.3);
+    arrasto = { x: e.clientX, y: e.clientY };
+  });
+  ["pointerup", "pointercancel"].forEach(function (tipo) { palco.addEventListener(tipo, function () { arrasto = null; }); });
+  palco.addEventListener("keydown", function (e) {
+    var passos = { ArrowLeft: [-8, 0], ArrowRight: [8, 0], ArrowUp: [0, 5], ArrowDown: [0, -5] }[e.key];
+    if (passos) { e.preventDefault(); pausar(); girarPor(passos[0], passos[1]); }
+  });
+
+  function pausar() {
+    if (girando) { cancelAnimationFrame(girando); girando = null; }
+    var botao = document.getElementById("girar");
+    botao.setAttribute("aria-pressed", "false");
+    botao.textContent = "Girar";
+  }
+  function quadro() { girarPor(0.25, 0); girando = requestAnimationFrame(quadro); }
+  document.getElementById("girar").addEventListener("click", function () {
+    if (girando) { pausar(); return; }
+    this.setAttribute("aria-pressed", "true");
+    this.textContent = "Pausar";
+    girando = requestAnimationFrame(quadro);
+  });
+  document.addEventListener("visibilitychange", function () { if (document.hidden) { pausar(); } });
+
+  document.getElementById("separar").addEventListener("click", function () {
+    var aberto = this.getAttribute("aria-pressed") !== "true";
+    this.setAttribute("aria-pressed", aberto ? "true" : "false");
+    this.textContent = aberto ? "Juntar as camadas" : "Separar as camadas";
+    pilha.style.setProperty("--vao", aberto ? "92px" : "46px");
+  });
+  document.getElementById("inicio").addEventListener("click", function () {
+    pausar();
+    angulo = { rx: inicial.rx, rz: inicial.rz };
+    aplicar(true);
+  });
+
+  aplicar(false);
+  selecionar(atual);
+})();
+</script>
+</body>
+</html>

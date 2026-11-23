@@ -305,11 +305,14 @@ def texto(arquivo: Path, idiomas: list[str], recursos: dict[int, str] | None = N
     'recursos' diz, por linha, que recurso retórico a página declarou no
     campo 'recurso'. Um contraste declarado não é tratado como vício.
     """
+    return _texto_das_linhas(comum.relativo(arquivo), comum.linhas_de_prosa(comum.ler(arquivo)), idiomas, recursos)
+
+
+def _texto_das_linhas(nome: str, linhas, idiomas: list[str], recursos: dict[int, str] | None = None) -> list[Achado]:
     achados: list[Achado] = []
-    nome = comum.relativo(arquivo)
     listas = ["texto-geral.tsv"] + [f"texto-{i}.tsv" for i in idiomas]
     recursos = recursos or {}
-    for n, linha in comum.linhas_de_prosa(comum.ler(arquivo)):
+    for n, linha in linhas:
         declarado = comum.normalizar(recursos.get(n, ""))
         for lista in listas:
             for nivel, padrao, orientacao in _padroes(lista):
@@ -469,6 +472,18 @@ def materiais_fora_do_git() -> list[Achado]:
     return []
 
 
+def repositorio_do_projeto() -> list[Achado]:
+    """Um projeto com conteúdo só fica em git local ou em repositório privado."""
+    import repositorio
+
+    if not repositorio.tem_projeto():
+        return []
+    geral, remotos = repositorio.situacao()
+    if repositorio.aceita(geral):
+        return []
+    return [Achado("erro", "repositorio", ".git", 0, repositorio.explicar(geral, remotos))]
+
+
 # --- Intake ---------------------------------------------------------------
 
 
@@ -486,6 +501,144 @@ def intake() -> list[Achado]:
     return achados
 
 
+# --- HTML interativo ------------------------------------------------------
+
+# O que faz um HTML depender de algo fora dele. Cada item: onde procurar
+# ("tags", "css" ou "js"), a expressão e o que dizer.
+_FORA_DO_ARQUIVO = [
+    ("tags", r"<(?:script|img|iframe|video|audio|source|embed|track|input)\b[^>]*?\bsrc\s*=\s*[\"']?(?!data:|blob:|about:blank|#)([^\"'\s>]+)", "carrega '{0}' de fora do arquivo"),
+    ("tags", r"<link\b[^>]*?\bhref\s*=\s*[\"']?(?!data:|#)([^\"'\s>]+)", "a tag link aponta para '{0}'"),
+    ("tags", r"<object\b[^>]*?\bdata\s*=\s*[\"']?(?!data:)([^\"'\s>]+)", "a tag object carrega '{0}'"),
+    ("tags", r"<(?:image|use|feImage)\b[^>]*?\bhref\s*=\s*[\"'](?!data:|#)([^\"']+)", "o SVG carrega '{0}' de fora do arquivo"),
+    ("tags", r"\bsrcset\s*=\s*[\"'](?!data:)([^\"']+)", "srcset aponta para '{0}'"),
+    ("tags", r"<base\b", "a tag base muda o endereço dos recursos"),
+    ("css", r"url\(\s*[\"']?(?!data:|#)([^\"')\s]+)", "o CSS carrega '{0}'"),
+    ("css", r"@import\b", "o CSS usa @import"),
+    ("js", r"\bfetch\s*\(|\bXMLHttpRequest\b|\bnew\s+WebSocket\b|\bEventSource\s*\(|\bsendBeacon\s*\(|\bimportScripts\s*\(", "o script faz uma chamada de rede"),
+    ("js", r"\bimport\s*\(|^\s*import\s[^;]*\bfrom\s*[\"']|^\s*import\s*[\"']", "o script importa um módulo de outro arquivo"),
+]
+
+_TEM_MOVIMENTO = re.compile(r"@keyframes|requestAnimationFrame|\btransition\s*:|\banimation\s*:|\.animate\s*\(|<animate", flags=re.IGNORECASE)
+
+
+def _linha_de(texto: str, posicao: int) -> int:
+    return texto.count("\n", 0, posicao) + 1
+
+
+def interativo(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    """HTML interativo: arquivo único, com mensagem, fonte e movimento com respeito a quem lê."""
+    achados: list[Achado] = []
+    arquivos = comum.interativos(pasta)
+    if not arquivos:
+        return achados
+    meta = _meta(pasta)
+    registro = {l.get("id", "") for l in comum.ler_tsv(comum.PROJETO / "evidencias.tsv")}
+    falta = "erro" if _rigoroso(pasta, rigoroso) else "aviso"
+    brief, _ = comum.cabecalho(comum.ler(comum.PROJETO / "brief.md"))
+    marcacao = brief.get("marcacao_obrigatoria", "").strip()
+    if not comum.storyline_aprovada(pasta):
+        achados.append(Achado("erro", "interativo", comum.relativo(pasta / "storyline.md"), 0, "Há HTML interativo e a storyline não foi aprovada pelo dono (aprovada: sim)."))
+    for arquivo in arquivos:
+        nome = comum.relativo(arquivo)
+        html = comum.ler(arquivo)
+
+        # 1. Arquivo único: nada vem de fora.
+        so_tags = re.sub(r"<(script|style)\b[^>]*>.*?</\1\s*>", lambda m: m.group(0)[:m.group(0).find(">") + 1] + "\n" * m.group(0).count("\n"), html, flags=re.DOTALL | re.IGNORECASE)
+        partes = {"tags": [(0, so_tags)], "css": [], "js": []}
+        for m in re.finditer(r"<style\b[^>]*>(.*?)</style\s*>", html, flags=re.DOTALL | re.IGNORECASE):
+            partes["css"].append((m.start(1), m.group(1)))
+        for m in re.finditer(r"\bstyle\s*=\s*\"([^\"]*)\"", so_tags, flags=re.IGNORECASE):
+            partes["css"].append((m.start(1), m.group(1)))
+        for m in re.finditer(r"<script\b([^>]*)>(.*?)</script\s*>", html, flags=re.DOTALL | re.IGNORECASE):
+            if not re.search(r"type\s*=\s*[\"']application/(?:ld\+)?json", m.group(1), flags=re.IGNORECASE):
+                partes["js"].append((m.start(2), m.group(2)))
+        for onde, expressao, mensagem in _FORA_DO_ARQUIVO:
+            for inicio, trecho in partes[onde]:
+                for m in re.finditer(expressao, trecho, flags=re.IGNORECASE | re.MULTILINE):
+                    alvo = (m.group(1) if m.groups() else "")[:60]
+                    achados.append(Achado("erro", "interativo", nome, _linha_de(html, inicio + m.start()), f"O HTML precisa ser um arquivo único: {mensagem.format(alvo)}. Ponha o conteúdo dentro do arquivo (script, estilo, SVG ou data:)."))
+
+        # 2. Estrutura mínima de um documento que abre sozinho.
+        for expressao, texto in (
+            (r"<!doctype html", "Falta '<!doctype html>' na primeira linha."),
+            (r"<html\b[^>]*\blang\s*=", "Falta o idioma em '<html lang=\"...\">'."),
+            (r"<meta\b[^>]*charset", "Falta '<meta charset=\"utf-8\">'."),
+            (r"<meta\b[^>]*name\s*=\s*[\"']viewport", "Falta a meta 'viewport', e a página não se ajusta à tela do celular."),
+            (r"<title>\s*[^<\s][^<]*</title>", "Falta o '<title>' com o nome da peça."),
+        ):
+            if not re.search(expressao, html, flags=re.IGNORECASE):
+                achados.append(Achado("erro", "interativo", nome, 0, texto))
+
+        # 3. O plano da peça, no comentário que abre o arquivo.
+        campos = comum.cabecalho_do_interativo(html)
+        for campo, texto in (
+            ("mensagem", "o que a pessoa deve entender depois de usar a peça, em uma frase"),
+            ("apoia", "a página ou a seção do entregável que a peça ajuda a entender"),
+            ("fontes", "os E-nnn do registro de evidências, ou 'nao-se-aplica' com o motivo"),
+        ):
+            if not campos.get(campo) or MARCA in campos.get(campo, ""):
+                achados.append(Achado(falta, "interativo", nome, 0, f"O comentário '<!-- interativo -->' do início não diz '{campo}': {texto}."))
+        for ident in re.findall(r"\bE-\d+\b", html):
+            if ident not in registro:
+                achados.append(Achado("erro", "interativo", nome, 0, f"{ident} não existe em _projeto/evidencias.tsv."))
+                break
+
+        # 4. Movimento, leitura sem script e impressão.
+        if _TEM_MOVIMENTO.search(html) and "prefers-reduced-motion" not in html:
+            achados.append(Achado("erro", "interativo", nome, 0, "A peça tem animação e não trata 'prefers-reduced-motion'. Quem pediu menos movimento ao sistema vê o estado final, parado."))
+        if "requestAnimationFrame" in html and not re.search(r"visibilitychange|pausa|pause", html, flags=re.IGNORECASE):
+            achados.append(Achado("aviso", "interativo", nome, 0, "A animação contínua não tem pausa. Dê um controle de pausar e pare o laço quando a aba não estiver visível."))
+        for m in re.finditer(r"<canvas\b([^>]*)>(.*?)</canvas>", html, flags=re.DOTALL | re.IGNORECASE):
+            if not re.search(r"aria-label|aria-labelledby|aria-hidden", m.group(1)) and not m.group(2).strip():
+                achados.append(Achado("aviso", "interativo", nome, _linha_de(html, m.start()), "O canvas não tem descrição. Ponha 'role=\"img\"' com 'aria-label', ou um texto dentro da tag."))
+        if "<noscript" not in html.lower():
+            achados.append(Achado("aviso", "interativo", nome, 0, "Falta '<noscript>' com a mensagem e os números principais, para quem abre sem script."))
+        if "@media print" not in html:
+            achados.append(Achado("aviso", "interativo", nome, 0, "Falta '@media print'. A peça costuma ser impressa ou salva em PDF junto com o material."))
+        if re.search(r"\b(?:alert|confirm|prompt)\s*\(", " ".join(t for _, t in partes["js"])):
+            achados.append(Achado("aviso", "interativo", nome, 0, "O script usa alert, confirm ou prompt. Mostre a mensagem na própria página."))
+        tamanho = arquivo.stat().st_size
+        if tamanho > 15 * 1024 * 1024:
+            achados.append(Achado("erro", "interativo", nome, 0, f"O arquivo tem {tamanho // (1024 * 1024)} MB. Acima de 15 MB ele não passa por e-mail nem abre bem no celular."))
+        elif tamanho > 3 * 1024 * 1024:
+            achados.append(Achado("aviso", "interativo", nome, 0, f"O arquivo tem {tamanho / (1024 * 1024):.1f} MB. Veja se as imagens embutidas podem ser menores."))
+
+        # 5. O texto que a pessoa lê segue as mesmas práticas do resto.
+        linhas = [(n, comum.limpar_linha(l)) for n, l in comum.texto_visivel(html)]
+        declarado = campos.get("idioma", "")[:2].lower()
+        idiomas = [declarado] if declarado in ("pt", "es", "en") else comum.idiomas_do_arquivo(arquivo, meta)
+        for achado in _texto_das_linhas(nome, linhas, idiomas):
+            achados.append(Achado(achado.nivel, "interativo", achado.arquivo, achado.linha, achado.texto))
+        for n, linha in linhas:
+            m = MARCAS_ESQUECIDAS.search(linha)
+            if m:
+                achados.append(Achado(falta, "interativo", nome, n, f"Marca esquecida no texto: '{m.group(0)}'."))
+        exemplos = len(re.findall(r'"(?:Exemplo|Ejemplo|Example)[:. ]', html))
+        if exemplos:
+            achados.append(Achado(falta, "interativo", nome, 0, f"A peça ainda traz {exemplos} dado(s) de exemplo do modelo. Troque pelos dados do projeto, com a fonte."))
+        visivel = "\n".join(l for _, l in linhas)
+        fontes = campos.get("fontes", "")
+        if re.search(r"\bE-\d+\b", fontes) and not re.search(r"\b(?:Fontes?|Fuentes?|Sources?)\s*:", visivel, flags=re.IGNORECASE):
+            achados.append(Achado(falta, "interativo", nome, 0, "A peça usa dados do registro e não mostra a fonte e a data na tela (uma linha 'Fonte: ...')."))
+        if marcacao and MARCA not in marcacao and _rigoroso(pasta, rigoroso) and marcacao.lower() not in visivel.lower():
+            achados.append(Achado("erro", "interativo", nome, 0, f"Falta a marcação '{marcacao}' no texto visível da peça."))
+    return achados
+
+
+def dominio_do_entregavel(pasta: Path, rigoroso: bool = False) -> list[Achado]:
+    """As regras que o projeto escreveu para o seu domínio, em _dominio/checagens.tsv."""
+    import dominio
+
+    return dominio.aplicar(pasta, rigoroso)
+
+
+def dominio_do_projeto() -> list[Achado]:
+    """As regras do domínio estão provadas pelos seus casos de teste."""
+    import dominio
+
+    return dominio.do_projeto()
+
+
 POR_ENTREGAVEL = {
     "briefing": briefing,
     "storyline": storyline,
@@ -495,4 +648,6 @@ POR_ENTREGAVEL = {
     "termos": termos,
     "estrutura": estrutura,
     "confidencialidade": confidencialidade,
+    "interativo": interativo,
+    "dominio": dominio_do_entregavel,
 }

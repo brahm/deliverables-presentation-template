@@ -39,6 +39,7 @@ def copiar_modelos(origem: Path, destino: Path) -> list[str]:
 def preparar_projeto() -> list[str]:
     criados = copiar_modelos(comum.MODELOS / "projeto", comum.PROJETO)
     criados += copiar_modelos(comum.MODELOS / "intake", comum.INTAKE)
+    criados += copiar_modelos(comum.MODELOS / "dominio", comum.BASE / "_dominio")
     materiais = comum.INTAKE / "materiais"
     if not materiais.exists():
         materiais.mkdir(parents=True)
@@ -74,6 +75,38 @@ def preparar_entregavel(ident: str, campos: dict) -> list[str]:
             arquivo.unlink()
             criados.remove(comum.relativo(arquivo))
     return criados
+
+
+def bases_de_interativo() -> list[str]:
+    return sorted(a.stem for a in (comum.MODELOS / "interativos").glob("*.html"))
+
+
+def preparar_interativo(ident: str, nome: str, base: str) -> list[str]:
+    """Copia um modelo de HTML interativo para a pasta do entregável."""
+    pasta = comum.BASE / ident
+    if not (pasta / "briefing.md").is_file():
+        raise SystemExit(f"O entregável '{ident}' não existe. Crie-o antes com --entregavel.")
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,48}", nome):
+        raise SystemExit("O nome da peça usa letras minúsculas, números e hífen.")
+    if base not in bases_de_interativo():
+        raise SystemExit(f"Modelo '{base}' não existe. Modelos: {', '.join(bases_de_interativo())}.")
+    faltas = comum.briefing_completo(pasta)
+    if faltas:
+        raise SystemExit("A peça espera o briefing completo. Falta: " + ", ".join(faltas) + ".")
+    if not comum.storyline_aprovada(pasta):
+        raise SystemExit("A peça espera a storyline aprovada pelo dono (aprovada: sim em storyline.md).")
+    destino = pasta / "interativos" / f"{nome}.html"
+    if destino.exists():
+        return []
+    texto = (comum.MODELOS / "interativos" / f"{base}.html").read_text(encoding="utf-8")
+    meta, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))
+    idiomas = [i.strip() for i in meta.get("idiomas", "").split(",") if i.strip() and comum.MARCA not in i]
+    if idiomas:
+        texto = texto.replace("idioma: pt-BR", f"idioma: {idiomas[0]}", 1)
+        texto = texto.replace('<html lang="pt-BR">', f'<html lang="{idiomas[0]}">', 1)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    destino.write_text(texto, encoding="utf-8")
+    return [comum.relativo(destino)]
 
 
 def pacotes_disponiveis() -> list[str]:
@@ -126,17 +159,23 @@ def main() -> int:
     analisador.add_argument("--titulo", default="")
     analisador.add_argument("--tipo", default="", help="apresentacao, documento, proposta, planilha ou treinamento")
     analisador.add_argument("--veiculo", default="", help="projetado, leitura, documento, planilha ou workshop")
-    analisador.add_argument("--formato", default="", help="pptx, docx, pdf ou xlsx")
+    analisador.add_argument("--formato", default="", help="pptx, docx, pdf, xlsx ou html")
     analisador.add_argument("--idiomas", default="", help="por exemplo: pt-BR, es")
     analisador.add_argument("--pacote", metavar="NOME", help="ativa um pacote de tipo de projeto")
+    analisador.add_argument("--interativo", metavar="NOME", help="cria um HTML interativo no entregável indicado")
+    analisador.add_argument("--base", default="fluxo", help="modelo do HTML interativo: fluxo, camadas-3d ou simulador")
     args = analisador.parse_args()
 
     criados = preparar_projeto()
-    if args.entregavel:
+    if args.interativo and not args.entregavel:
+        raise SystemExit("Diga em que entregável a peça entra: --entregavel ID --interativo NOME.")
+    if args.entregavel and not (args.interativo and (comum.BASE / args.entregavel / "briefing.md").is_file()):
         criados += preparar_entregavel(args.entregavel, {
             "titulo": args.titulo, "tipo": args.tipo, "veiculo": args.veiculo,
             "formato": args.formato, "idiomas": args.idiomas,
         })
+    if args.interativo:
+        criados += preparar_interativo(args.entregavel, args.interativo, args.base)
     if args.pacote:
         criados += ativar_pacote(args.pacote)
         print(f"Pacote '{args.pacote}' ativo. Leia {comum.relativo(comum.HARNESS / 'pacotes' / args.pacote / 'PACOTE.md')}.")

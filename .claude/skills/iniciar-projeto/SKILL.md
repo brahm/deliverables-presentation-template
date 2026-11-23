@@ -10,8 +10,16 @@ metadata:
 O dono diz o que quer com as palavras dele. O resto é seu, de uma vez,
 sem esperar que ele dite cada passo.
 
-1. Rode `python3 entregaveis/_harness/scripts/preparar.py`. Ele cria
-   `_projeto/` e `_intake/` a partir dos modelos. Se o projeto já tem
+1. Confira onde o projeto vai ficar, antes de escrever qualquer coisa
+   sobre o cliente: `python3 entregaveis/_harness/scripts/repositorio.py`.
+   Um projeto só é iniciado em pasta sem git, em git local ou em
+   repositório privado. Se o remoto for público, pare e leve ao dono as
+   saídas: criar um repositório privado a partir do template, tornar
+   este privado, ou remover o remoto e seguir em git local. Se o remoto
+   não pôde ser verificado, pergunte ao dono se ele é privado e registre
+   a resposta com `repositorio.py --confirmar "palavras do dono"`.
+   Depois rode `python3 entregaveis/_harness/scripts/preparar.py`. Ele
+   cria `_projeto/`, `_intake/` e `_dominio/` a partir dos modelos. Se o projeto já tem
    apresentações, documentos, dados ou regras de agente anteriores ao
    harness, pare aqui e siga `adotar-projeto`.
 2. Leia o que o dono já escreveu e tire dali o que der: cliente, tipo de
@@ -37,8 +45,11 @@ sem esperar que ele dite cada passo.
    podem aparecer em entregáveis.
 5. Ative os pacotes do tipo de trabalho com
    `preparar.py --pacote NOME`. Os que existem estão listados em
-   `entregaveis/_harness/pacotes/LEIA-ME.md`. Sem pacote que sirva, monte
-   um para o projeto com o que você conhece do domínio.
+   `entregaveis/_harness/pacotes/LEIA-ME.md`. Um pacote é ponto de
+   partida genérico. O que é próprio deste trabalho entra no domínio do
+   projeto: assim que o dono fornecer referências, métodos, contexto e
+   objetivo, aplique `calibrar-dominio`, que escreve o método, as
+   regras de checagem e os casos de teste em `_dominio/`.
 6. Abra o intake com `receber-materiais`: uma linha por material pedido,
    mais a lista de pedido de dados do pacote.
 7. Adapte o harness ao projeto. Um procedimento que vai se repetir vira

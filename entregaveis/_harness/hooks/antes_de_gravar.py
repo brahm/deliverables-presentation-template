@@ -2,8 +2,9 @@
 """Hook de antes da gravação: a história vem antes da página.
 
 Recusa gravar o corpo de um entregável enquanto o briefing estiver
-incompleto ou a storyline não tiver a aprovação do dono. É um dos dois
-pontos em que o harness bloqueia.
+incompleto ou a storyline não tiver a aprovação do dono. Recusa também
+gravar qualquer registro, material ou entregável do projeto enquanto o
+repositório remoto for público ou não tiver sido verificado.
 """
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ import sys
 
 import _base
 import comum
+import repositorio
 
 
 def principal() -> int:
@@ -18,6 +20,11 @@ def principal() -> int:
     arquivo = _base.arquivo_da_ferramenta(dados)
     if arquivo is None:
         return 0
+    if _base.area_de_projeto(arquivo):
+        geral, remotos = repositorio.situacao()
+        if not repositorio.aceita(geral):
+            print("Bloqueado pelo harness: " + repositorio.explicar(geral, remotos), file=sys.stderr)
+            return 2
     pasta = _base.entregavel_do_arquivo(arquivo)
     if pasta is None or not _base.e_conteudo(arquivo, pasta):
         return 0

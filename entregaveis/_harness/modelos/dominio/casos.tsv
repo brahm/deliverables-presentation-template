@@ -1,0 +1,7 @@
+# Casos de teste das regras do domínio. Para cada regra, ao menos um texto que ela acusa e um que ela deixa passar.
+# espera: acusa ou passa. texto: use \n para quebra de linha. Uma linha em branco (\n\n) separa páginas ou parágrafos.
+# Escreva os casos com frases que poderiam estar em um entregável deste projeto, sem dado real do cliente.
+# Formato, com dados fictícios:
+# D-001	acusa	A nota de maturidade da frente de dados é 2.
+# D-001	passa	A nota de maturidade da frente de dados é 2. O critério: não há identificador único de cliente.
+checagem	espera	texto
