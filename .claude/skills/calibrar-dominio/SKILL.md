@@ -1,6 +1,6 @@
 ---
 name: calibrar-dominio
-description: Use quando o dono fornece referências, métodos, contexto ou o objetivo do projeto, quando chega um material que muda o método e quando o estado diz que o domínio não foi calibrado. Escreve dentro do projeto o método, as regras de checagem e os casos de teste próprios deste trabalho, sem levar nada disso ao template.
+description: Use quando o consultor fornece referências, métodos, contexto ou o objetivo do projeto, quando chega um material que muda o método e quando o estado diz que o domínio não foi calibrado. Escreve dentro do projeto o método, as regras de checagem e os casos de teste próprios deste trabalho, sem levar nada disso ao template.
 metadata:
   origem: harness-de-entregaveis
 ---
@@ -16,9 +16,9 @@ vez.
 1. Confira onde o projeto está guardado:
    `python3 entregaveis/_harness/scripts/repositorio.py`. Só siga em
    git local ou em repositório privado. Se o remoto for público, pare e
-   leve ao dono as duas saídas: tornar o repositório privado ou remover
+   leve ao consultor as duas saídas: tornar o repositório privado ou remover
    o remoto.
-2. Junte o que o dono forneceu: as referências e os métodos em
+2. Junte o que o consultor forneceu: as referências e os métodos em
    `_intake/materiais/`, o contexto e o objetivo no brief. Registre
    cada material com a skill `receber-materiais`. Leia de cada um só o
    que trata de como o trabalho é feito e julgado.
@@ -51,12 +51,12 @@ vez.
    `dominio.md` que diz quando usar.
 10. Rode `python3 entregaveis/_harness/scripts/validar.py` nos
     entregáveis que já existem. Um achado novo em material aprovado é
-    uma pergunta para o dono, e não uma correção silenciosa.
+    uma pergunta para o consultor, e não uma correção silenciosa.
 11. Marque `estado: rascunho` em `dominio.md` e relate com
-    `relatar-ao-dono`: os métodos que você registrou, as regras criadas
+    `relatar-ao-consultor`: os métodos que você registrou, as regras criadas
     com um exemplo de cada, o que ficou para a revisão humana e o que
-    você supôs. Com o sim do dono, marque `estado: confirmado`.
-12. Volte a esta skill quando chegar um material novo, quando o dono
+    você supôs. Com o sim do consultor, marque `estado: confirmado`.
+12. Volte a esta skill quando chegar um material novo, quando o consultor
     corrigir um método e quando uma revisão pegar o que uma regra
     deveria ter pego. Regra nova nasce com os dois casos.
 

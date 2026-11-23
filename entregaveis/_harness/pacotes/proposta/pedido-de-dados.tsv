@@ -1,20 +1,20 @@
-# Lista padrão de informações a pedir para montar uma proposta. Quase tudo vem do dono do projeto.
+# Lista padrão de informações a pedir para montar uma proposta. Quase tudo vem do consultor.
 # A skill receber-materiais leva para _intake/pedido-de-dados.md só os itens que a proposta usa.
 # prioridade: essencial (sem ele não há proposta), importante (melhora um argumento) ou complementar.
 item	para_que	formato	quem_costuma_ter	prioridade
-Pedido de proposta do cliente, com anexos, requisitos e cronograma do processo	Matriz de requisitos e formato	PDF ou documentos	Dono do projeto	essencial
-Critérios de avaliação declarados pelo cliente e os pesos	Temas da proposta e ordem do material	Documento	Dono do projeto	essencial
-Notas das conversas com o cliente, com as frases dele	Entendimento do problema	Documento	Dono do projeto	essencial
-Materiais do cliente sobre o problema: relatórios, números, apresentações	Entendimento do problema e custo de não agir	Qualquer formato	Cliente, via dono	importante
-Mapa de decisores: nomes, papéis e posição conhecida	Mapa de decisores	Planilha	Dono do projeto	essencial
-Casos autorizados para citação, com o nível de identificação permitido e os resultados	Provas	Documento	Dono do projeto	essencial
-Currículos da equipe proposta	Equipe e governança	Documento	Dono do projeto	importante
-Credenciais e certificações da organização, com comprovante	Provas	Documento	Dono do projeto	complementar
-Estimativa de esforço e de prazo por fase	Abordagem e investimento	Planilha	Dono do projeto	essencial
-Regras de preço, tabela de valores e alçadas de aprovação	Investimento e opções	Documento ou planilha	Dono do projeto	essencial
-Termos comerciais e contratuais padrão	Escopo de trabalho	Documento	Jurídico do dono	importante
-Modelo de proposta e guia de marca da organização do dono	Formato e identidade visual	Arquivo de modelo	Dono do projeto	essencial
-Propostas anteriores para o mesmo cliente e o retorno recebido	Lições e tom	Arquivos	Dono do projeto	complementar
-O que se sabe dos concorrentes na disputa	Posicionamento e objeções	Notas	Dono do projeto	complementar
-Orçamento disponível ou esperado pelo cliente	Opções de investimento	Nota	Dono do projeto	importante
-Lista de nomes de outros clientes que não podem aparecer	Checagem de confidencialidade	Lista	Dono do projeto	essencial
+Pedido de proposta do cliente, com anexos, requisitos e cronograma do processo	Matriz de requisitos e formato	PDF ou documentos	Consultor	essencial
+Critérios de avaliação declarados pelo cliente e os pesos	Temas da proposta e ordem do material	Documento	Consultor	essencial
+Notas das conversas com o cliente, com as frases dele	Entendimento do problema	Documento	Consultor	essencial
+Materiais do cliente sobre o problema: relatórios, números, apresentações	Entendimento do problema e custo de não agir	Qualquer formato	Cliente, via consultor	importante
+Mapa de decisores: nomes, papéis e posição conhecida	Mapa de decisores	Planilha	Consultor	essencial
+Casos autorizados para citação, com o nível de identificação permitido e os resultados	Provas	Documento	Consultor	essencial
+Currículos da equipe proposta	Equipe e governança	Documento	Consultor	importante
+Credenciais e certificações da organização, com comprovante	Provas	Documento	Consultor	complementar
+Estimativa de esforço e de prazo por fase	Abordagem e investimento	Planilha	Consultor	essencial
+Regras de preço, tabela de valores e alçadas de aprovação	Investimento e opções	Documento ou planilha	Consultor	essencial
+Termos comerciais e contratuais padrão	Escopo de trabalho	Documento	Jurídico da organização do consultor	importante
+Modelo de proposta e guia de marca da organização do consultor	Formato e identidade visual	Arquivo de modelo	Consultor	essencial
+Propostas anteriores para o mesmo cliente e o retorno recebido	Lições e tom	Arquivos	Consultor	complementar
+O que se sabe dos concorrentes na disputa	Posicionamento e objeções	Notas	Consultor	complementar
+Orçamento disponível ou esperado pelo cliente	Opções de investimento	Nota	Consultor	importante
+Lista de nomes de outros clientes que não podem aparecer	Checagem de confidencialidade	Lista	Consultor	essencial

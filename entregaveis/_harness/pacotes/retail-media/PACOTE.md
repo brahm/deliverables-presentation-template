@@ -12,7 +12,7 @@ dados de compra. Há dois lados, e o pacote serve aos dois:
 Defina o lado no início. Ele muda a audiência, os frameworks e o
 pedido.
 
-## O que perguntar ao dono no início
+## O que perguntar ao consultor no início
 
 Além das perguntas de `iniciar-projeto`:
 

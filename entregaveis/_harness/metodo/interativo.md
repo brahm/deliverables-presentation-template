@@ -144,5 +144,5 @@ conferido de novo.
 - Alguns serviços de e-mail barram anexo `.html`. Nesse caso, envie em
   um arquivo compactado ou pelo repositório de arquivos do projeto.
 - Publicar a peça em um serviço de páginas é uma saída do projeto. O
-  dono decide, e a peça precisa respeitar
+  consultor decide, e a peça precisa respeitar
   `_projeto/regras-de-material.md`.

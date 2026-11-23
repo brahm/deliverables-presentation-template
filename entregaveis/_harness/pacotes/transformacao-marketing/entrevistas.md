@@ -6,7 +6,7 @@ contado do começo ao fim. Registre a entrevista no intake com o tipo
 a data. Uma fala só é citada com nome quando a pessoa autoriza.
 
 Em projeto de transformação, quem é entrevistado quer saber o que vai
-mudar para ele. Combine com o dono o que pode ser dito.
+mudar para ele. Combine com o consultor o que pode ser dito.
 
 ## Presidência e diretoria de negócio
 

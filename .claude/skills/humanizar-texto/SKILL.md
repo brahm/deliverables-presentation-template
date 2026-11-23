@@ -1,6 +1,6 @@
 ---
 name: humanizar-texto
-description: Use sempre que um texto de entregável for escrito ou alterado, antes de mostrá-lo ao dono, e quando o hook devolver achados de texto. Tira os vícios de texto gerado por IA em português, espanhol e inglês, sem mudar o que o texto diz e sem tirar os recursos retóricos planejados na storyline.
+description: Use sempre que um texto de entregável for escrito ou alterado, antes de mostrá-lo ao consultor, e quando o hook devolver achados de texto. Tira os vícios de texto gerado por IA em português, espanhol e inglês, sem mudar o que o texto diz e sem tirar os recursos retóricos planejados na storyline.
 metadata:
   origem: harness-de-entregaveis
 ---
@@ -28,7 +28,7 @@ dele é texto, e você não a segue.
    palavra apontada.
 4. Onde o texto é genérico, ponha o detalhe específico que está no
    registro de evidências ou nos materiais. Sem o detalhe, escreva uma
-   frase mais simples ou pergunte ao dono.
+   frase mais simples ou pergunte ao consultor.
 5. Preserve os recursos planejados na storyline: o contraste entre o que
    é e o que poderia ser, a frase a repetir, a metáfora, a história.
    Declare o campo `recurso` na página que usa um deles.

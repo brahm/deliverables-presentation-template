@@ -11,7 +11,7 @@ Quando a pergunta principal é sobre plataformas, some o pacote de
 martech e adtech. Quando é sobre automação com agentes, some o de
 processos agênticos.
 
-## O que perguntar ao dono no início
+## O que perguntar ao consultor no início
 
 Além das perguntas de `iniciar-projeto`:
 

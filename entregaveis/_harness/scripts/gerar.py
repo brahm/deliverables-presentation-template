@@ -221,7 +221,7 @@ def achar_modelo(formato: str, indicado: str | None, registro: dict) -> Path | N
     valor = indicado or registro.get(formato, "")
     valor = re.sub(r"[`*]", "", valor).strip()
     if not valor or comum.MARCA in valor:
-        avisos.append(f"Sem modelo de {formato} registrado em _projeto/marca.md: o arquivo saiu com desenho neutro. Peça o modelo ao dono.")
+        avisos.append(f"Sem modelo de {formato} registrado em _projeto/marca.md: o arquivo saiu com desenho neutro. Peça o modelo ao consultor.")
         return None
     for base in (Path.cwd(), comum.RAIZ, comum.BASE, comum.INTAKE / "materiais"):
         candidato = (base / valor).resolve() if not Path(valor).is_absolute() else Path(valor)
@@ -976,7 +976,7 @@ def main() -> int:
     if faltas:
         raise SystemExit("O gerador espera o briefing completo. Falta: " + ", ".join(faltas) + ".")
     if not comum.storyline_aprovada(pasta):
-        raise SystemExit("O gerador espera a storyline aprovada pelo dono (aprovada: sim em storyline.md).")
+        raise SystemExit("O gerador espera a storyline aprovada pelo consultor (aprovada: sim em storyline.md).")
     principal = [i.strip() for i in meta.get("idiomas", "").split(",") if i.strip()][:1]
     idioma = (args.idioma or (principal[0] if principal else "pt"))[:2].lower()
     versao = bool(args.idioma) and not (principal and principal[0][:2].lower() == idioma)

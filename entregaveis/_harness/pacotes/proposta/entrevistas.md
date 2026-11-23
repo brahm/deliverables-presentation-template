@@ -1,14 +1,14 @@
 # Roteiros de conversa
 
 Em proposta, as conversas são de descoberta e acontecem antes de
-escrever. Quem conversa com o cliente é o dono. Estes roteiros o ajudam
-a preparar a conversa e ajudam o agente a perguntar ao dono o que ele
+escrever. Quem conversa com o cliente é o consultor. Estes roteiros o ajudam
+a preparar a conversa e ajudam o agente a perguntar ao consultor o que ele
 ouviu. Registre no intake com o tipo `entrevista`, com a data.
 
 O que o cliente disse com as próprias palavras vale mais do que a
 descrição formal do pedido. Anote as frases.
 
-## Com o dono, antes de qualquer conversa
+## Com o consultor, antes de qualquer conversa
 
 - Como a oportunidade chegou e o que já foi dito ao cliente?
 - Quem decide, quem influencia e quem você ainda não conhece?

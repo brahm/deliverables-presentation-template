@@ -17,7 +17,7 @@ from pathlib import Path
 import comum
 from comum import Achado, MARCA
 
-# Limites de palavras por veículo. O dono pode trocar qualquer um em
+# Limites de palavras por veículo. O consultor pode trocar qualquer um em
 # _projeto/limites.tsv (colunas: veiculo, limite, valor).
 LIMITES = {
     "projetado": {"titulo": 14, "corpo_aviso": 40, "corpo_erro": 80, "marcadores": 5},
@@ -130,7 +130,7 @@ def _rotulo(titulo: str) -> bool:
 
 
 def storyline(pasta: Path, rigoroso: bool = False) -> list[Achado]:
-    """Títulos de ação, resumo executivo, pedido e aprovação do dono."""
+    """Títulos de ação, resumo executivo, pedido e aprovação do consultor."""
     achados: list[Achado] = []
     meta = _meta(pasta)
     etapa = comum.etapa(meta)
@@ -161,7 +161,7 @@ def storyline(pasta: Path, rigoroso: bool = False) -> list[Achado]:
     if sequencia and not any(comum.normalizar(l.get("tipo", "")) == "pedido" for l in sequencia):
         achados.append(Achado("erro" if etapa >= 2 or rigoroso else "aviso", "storyline", nome_story, 0, "Nenhuma página do tipo 'pedido': a história precisa terminar no que a audiência deve fazer."))
     if (etapa >= 3 or comum.tem_paginas_reais(pasta)) and not comum.storyline_aprovada(pasta):
-        achados.append(Achado("erro", "storyline", nome_story, 0, "Há conteúdo escrito e a storyline não foi aprovada pelo dono (aprovada: sim)."))
+        achados.append(Achado("erro", "storyline", nome_story, 0, "Há conteúdo escrito e a storyline não foi aprovada pelo consultor (aprovada: sim)."))
 
     for arquivo in pasta.glob("conteudo*.md"):
         nome = comum.relativo(arquivo)
@@ -537,7 +537,7 @@ def interativo(pasta: Path, rigoroso: bool = False) -> list[Achado]:
     brief, _ = comum.cabecalho(comum.ler(comum.PROJETO / "brief.md"))
     marcacao = brief.get("marcacao_obrigatoria", "").strip()
     if not comum.storyline_aprovada(pasta):
-        achados.append(Achado("erro", "interativo", comum.relativo(pasta / "storyline.md"), 0, "Há HTML interativo e a storyline não foi aprovada pelo dono (aprovada: sim)."))
+        achados.append(Achado("erro", "interativo", comum.relativo(pasta / "storyline.md"), 0, "Há HTML interativo e a storyline não foi aprovada pelo consultor (aprovada: sim)."))
     for arquivo in arquivos:
         nome = comum.relativo(arquivo)
         html = comum.ler(arquivo)

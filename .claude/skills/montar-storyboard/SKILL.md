@@ -1,6 +1,6 @@
 ---
 name: montar-storyboard
-description: Use quando o dono aprovou a storyline e antes de redigir. Decide, página por página, o tipo de página, o que ela mostra e que evidência usa, e transforma cada lacuna em pedido de dados.
+description: Use quando o consultor aprovou a storyline e antes de redigir. Decide, página por página, o tipo de página, o que ela mostra e que evidência usa, e transforma cada lacuna em pedido de dados.
 metadata:
   origem: harness-de-entregaveis
 ---
@@ -20,7 +20,7 @@ em `entregaveis/_harness/metodo/visual.md`.
    a coluna "Falta" e vira um pedido com `receber-materiais`.
 5. Uma ideia por página. Se uma linha precisa provar duas coisas, divida
    em duas páginas.
-6. Uma mudança de título depois da aprovação volta ao dono: atualize a
+6. Uma mudança de título depois da aprovação volta ao consultor: atualize a
    storyline e mostre o que mudou.
 7. Monte a navegação: as seções, a agenda e onde ela se repete.
 8. Descarte a primeira imagem que vier à cabeça para cada conceito.

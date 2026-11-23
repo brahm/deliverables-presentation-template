@@ -2,7 +2,7 @@
 
 Esta pasta guarda o que é próprio deste projeto: os métodos, os
 critérios e as regras que saíram das referências, do contexto e do
-objetivo que o dono forneceu. O template público traz só o esqueleto. O
+objetivo que o consultor forneceu. O template público traz só o esqueleto. O
 conteúdo é escrito aqui, dentro do projeto, pela skill
 `calibrar-dominio`.
 

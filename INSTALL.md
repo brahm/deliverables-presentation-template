@@ -41,34 +41,34 @@ descompacte fora do projeto e troque o endereço pelo caminho da pasta.
 
 1. Traga o kit para fora do projeto. Clone em uma pasta temporária
    (`git clone --depth 1 https://github.com/brahm/deliverables-presentation-template KIT`)
-   ou use a cópia local que o dono indicar. Nunca clone dentro do
+   ou use a cópia local que o consultor indicar. Nunca clone dentro do
    projeto.
 2. Olhe o projeto antes de instalar: as pastas da raiz, os arquivos de
    instrução para agentes (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
    `.github/copilot-instructions.md`, `.cursorrules`) e
    `.claude/settings.json`. Você só lê nesta etapa.
 3. Escolha o nome da pasta do harness. O padrão é `entregaveis`. Se o
-   projeto já usa esse nome para outra coisa, ou se o dono prefere outro,
+   projeto já usa esse nome para outra coisa, ou se o consultor prefere outro,
    use `--pasta NOME`. Uma pasta `entregaveis/` que já existe pode ser
    usada: o harness só ocupa as subpastas que começam por `_` e as que
    têm `briefing.md`.
-4. Simule e mostre a saída ao dono:
+4. Simule e mostre a saída ao consultor:
    `sh KIT/install.sh --destino RAIZ_DO_PROJETO --simular`
 5. Instale, com as mesmas opções e sem `--simular`. Acrescente `--ci`
-   quando o projeto está no GitHub e o dono quer as checagens em cada
+   quando o projeto está no GitHub e o consultor quer as checagens em cada
    pull request.
-6. Leia a seção "Atenção" da saída e resolva cada linha com o dono. Uma
-   skill do projeto com o mesmo nome de uma do kit é mantida, e o dono
+6. Leia a seção "Atenção" da saída e resolva cada linha com o consultor. Uma
+   skill do projeto com o mesmo nome de uma do kit é mantida, e o consultor
    decide qual fica.
 7. Rode `python3 PASTA/_harness/scripts/repositorio.py`. Se o remoto for
-   público, pare e leve ao dono as saídas: tornar o repositório privado
+   público, pare e leve ao consultor as saídas: tornar o repositório privado
    ou remover o remoto. Depois rode
    `python3 PASTA/_harness/scripts/estado.py`. Ele vai dizer que o
    projeto não foi iniciado.
 8. Siga `.claude/skills/adotar-projeto/SKILL.md` se o projeto já tinha
    apresentações, documentos, dados ou regras antes do harness. Siga
    `.claude/skills/iniciar-projeto/SKILL.md` se ele estava vazio.
-9. Apague a pasta temporária do kit. Mostre ao dono o que mudou
+9. Apague a pasta temporária do kit. Mostre ao consultor o que mudou
    (`git status`, quando há git) e só faça commit quando ele pedir.
 
 ## O que o instalador faz

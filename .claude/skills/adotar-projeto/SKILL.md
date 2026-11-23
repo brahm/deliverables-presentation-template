@@ -1,6 +1,6 @@
 ---
 name: adotar-projeto
-description: Use quando o harness foi instalado em um projeto que já estava em andamento, com apresentações, documentos, dados ou regras de agente que existiam antes dele. Levanta o que existe sem supor como o projeto foi organizado, encaixa o harness nesse desenho e pergunta ao dono só o que os arquivos não respondem e onde há conflito.
+description: Use quando o harness foi instalado em um projeto que já estava em andamento, com apresentações, documentos, dados ou regras de agente que existiam antes dele. Levanta o que existe sem supor como o projeto foi organizado, encaixa o harness nesse desenho e pergunta ao consultor só o que os arquivos não respondem e onde há conflito.
 metadata:
   origem: harness-de-entregaveis
 ---
@@ -15,9 +15,9 @@ levante, encaixe e pergunte.
    só acrescenta registros.
 2. Rode `python3 entregaveis/_harness/scripts/repositorio.py`. Um
    projeto de cliente só fica em git local ou em repositório privado.
-   Se o remoto for público, pare e leve ao dono as saídas: tornar o
+   Se o remoto for público, pare e leve ao consultor as saídas: tornar o
    repositório privado ou remover o remoto. Se não pôde ser verificado,
-   pergunte ao dono e registre a resposta com `--confirmar`. Depois rode
+   pergunte ao consultor e registre a resposta com `--confirmar`. Depois rode
    `python3 entregaveis/_harness/scripts/preparar.py` e
    `python3 entregaveis/_harness/scripts/levantar.py`. Leia a saída.
 3. Leia as instruções para agentes que o projeto já tem. Elas continuam
@@ -40,7 +40,7 @@ levante, encaixe e pergunte.
    - preencha o briefing com o que o material deixa ver e marque o
      `estado` no ponto real do trabalho;
    - rode `validar.py ID` e guarde a lista do que o material reprova.
-     Não corrija ainda: o dono decide o que vale refazer.
+     Não corrija ainda: o consultor decide o que vale refazer.
 7. Leve ao registro de evidências os números do material que têm fonte.
    Os que não têm formam a lista de lacunas.
 8. Pergunte uma vez, com a resposta que você assumiria em cada item:
@@ -56,6 +56,6 @@ levante, encaixe e pergunte.
    que o projeto já segue entram no domínio, com a skill
    `calibrar-dominio`.
 10. Marque `iniciado: sim`, rode `validar.py` e relate com
-    `relatar-ao-dono`: o que você encontrou, onde cada coisa foi
+    `relatar-ao-consultor`: o que você encontrou, onde cada coisa foi
     encaixada, os conflitos, o que o material existente reprova e as
     perguntas.

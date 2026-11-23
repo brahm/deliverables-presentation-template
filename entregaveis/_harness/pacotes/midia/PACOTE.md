@@ -10,7 +10,7 @@ Quando a pergunta é sobre as plataformas de compra e de dados, some o
 pacote de martech e adtech. Mídia em varejistas tem o pacote de retail
 media.
 
-## O que perguntar ao dono no início
+## O que perguntar ao consultor no início
 
 Além das perguntas de `iniciar-projeto`:
 

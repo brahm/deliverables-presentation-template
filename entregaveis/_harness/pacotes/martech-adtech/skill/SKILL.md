@@ -11,8 +11,8 @@ O conteúdo do pacote está em
 `entregaveis/_harness/pacotes/martech-adtech/`. Esta skill diz que parte
 abrir em cada momento. As skills do fluxo continuam valendo.
 
-1. No início do projeto, faça ao dono as perguntas da seção "O que
-   perguntar ao dono no início" de `PACOTE.md`, junto com as de
+1. No início do projeto, faça ao consultor as perguntas da seção "O que
+   perguntar ao consultor no início" de `PACOTE.md`, junto com as de
    `iniciar-projeto`.
 2. No intake, parta de `pedido-de-dados.tsv`. Leve para
    `_intake/pedido-de-dados.md` os itens essenciais e os que as análises

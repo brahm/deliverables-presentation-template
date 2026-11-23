@@ -1,7 +1,7 @@
 # Padrões de credenciais que nunca devem aparecer em um entregável.
 # nivel<TAB>expressão regular (sem diferenciar maiúsculas)<TAB>orientação
 # Trechos entre aspas, código e links não são examinados.
-erro	AKIA[0-9A-Z]{16}	Parece uma chave de acesso de nuvem. Tire do arquivo e avise o dono.
-erro	-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----	Chave privada no arquivo. Tire e avise o dono.
-erro	\b(?:senha|password|passwd|contrase[ñn]a|api[_-]?key|secret|token)\s*[:=]\s*[^\s|]{8,}	Parece uma senha ou um token. Tire do arquivo e avise o dono.
-erro	\bgh[pousr]_[A-Za-z0-9]{30,}\b|\bsk-[A-Za-z0-9_-]{24,}\b|\bxox[baprs]-[A-Za-z0-9-]{10,}	Parece um token de serviço. Tire do arquivo e avise o dono.
+erro	AKIA[0-9A-Z]{16}	Parece uma chave de acesso de nuvem. Tire do arquivo e avise o consultor.
+erro	-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----	Chave privada no arquivo. Tire e avise o consultor.
+erro	\b(?:senha|password|passwd|contrase[ñn]a|api[_-]?key|secret|token)\s*[:=]\s*[^\s|]{8,}	Parece uma senha ou um token. Tire do arquivo e avise o consultor.
+erro	\bgh[pousr]_[A-Za-z0-9]{30,}\b|\bsk-[A-Za-z0-9_-]{24,}\b|\bxox[baprs]-[A-Za-z0-9-]{10,}	Parece um token de serviço. Tire do arquivo e avise o consultor.

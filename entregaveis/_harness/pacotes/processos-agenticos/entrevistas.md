@@ -7,7 +7,7 @@ achado ao registro de evidências com a área e a data. Uma fala só é
 citada com nome quando a pessoa autoriza.
 
 Quem executa o processo quer saber o que acontece com o trabalho dele.
-Combine com o dono o que pode ser dito.
+Combine com o consultor o que pode ser dito.
 
 ## Patrocinador
 

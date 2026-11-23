@@ -13,7 +13,7 @@ que sai. Os dois são definidos no briefing, antes da storyline.
 | `documento` | Relatório, memorando, proposta escrita, apostila | Sem limite fixo | Aviso para parágrafo acima de 130 palavras e frase acima de 40 |
 | `planilha` | Bases de dados, tabelas grandes, análises e gráficos | Não se aplica | Não se aplica |
 
-O dono troca qualquer limite em `entregaveis/_projeto/limites.tsv`.
+O consultor troca qualquer limite em `entregaveis/_projeto/limites.tsv`.
 
 Um material feito para ser projetado e também lido depois são dois
 materiais: o que se projeta e o documento de leitura. Escreva a storyline

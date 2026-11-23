@@ -1,6 +1,6 @@
 ---
 name: construir-storyline
-description: Use quando o briefing de um entregável está completo, antes de qualquer página, e quando o dono pede para mudar a história de um material. Monta a abertura, o resumo executivo e a sequência de títulos de ação, e leva a sequência ao dono para aprovação.
+description: Use quando o briefing de um entregável está completo, antes de qualquer página, e quando o consultor pede para mudar a história de um material. Monta a abertura, o resumo executivo e a sequência de títulos de ação, e leva a sequência ao consultor para aprovação.
 metadata:
   origem: harness-de-entregaveis
 ---
@@ -31,7 +31,7 @@ arquivo é `storyline.md`, na pasta do entregável.
 9. Confira o tamanho: o conteúdo ocupa cerca de 60% do tempo disponível.
 10. Escreva o resumo executivo, com a conclusão primeiro.
 11. Rode `python3 entregaveis/_harness/scripts/validar.py ID --so storyline,texto`.
-12. Leve ao dono a grande ideia, a sequência de títulos e a lista do que
+12. Leve ao consultor a grande ideia, a sequência de títulos e a lista do que
     falta de evidência, e peça a aprovação. Depois do sim, registre em
     `storyline.md` `aprovada: sim`, a data e as palavras dele, e mude o
     `estado` do briefing para `storyboard`. Nunca marque a aprovação por

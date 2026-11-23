@@ -1,6 +1,6 @@
 ---
 name: revisar-entregavel
-description: Use antes de dizer que um entregável está pronto, antes de mostrá-lo ao dono como versão para envio e quando o hook de fim de turno pedir. Roda as checagens, aplica a rubrica como quem não escreveu e registra a revisão da versão atual.
+description: Use antes de dizer que um entregável está pronto, antes de mostrá-lo ao consultor como versão para envio e quando o hook de fim de turno pedir. Roda as checagens, aplica a rubrica como quem não escreveu e registra a revisão da versão atual.
 metadata:
   origem: harness-de-entregaveis
 ---
@@ -26,7 +26,7 @@ metadata:
 7. Rode `python3 entregaveis/_harness/scripts/validar.py --carimbar ID`.
    O comando registra a revisão desta versão do conteúdo e falha se
    ainda houver erro. Mude o `estado` do briefing para `revisao`.
-8. Relate com `relatar-ao-dono`: o que passou, o que foi corrigido e o
+8. Relate com `relatar-ao-consultor`: o que passou, o que foi corrigido e o
    que ficou pendente. Não diga que um material foi revisado sem o
    registro do passo 7. Uma alteração no conteúdo depois do registro
    pede nova revisão.

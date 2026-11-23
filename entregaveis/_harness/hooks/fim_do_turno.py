@@ -3,7 +3,7 @@
 
 Se o conteúdo de um entregável mudou nesta sessão e a revisão registrada
 não é da versão atual, pede a revisão antes de encerrar. Pede uma vez por
-versão: se o agente decidir parar mesmo assim, ele precisa dizer ao dono
+versão: se o agente decidir parar mesmo assim, ele precisa dizer ao consultor
 que a revisão ficou pendente.
 """
 from __future__ import annotations
@@ -36,7 +36,7 @@ def principal() -> int:
     _base.gravar_sessao(sessao_id, sessao)
     print(
         f"Harness: o conteúdo de {', '.join(pendentes)} mudou nesta sessão e a revisão registrada não é desta versão. "
-        "Aplique a skill revisar-entregavel agora. Se a revisão não couber neste turno, diga ao dono, "
+        "Aplique a skill revisar-entregavel agora. Se a revisão não couber neste turno, diga ao consultor, "
         "com todas as letras, que ela ficou pendente e por quê.",
         file=sys.stderr,
     )

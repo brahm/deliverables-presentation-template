@@ -17,7 +17,7 @@ formatos em `metodo/formatos.md`.
    página traz a fonte e a data. Sem 3D e sem eixo que distorce.
 3. Itens que se relacionam viram um diagrama, escolhido pela relação:
    rede, segmento, junção, fluxo ou pilha.
-4. Imagens. Use só as que vieram nos materiais do projeto ou que o dono
+4. Imagens. Use só as que vieram nos materiais do projeto ou que o consultor
    confirmou que pode usar. Fuja da primeira ideia.
 5. Marca. Aplique o modelo, as fontes e as cores de
    `_projeto/marca.md`. Use os layouts do modelo em vez de desenhar por

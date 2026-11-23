@@ -1,6 +1,6 @@
 ---
 name: construir-interativo
-description: Use quando o dono pede uma peça interativa ou animada, em 2D ou 3D, e quando uma página do storyboard fica mais fácil de entender com a audiência mexendo (percorrer um fluxo, girar uma arquitetura, testar uma premissa). Constrói um HTML de arquivo único, sem biblioteca nem recurso externo, que apoia a leitura do entregável.
+description: Use quando o consultor pede uma peça interativa ou animada, em 2D ou 3D, e quando uma página do storyboard fica mais fácil de entender com a audiência mexendo (percorrer um fluxo, girar uma arquitetura, testar uma premissa). Constrói um HTML de arquivo único, sem biblioteca nem recurso externo, que apoia a leitura do entregável.
 metadata:
   origem: harness-de-entregaveis
 ---
@@ -14,7 +14,7 @@ página antes da primeira peça do projeto.
    entende mexendo que não entenderia lendo a página. Sem essa frase,
    faça uma página estática com a skill `desenhar-visual`.
 2. A história vem antes. A peça só nasce com o briefing completo e a
-   storyline aprovada pelo dono, e a mensagem dela é uma das mensagens
+   storyline aprovada pelo consultor, e a mensagem dela é uma das mensagens
    da storyline. O harness bloqueia a gravação fora dessa ordem.
 3. Escolha o modelo de partida pela pergunta da audiência: `fluxo` para
    uma sequência, `camadas-3d` para partes que se empilham, `simulador`
@@ -47,11 +47,11 @@ página antes da primeira peça do projeto.
     teclado, movimento reduzido e impressão. Onde há Node e Playwright,
     rode `node entregaveis/_harness/scripts/conferir_interativo.js`
     com o caminho do arquivo e olhe as imagens geradas. Sem eles, peça
-    ao dono para abrir o arquivo e diga no relatório que a conferência
+    ao consultor para abrir o arquivo e diga no relatório que a conferência
     renderizada não foi feita por você.
 12. Ligue a peça ao material. A página que ela apoia recebe uma imagem
     do estado principal e uma linha que diz como abrir a peça. O
     material precisa se sustentar sem ela.
 13. A peça entra na revisão junto com o entregável, com a skill
     `revisar-entregavel`. Publicar em um serviço de páginas ou enviar ao
-    cliente é decisão do dono.
+    cliente é decisão do consultor.

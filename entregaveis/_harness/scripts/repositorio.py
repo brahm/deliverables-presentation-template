@@ -7,12 +7,12 @@ pessoa lê sem se identificar é público, e o harness recusa.
 
 Uso:
     repositorio.py                         mostra a situação de cada remoto
-    repositorio.py --confirmar "palavras"  registra que o dono confirmou que
+    repositorio.py --confirmar "palavras"  registra que o consultor confirmou que
                                            os remotos não verificados são privados
 
 A verificação é o pedido que o git faz ao clonar, sem credencial, ao
 endereço do próprio remoto. Quando não há rede, ou o servidor não
-responde, a situação fica "não verificado" e vale a confirmação do dono, registrada em
+responde, a situação fica "não verificado" e vale a confirmação do consultor, registrada em
 _projeto/repositorio.tsv. Um remoto verificado como público não aceita
 confirmação: torne-o privado ou remova-o.
 
@@ -154,7 +154,7 @@ def _lembrar(url: str, situacao: str) -> None:
 
 
 def confirmados() -> dict[str, dict]:
-    """Remotos que o dono confirmou como privados, pelo endereço."""
+    """Remotos que o consultor confirmou como privados, pelo endereço."""
     return {l.get("remoto", ""): l for l in comum.ler_tsv(REGISTRO) if comum.normalizar(l.get("situacao", "")) == PRIVADO}
 
 
@@ -202,15 +202,15 @@ def explicar(geral: str, linhas: list[tuple[str, str, str]]) -> str:
         return (
             f"O repositório remoto {publicos} é público: qualquer pessoa lê o que for enviado. "
             "Um projeto de cliente só fica em git local ou em repositório privado. "
-            "Peça ao dono para tornar o repositório privado, ou para remover o remoto e seguir só com o git local, "
+            "Peça ao consultor para tornar o repositório privado, ou para remover o remoto e seguir só com o git local, "
             "e rode de novo 'python3 entregaveis/_harness/scripts/repositorio.py'. Não contorne esta trava."
         )
     pendentes = ", ".join(f"{nome} ({url})" for nome, url, s in linhas if s == NAO_VERIFICADO)
     return (
         f"Não foi possível verificar se o repositório remoto {pendentes} é privado (sem rede, ou o servidor não respondeu). "
         "Um projeto de cliente só fica em git local ou em repositório privado. "
-        "Pergunte ao dono se o repositório é privado e, com o sim dele, registre com "
-        "'python3 entregaveis/_harness/scripts/repositorio.py --confirmar \"palavras do dono\"'. "
+        "Pergunte ao consultor se o repositório é privado e, com o sim dele, registre com "
+        "'python3 entregaveis/_harness/scripts/repositorio.py --confirmar \"palavras do consultor\"'. "
         "Não registre a confirmação por conta própria."
     )
 
@@ -224,10 +224,10 @@ def confirmar(palavras: str) -> int:
     if not pendentes:
         print("Nada a confirmar: não há remoto sem verificação.")
         return 0
-    cabecalho = "remoto\tsituacao\tconfirmado_em\tpalavras_do_dono\n"
+    cabecalho = "remoto\tsituacao\tconfirmado_em\tpalavras_do_consultor\n"
     atual = comum.ler(REGISTRO)
     if not atual.strip():
-        atual = "# Remotos que o dono confirmou como privados. Uma linha por endereço.\n" + cabecalho
+        atual = "# Remotos que o consultor confirmou como privados. Uma linha por endereço.\n" + cabecalho
     hoje = datetime.date.today().isoformat()
     limpo = re.sub(r"[\t\r\n]+", " ", palavras).strip()
     for _, url in pendentes:
@@ -243,7 +243,7 @@ NOMES = {LOCAL: "local", PRIVADO: "privado", PUBLICO: "PÚBLICO", NAO_VERIFICADO
 
 def main() -> int:
     analisador = argparse.ArgumentParser(description="Situação do repositório do projeto.")
-    analisador.add_argument("--confirmar", metavar="PALAVRAS", help="registra a confirmação do dono para os remotos não verificados")
+    analisador.add_argument("--confirmar", metavar="PALAVRAS", help="registra a confirmação do consultor para os remotos não verificados")
     args = analisador.parse_args()
     if args.confirmar:
         return confirmar(args.confirmar)

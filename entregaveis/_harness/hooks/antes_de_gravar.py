@@ -2,7 +2,7 @@
 """Hook de antes da gravação: a história vem antes da página.
 
 Recusa gravar o corpo de um entregável enquanto o briefing estiver
-incompleto ou a storyline não tiver a aprovação do dono. Recusa também
+incompleto ou a storyline não tiver a aprovação do consultor. Recusa também
 gravar qualquer registro, material ou entregável do projeto enquanto o
 repositório remoto for público ou não tiver sido verificado.
 """
@@ -49,8 +49,8 @@ def principal() -> int:
         return 2
     if not comum.storyline_aprovada(pasta):
         print(
-            f"Bloqueado pelo harness: a storyline de '{pasta.name}' não foi aprovada pelo dono. "
-            "Mostre a sequência de títulos ao dono e, depois do sim dele, registre 'aprovada: sim' em storyline.md "
+            f"Bloqueado pelo harness: a storyline de '{pasta.name}' não foi aprovada pelo consultor. "
+            "Mostre a sequência de títulos ao consultor e, depois do sim dele, registre 'aprovada: sim' em storyline.md "
             "com a data e as palavras dele. Não marque a aprovação por conta própria.",
             file=sys.stderr,
         )

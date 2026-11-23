@@ -22,11 +22,11 @@ O método está em `entregaveis/_harness/metodo/metodo.md`, seções 1 e 2.
 5. Chamada para ação. Uma linha por ação, com dono, prazo e papel.
 6. Resistências. Liste as lógicas, as emocionais e as práticas, cada uma
    com a resposta que o material vai dar.
-7. Veículo e formato, por `metodo/formatos.md`. Se o dono não disse como
+7. Veículo e formato, por `metodo/formatos.md`. Se o consultor não disse como
    o material será usado, pergunte: projetado ou lido muda tudo.
-8. Pergunte ao dono, uma vez, o que você não tem como saber. O resto
+8. Pergunte ao consultor, uma vez, o que você não tem como saber. O resto
    você assume e registra com `registrar-decisao`.
 9. Rode `python3 entregaveis/_harness/scripts/validar.py ID --so briefing`.
    Com o briefing completo, mude o `estado` para `storyline`.
-10. Mostre ao dono a grande ideia e o pedido em duas linhas antes de
+10. Mostre ao consultor a grande ideia e o pedido em duas linhas antes de
     seguir. As duas escolhas são dele.

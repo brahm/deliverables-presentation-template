@@ -6,7 +6,7 @@ a área e a data. Uma fala só é citada com nome quando a pessoa autoriza.
 
 Use os roteiros do lado em que o cliente está. Conversas com
 fornecedores ou com varejistas, do outro lado da mesa, só com a
-aprovação do dono e do cliente.
+aprovação do consultor e do cliente.
 
 ## Varejista: presidência e diretoria
 

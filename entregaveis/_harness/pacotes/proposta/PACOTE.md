@@ -10,7 +10,7 @@ O pacote completa a seção 7 de `metodo/metodo.md`, "Argumento de venda".
 O conteúdo técnico da proposta vem do pacote do tipo de trabalho
 proposto.
 
-## O que perguntar ao dono no início
+## O que perguntar ao consultor no início
 
 Além das perguntas de `iniciar-projeto`:
 
@@ -21,10 +21,10 @@ Além das perguntas de `iniciar-projeto`:
   declarou?
 - Há pedido formal de proposta, com requisitos e formato obrigatório?
 - Que orçamento o cliente tem ou espera?
-- O que o dono já conversou com o cliente e o que foi prometido?
+- O que o consultor já conversou com o cliente e o que foi prometido?
 - Que casos, pessoas e credenciais podem ser citados, e com que
   autorização?
-- Quem aprova preço, escopo e termos do lado do dono?
+- Quem aprova preço, escopo e termos do lado do consultor?
 
 ## Entregáveis típicos
 
@@ -35,7 +35,7 @@ Além das perguntas de `iniciar-projeto`:
 | Resumo executivo ou carta | documento | docx ou pdf | Decisor econômico |
 | Matriz de resposta aos requisitos | planilha | xlsx | Compras e avaliadores técnicos |
 | Escopo de trabalho | documento | docx | Compras, jurídico e patrocinador |
-| Estimativa de investimento | planilha | xlsx | Dono do projeto, antes de ir ao cliente |
+| Estimativa de investimento | planilha | xlsx | Consultor, antes de ir ao cliente |
 
 ## Frameworks
 
@@ -43,7 +43,7 @@ Além das perguntas de `iniciar-projeto`:
 
 Antes de escrever, confira: há um problema reconhecido, um decisor
 identificado, orçamento provável, prazo de decisão e uma razão para o
-cliente escolher esta proposta. O que falta vira pergunta ao dono. Uma
+cliente escolher esta proposta. O que falta vira pergunta ao consultor. Uma
 proposta escrita sem o decisor identificado é escrita para ninguém.
 
 ### 2. Mapa de decisores
@@ -96,7 +96,7 @@ mudanças de escopo são tratadas.
 
 Casos, resultados, credenciais e referências. Regras:
 
-- só entra o caso que o dono confirmou que pode ser citado, com o nível
+- só entra o caso que o consultor confirmou que pode ser citado, com o nível
   de identificação autorizado;
 - cada caso diz o problema, o que foi feito e o resultado com número;
 - o caso é escolhido pela semelhança com o problema deste cliente.
@@ -108,7 +108,7 @@ Nenhum outro cliente é citado pelo nome sem autorização registrada.
 Duas ou três opções com escopo e valor diferentes, e a recomendação.
 Mostre o valor ao lado do que o cliente recebe e do custo de não agir.
 As premissas de preço ficam à vista. O valor e os termos comerciais são
-do dono: o agente monta a estrutura e a conta, e o dono define e aprova
+do consultor: o agente monta a estrutura e a conta, e o consultor define e aprova
 cada número.
 
 ### 10. Riscos e objeções
@@ -172,11 +172,11 @@ o investimento e o próximo passo, nesta ordem.
 | --- | --- |
 | Problema e números do cliente | Material do cliente ou conversa registrada, com data |
 | Custo de não agir | Cálculo com dados do cliente e as premissas escritas |
-| Resultado de um caso | Caso autorizado pelo dono, com o número conferido |
-| Experiência de uma pessoa da equipe | Currículo fornecido pelo dono |
+| Resultado de um caso | Caso autorizado pelo consultor, com o número conferido |
+| Experiência de uma pessoa da equipe | Currículo fornecido pelo consultor |
 | Credencial ou certificação | Documento que a comprove |
-| Prazo e esforço | Estimativa do dono, com as premissas |
-| Valor da proposta | Definido e aprovado pelo dono |
+| Prazo e esforço | Estimativa do consultor, com as premissas |
+| Valor da proposta | Definido e aprovado pelo consultor |
 | Atendimento a um requisito | Linha da matriz de requisitos, com o trecho que responde |
 
 ## Armadilhas
@@ -194,4 +194,4 @@ o investimento e o próximo passo, nesta ordem.
 - Reaproveitar texto de outra proposta com o nome ou o contexto de
   outro cliente. Confira com `validar.py --so confidencialidade` e ponha
   os nomes de outros clientes em `confidencial.tsv`.
-- Enviar a proposta. Quem envia é o dono.
+- Enviar a proposta. Quem envia é o consultor.

@@ -5,10 +5,10 @@ materiais: PREENCHER
 ---
 # Domínio do projeto
 
-Campos do cabeçalho. `estado`: rascunho (você montou e o dono ainda não
-viu) ou confirmado (o dono leu e concordou). `materiais`: os
+Campos do cabeçalho. `estado`: rascunho (você montou e o consultor ainda não
+viu) ou confirmado (o consultor leu e concordou). `materiais`: os
 identificadores do intake que serviram de base, como M-003. Cada item
-desta página diz de onde veio: o material, a fala do dono ou uma
+desta página diz de onde veio: o material, a fala do consultor ou uma
 suposição sua, que então também entra em `_projeto/decisoes.md`.
 
 ## Contexto e objetivo
