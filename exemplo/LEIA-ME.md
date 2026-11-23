@@ -46,6 +46,7 @@ nunca citou uma skill: o agente aplicou cada uma no momento certo.
 | 5 e 6 de novembro | Apresentou e contou o que a diretoria decidiu e perguntou | Registrou as decisões, respondeu à pergunta sobre a multa e guardou a lição | [fechamento.md](entregaveis/leitura-executiva/fechamento.md), D-008, D-009 e L-002 |
 | 6 de novembro | Contou a reunião sem ata e deu data nova aos relatórios de uso | Registrou a reunião como relato da consultora, abriu as três tarefas com dono e prazo e guardou a data anterior do pedido | [reunioes.tsv](entregaveis/_projeto/reunioes.tsv), [acoes.tsv](entregaveis/_projeto/acoes.tsv), [prazos.tsv](entregaveis/_projeto/prazos.tsv) |
 | 6 de novembro | Confirmou o nível de governança que o agente sugeriu | Leu oito semanas, uma frente e nenhum comitê, sugeriu o nível enxuto e gravou os sete materiais, quem aprova, a linha de base, o risco do aviso e a premissa da migração | D-010, [governanca.tsv](entregaveis/_projeto/governanca.tsv), [papeis.tsv](entregaveis/_projeto/papeis.tsv), [linha-de-base.tsv](entregaveis/_projeto/linha-de-base.tsv), [riscos.tsv](entregaveis/_projeto/riscos.tsv), [premissas.tsv](entregaveis/_projeto/premissas.tsv) |
+| 12 de outubro a 6 de novembro | Não pediu nada | Levou o que o projeto aprendeu a seis notas, cada afirmação com o id do registro. A decisão de governança ficou só no registro, sem nota | [indice.md](entregaveis/_cerebro/indice.md), [registro.md](entregaveis/_cerebro/registro.md) |
 | 20 de novembro | Disse que cobrou os relatórios de uso da diretora de marketing | Registrou a cobrança, que passa a aparecer na lista do dia | [cobrancas.tsv](entregaveis/_projeto/cobrancas.tsv) |
 
 ## Se você tem cinco minutos
@@ -58,6 +59,8 @@ nunca citou uma skill: o agente aplicou cada uma no momento certo.
    É assim que o agente mostra o que decidiu sem perguntar.
 4. Leia a linha "Diagrama" da [revisão](entregaveis/leitura-executiva/revisao.md).
    Uma revisão de verdade reprova alguma coisa.
+5. Abra o [índice do segundo cérebro](entregaveis/_cerebro/indice.md) e
+   uma das notas. Cada afirmação cita o registro de onde veio.
 
 ## Abrir o exemplo rodando
 
@@ -79,6 +82,8 @@ python3 entregaveis/_harness/scripts/rotina.py --datas
 python3 entregaveis/_harness/scripts/rotina.py --lista --hoje 2026-11-27
 python3 entregaveis/_harness/scripts/governanca.py
 python3 entregaveis/_harness/scripts/governanca.py --desvios
+python3 entregaveis/_harness/scripts/cerebro.py --buscar multa
+python3 entregaveis/_harness/scripts/cerebro.py --id E-008
 ```
 
 O estado lista o nível de governança, um material em falta, uma decisão
@@ -95,6 +100,11 @@ alta o ameaça. Depois vêm os dois prazos mais próximos. Abaixo ficam o
 que espera o cliente, com a cobrança de 20 de novembro, e as perguntas
 da semana. O comando `governanca.py` mostra os sete materiais do nível
 enxuto, e `--desvios` compara as datas de hoje com a linha de base.
+
+A busca do segundo cérebro procura nas notas e nos registros de uma vez.
+Com "multa", ela traz as quatro notas que falam do assunto e as linhas
+dos registros, da evidência à lição. Com `--id`, ela mostra a linha do
+registro e a nota que diz o que aquele dado significa.
 
 Para experimentar, abra a pasta com o seu agente e peça uma mudança, por
 exemplo trocar o título da página 4 por um rótulo como "Investimento". A

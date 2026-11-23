@@ -1,0 +1,5 @@
+# O que o segundo cérebro já leu em cada registro do projeto. Quem escreve é cerebro.py --absorver.
+# item: o id da linha (E-008, D-003, A-001) ou o arquivo (brief.md, ID/briefing.md).
+# marca: o resumo do conteúdo no dia da leitura. Quando a linha muda, o item volta a aparecer em --pendentes.
+# notas: as notas que guardam o que o item ensina, ou nada quando ele não trouxe conhecimento novo.
+item	marca	absorvido_em	notas

@@ -184,7 +184,7 @@ def aceita(geral: str) -> bool:
 
 
 def tem_projeto() -> bool:
-    """Diz se já há conteúdo de projeto: brief iniciado, entregável, domínio, material recebido ou ata."""
+    """Diz se já há conteúdo de projeto: brief iniciado, entregável, domínio, material recebido, ata ou nota do segundo cérebro."""
     meta, _ = comum.cabecalho(comum.ler(comum.PROJETO / "brief.md"))
     if comum.normalizar(meta.get("iniciado", "nao")) == "sim" or comum.entregaveis():
         return True
@@ -194,6 +194,9 @@ def tem_projeto() -> bool:
     for pasta in (comum.INTAKE / "materiais", comum.INTAKE / "entrada", comum.BASE / "_atas"):
         if pasta.is_dir() and any(a.name not in (".gitkeep", "LEIA-ME.md") for a in pasta.iterdir()):
             return True
+    cerebro = comum.BASE / "_cerebro"
+    if any(a.suffix == ".md" for pasta in cerebro.glob("[1-4]-*") for a in pasta.rglob("*")):
+        return True
     return False
 
 

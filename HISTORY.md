@@ -3,6 +3,39 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.10.0
+
+- Segundo cérebro do projeto. O que o projeto aprende fica em notas de
+  Markdown em `entregaveis/_cerebro/`, nas quatro pastas do método PARA:
+  `1-projetos`, `2-areas`, `3-recursos` e `4-arquivo`. O agente escreve
+  e mantém as notas, o `indice.md` e o `registro.md` de atualizações.
+  Nenhum programa de terceiros é necessário.
+- Os registros continuam sendo a fonte. A nota cita o id do registro e
+  diz o que o dado significa. Tarefas, mudanças de data, cobranças,
+  avisos, versões e o histórico das decisões ficam só nos registros.
+- `scripts/cerebro.py` busca nas notas e nos registros de uma vez
+  (`--buscar`, `--id`), mostra o que o projeto registrou e nenhuma nota
+  guarda (`--pendentes`), marca o que cada nota absorveu (`--absorver`,
+  que recusa a nota que não cita o item), cria e move notas (`--nova`,
+  `--mover`), refaz o índice e confere as notas (`--conferir`).
+- Gatilhos a cada ação do projeto: o hook de gravação lembra o item novo
+  e confere a nota gravada, o hook de fim de turno pede a absorção do
+  que o turno registrou, o estado conta as notas e o que falta, e a
+  lista do dia mostra o que está fora das notas.
+- Skill nova `manter-cerebro`, regra 22, página de método
+  `metodo/segundo-cerebro.md` e checagem "Segundo cérebro", que só
+  avisa.
+- O pacote para outros ambientes leva o índice e as notas, e as
+  instruções mandam consultar antes de escrever e devolver as notas
+  novas.
+- O exemplo ganhou seis notas, com o índice e o registro de
+  atualizações.
+
+O que o projeto precisa fazer: atualize com `--atualizar`. Ele cria a
+pasta `_cerebro/` vazia. Depois o estado mostra quantos itens do projeto
+estão fora das notas, e o agente absorve por assunto, começando pelo
+cliente, pelas pessoas e pelo que é avaliado.
+
 ## 0.9.0
 
 - Nível de governança. Depois do brief, o agente lê o porte do projeto

@@ -113,7 +113,7 @@ def lista_de_vicios(arquivo: Path) -> str:
 def metodo_e_texto() -> str:
     metodo = comum.HARNESS / "metodo"
     partes = [topo("Método, texto e revisão")]
-    for nome in ("metodo.md", "texto.md", "rubrica.md"):
+    for nome in ("metodo.md", "texto.md", "rubrica.md", "segundo-cerebro.md"):
         partes.append(rebaixar(comum.ler(metodo / nome)))
     partes.append("## Vícios de texto a tirar\n\nCada linha diz o que corrigir e traz o padrão que denuncia o vício. Confira o texto contra a lista do idioma dele e contra a lista geral.\n")
     for titulo, nome in (("Em qualquer idioma", "texto-geral.tsv"), ("Português", "texto-pt.tsv"), ("Espanhol", "texto-es.tsv"), ("Inglês", "texto-en.tsv")):
@@ -147,6 +147,7 @@ def modelos() -> str:
         ("Materiais", comum.MODELOS / "intake", ("registro.tsv",)),
         ("Domínio", comum.MODELOS / "dominio", ("dominio.md", "checagens.tsv", "casos.tsv")),
         ("Catálogo de materiais de governança", comum.HARNESS / "governanca", ("catalogo.tsv",)),
+        ("Nota do segundo cérebro", comum.MODELOS / "cerebro-nota", ("nota.md",)),
     )
     for titulo, pasta, nomes in grupos:
         partes.append(f"## {titulo}\n")
@@ -206,6 +207,20 @@ def pacotes_do_projeto() -> list[str]:
     return vistos
 
 
+def segundo_cerebro() -> list[str]:
+    """O índice e as notas do segundo cérebro, para o outro ambiente consultar antes de escrever."""
+    import cerebro
+
+    notas = cerebro.notas()
+    if not notas:
+        return []
+    partes = ["## Segundo cérebro\n\nO que o projeto aprendeu. Consulte antes de escrever, e devolva as notas novas ou mudadas no fim da conversa.\n"]
+    partes.append("### indice.md\n\n" + cercado(comum.ler(cerebro.INDICE) or cerebro.texto_do_indice()))
+    for nota in notas:
+        partes.append(f"### {nota.rel}\n\n" + cercado(nota.texto))
+    return partes
+
+
 def projeto() -> str:
     nota = (
         "O registro deste projeto no dia em que o pacote foi montado. Ele vence os pacotes onde os dois se contradizem. "
@@ -228,6 +243,7 @@ def projeto() -> str:
         partes.append("## Domínio do projeto\n\n" + cercado(comum.ler(dominio / "dominio.md")))
         if comum.ler(dominio / "checagens.tsv").strip():
             partes.append("### Regras de checagem do domínio\n\nConfira cada entregável contra estas regras, à mão.\n\n" + cercado(comum.ler(dominio / "checagens.tsv")))
+    partes += segundo_cerebro()
     entregaveis = comum.entregaveis()
     if entregaveis:
         partes.append("## Entregáveis\n")

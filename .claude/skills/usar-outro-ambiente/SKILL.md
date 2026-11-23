@@ -31,7 +31,8 @@ trava nem checagem automática: diga isso ao consultor uma vez.
    `5-projeto.txt`, `1-procedimentos.txt`, `2-metodo-e-texto.txt`, o
    pacote da fase atual, `4-modelos.txt` e `3-formatos-e-visual.txt`.
 5. Lembre o que ele precisa trazer de volta: o registro do projeto
-   atualizado e os materiais produzidos.
+   atualizado, as notas do segundo cérebro novas ou mudadas e os
+   materiais produzidos.
 
 ## Trazer de volta
 
@@ -39,7 +40,7 @@ trava nem checagem automática: diga isso ao consultor uma vez.
    `entregaveis/_projeto/`. Leve cada parte nova ao arquivo certo, pela
    skill do assunto: decisões com `registrar-decisao`, materiais com
    `receber-materiais`, lições com `registrar-licao`, itens adiados com
-   `adiar-trabalho`. Nunca troque um registro inteiro pelo que veio de
+   `adiar-trabalho`, notas com `manter-cerebro`. Nunca troque um registro inteiro pelo que veio de
    fora, e nunca apague uma linha.
 7. O que contradiz um registro daqui vira pergunta ao consultor, com as
    duas versões lado a lado.

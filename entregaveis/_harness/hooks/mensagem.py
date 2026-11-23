@@ -3,12 +3,15 @@
 
 Escreve no máximo três linhas, para custar pouco a cada mensagem. Fica
 calado quando não há entregável em andamento e a mensagem não fala de um.
+Guarda também o que o segundo cérebro já tinha por absorver, para o fim
+do turno cobrar só o que o turno registrou.
 """
 from __future__ import annotations
 
 import re
 
 import _base
+import cerebro
 import comum
 import estado
 
@@ -60,6 +63,15 @@ AVISO_DE_FOLLOW_UP = (
 )
 
 
+def guardar_pendencias_do_cerebro(dados: dict) -> None:
+    """Guarda o que já estava por absorver quando o turno começou. O fim do turno só cobra o que veio depois."""
+    if not dados.get("session_id") or not cerebro.PASTA.is_dir():
+        return
+    sessao = _base.ler_sessao(dados["session_id"])
+    sessao["cerebro_antes"] = sorted(f"{f.ident}:{f.marca}" for f, _, _ in cerebro.pendentes())
+    _base.gravar_sessao(dados["session_id"], sessao)
+
+
 def principal() -> int:
     dados = _base.entrada()
     meta, _ = comum.cabecalho(comum.ler(comum.PROJETO / "brief.md"))
@@ -68,6 +80,7 @@ def principal() -> int:
         if ASSUNTO.search(str(dados.get("prompt", ""))):
             print("Harness de entregáveis: o projeto não foi iniciado. Aplique iniciar-projeto (ou adotar-projeto, se o projeto já estava em andamento) antes de produzir material.")
         return 0
+    guardar_pendencias_do_cerebro(dados)
     if MUDANCA_DE_FASE.search(str(dados.get("prompt", ""))):
         print(AVISO_DE_FASE)
     if DISPENSA.search(str(dados.get("prompt", ""))):

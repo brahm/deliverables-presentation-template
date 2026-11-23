@@ -228,6 +228,11 @@ def montar(hoje: datetime.date) -> dict:
     lista["confirmar"] += [(chave, texto + ". Vale como está? Sim, corrige ou não.") for chave, texto in resumo["sim"]]
     if lista["pausa"]:
         return lista
+    import cerebro
+    fora = cerebro.pendentes() if cerebro.PASTA.is_dir() else []
+    if fora:
+        nomes = ", ".join(f.ident for f, _, _ in fora[:5]) + ("..." if len(fora) > 5 else "")
+        lista["entrada"].append(("cerebro", f"Segundo cérebro: {len(fora)} item(ns) do projeto ainda fora das notas ({nomes}). Absorva com a skill manter-cerebro"))
     itens = itens_abertos()
     fases = {i.ident: rotina.fase_do_item(i, hoje, p) for i in rotina.itens_com_prazo()}
     etapas = {i.ident: i.etapas for i in rotina.itens_com_prazo()}

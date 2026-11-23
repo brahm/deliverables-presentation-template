@@ -20,7 +20,7 @@ metadata:
    Depois rode
    `install.sh --destino RAIZ_DO_PROJETO --atualizar`. Ele substitui o
    que pertence ao kit e não toca em `_projeto/`, `_intake/`,
-   `_dominio/` nem nas pastas de entregável.
+   `_dominio/`, `_cerebro/` nem nas pastas de entregável.
 4. Reaplique as adaptações do projeto que viviam em arquivos do kit. A
    lista delas está em `_projeto/licoes.md`.
 5. Uma regra nova que conflita com uma decisão do projeto é uma pergunta
@@ -33,8 +33,9 @@ metadata:
 1. Liste as linhas de `_projeto/licoes.md` com o estado `proposta`.
 2. Escreva cada uma como ela ficaria no template: a mudança na regra, na
    skill ou na checagem, em termos gerais, sem o nome do cliente nem o
-   assunto do projeto. Nada de `_dominio/` sai do projeto: nem método,
-   nem regra, nem caso de teste. O template é público.
+   assunto do projeto. Nada de `_dominio/` nem de `_cerebro/` sai do
+   projeto: nem método, nem regra, nem caso de teste, nem nota. O
+   template é público.
 3. Abra um pull request no repositório do template só quando o consultor
    pedir ou concordar. Sem acesso, entregue ao consultor o texto a aplicar.
 4. Depois da fusão, marque as linhas como `no template`.

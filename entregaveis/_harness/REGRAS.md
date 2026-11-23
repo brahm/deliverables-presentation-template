@@ -45,6 +45,7 @@ que você abre quando a tarefa pede.
    | Qualquer relatório ao consultor | `relatar-ao-consultor` |
    | O consultor leva o trabalho ao Claude desktop, ao ChatGPT ou ao Copilot, ou traz de lá o que foi feito | `usar-outro-ambiente` |
    | O brief foi fechado, o projeto foi adotado, o porte mudou ou o consultor pede, tira ou muda um material de governança | `definir-governanca` |
+   | Um registro, uma ata, um material ou um entregável mudou, ou é preciso saber o que o projeto já sabe | `manter-cerebro` |
    | O harness tem uma versão nova | `atualizar-harness` |
 
    Um pacote ativo traz a sua própria skill, `pacote-NOME`, que se
@@ -166,9 +167,18 @@ que você abre quando a tarefa pede.
     passa por `entregaveis/_projeto/mudancas.tsv`. O aceite vem do
     cliente.
 
+22. O que o projeto aprende vai para o segundo cérebro, em
+    `entregaveis/_cerebro/`. Cada ação que grava um registro, uma ata,
+    um material ou um entregável termina com a nota do assunto
+    atualizada e com `python3 entregaveis/_harness/scripts/cerebro.py --absorver`.
+    A nota cita o id do registro e não copia a linha. Decisões, datas,
+    cobranças e avisos continuam só nos registros. Antes de escrever ou
+    de responder o que o projeto sabe, busque com `cerebro.py --buscar`.
+    O método está em [metodo/segundo-cerebro.md](metodo/segundo-cerebro.md).
+
 ## Relatório e idioma
 
-22. Relate ao consultor no idioma dele, com o resultado primeiro. Depois diga
+23. Relate ao consultor no idioma dele, com o resultado primeiro. Depois diga
     o que foi checado, o que você assumiu e o que ficou por fazer.
-23. As instruções e os registros do harness ficam em português. Os
+24. As instruções e os registros do harness ficam em português. Os
     entregáveis ficam nos idiomas definidos no brief do projeto.

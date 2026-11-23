@@ -549,6 +549,13 @@ _ESTADOS_DE_GOVERNANCA = {
 }
 
 
+def cerebro_do_projeto() -> list[Achado]:
+    """Nota com ligação quebrada, id que não existe, sem fonte ou órfã, e o que o projeto registrou e nenhuma nota guarda."""
+    import cerebro
+
+    return cerebro.conferir()
+
+
 def governanca_do_projeto() -> list[Achado]:
     """Nível e estados fora do combinado, dependência que aponta para o vazio e trabalho concluído à frente do cliente."""
     import afazeres

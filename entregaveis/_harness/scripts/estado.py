@@ -13,6 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import cerebro  # noqa: E402
 import comum  # noqa: E402
 import governanca  # noqa: E402
 import repositorio  # noqa: E402
@@ -107,6 +108,7 @@ def linhas_de_estado() -> list[str]:
     linhas += linhas_de_fase()
     linhas += governanca.linha_de_estado()
     linhas += linhas_de_dominio()
+    linhas += cerebro.linha_de_estado()
     pastas = comum.entregaveis()
     if not pastas:
         linhas.append("Nenhum entregável aberto. Crie um com scripts/preparar.py --entregavel ID.")
