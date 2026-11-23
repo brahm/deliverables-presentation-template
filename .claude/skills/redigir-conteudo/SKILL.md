@@ -17,7 +17,10 @@ metadata:
    - planilha: `planilha.md`, com as abas, o dicionário de dados e os
      gráficos, e os dados na pasta `dados/`.
 2. O título de cada página é o da storyline aprovada. O corpo prova o
-   título e para aí.
+   título e para aí. Uma tabela Markdown vira tabela no arquivo
+   final, e um bloco de código `grafico` vira gráfico nativo, com a
+   sintaxe descrita em `formatos.md`. Uma imagem é citada com o caminho
+   do arquivo dentro da pasta do entregável.
 3. Respeite os limites do veículo, em
    `entregaveis/_harness/metodo/formatos.md`. O que não cabe vai para as
    notas, para o apêndice ou para a planilha.

@@ -239,6 +239,7 @@ def linhas_de_prosa(texto: str):
 def contar_palavras(texto: str) -> int:
     """Palavras do texto, sem marcação Markdown e sem os campos da página."""
     texto = re.sub(r"<!--.*?-->", " ", texto, flags=re.DOTALL)
+    texto = re.sub(r"^\s*```.*?^\s*```", " ", texto, flags=re.DOTALL | re.MULTILINE)  # gráficos e código
     texto = re.sub(r"[#*_>|`\[\]()-]", " ", texto)
     return len(re.findall(r"\w+", texto))
 

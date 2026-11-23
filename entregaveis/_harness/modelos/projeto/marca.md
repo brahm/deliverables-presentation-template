@@ -16,6 +16,18 @@ origem no registro de intake.
 | Rodapé e marcação obrigatória | | |
 | Tom de voz | | |
 
+## Layouts do modelo
+
+O gerador escolhe o layout de cada tipo de página pelo nome e pelos
+campos dos layouts do modelo de apresentação. Preencha uma linha só
+quando a escolha dele não servir.
+`python3 entregaveis/_harness/scripts/gerar.py --layouts` lista os
+nomes e os números. Na coluna Layout vale um ou outro.
+
+| Tipo de página | Layout |
+| --- | --- |
+| | |
+
 ## Conflitos e lacunas
 
 O que os materiais não dizem, ou onde dois materiais se contradizem. Cada

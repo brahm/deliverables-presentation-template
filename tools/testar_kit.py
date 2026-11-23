@@ -876,6 +876,273 @@ def testar_repositorio(tmp: Path) -> None:
         servidor.shutdown()
 
 
+CONTEUDO_COM_VISUAIS = CONTEUDO.replace(
+    "Das 14 plataformas contratadas, duas enviam e-mail para a mesma base.\n",
+    """Das 14 plataformas contratadas, duas enviam e-mail para a mesma base.
+
+- A plataforma A cobre **campanhas** e jornadas.
+- A plataforma B cobre só campanhas.
+
+```grafico
+tipo: barras
+destaque: E-mail
+dados:
+Função | Plataformas
+E-mail | 2
+Dados | 1
+Mídia | 1
+```
+""",
+).replace(
+    "A diretora de marketing aprova o plano de migração.\n",
+    """A diretora de marketing aprova o plano de migração.
+
+| Quem | Faz o quê | Até quando |
+| --- | --- | --- |
+| Diretoria | Aprova o desligamento | Dezembro |
+| Operações | Migra as jornadas | Fevereiro |
+""",
+)
+
+DOCUMENTO = """# Diagnóstico de martech
+
+A diretoria aprova o desligamento de uma plataforma de e-mail até dezembro.
+
+## Duas plataformas fazem o mesmo trabalho
+
+Das 14 plataformas contratadas, duas enviam e-mail para a mesma base [E-001].
+
+- A plataforma A cobre **campanhas** e jornadas.
+- A plataforma B cobre só campanhas.
+
+| Função | Plataformas |
+| --- | --- |
+| E-mail | 2 |
+| Dados | 1 |
+
+## O pedido
+
+1. A diretoria aprova o desligamento.
+2. Operações migra as jornadas.
+"""
+
+PLANILHA = """# Planilha
+
+## Perguntas que a planilha responde
+
+- Que plataformas estão contratadas e quanto custam.
+
+## Abas
+
+| Aba | O que contém | Origem dos dados (E-nnn) | Data dos dados |
+| --- | --- | --- | --- |
+| Inventário | Uma linha por plataforma contratada | E-001 | 2026-10-01 |
+
+## Dicionário de dados
+
+| Aba | Coluna | Definição | Unidade | Regra de cálculo |
+| --- | --- | --- | --- | --- |
+| Inventário | Custo anual | Valor do contrato em doze meses | R$ | Soma das parcelas |
+
+## Gráficos e análises
+
+| Gráfico ou análise | Pergunta que responde | Achado que o título deve dizer |
+| --- | --- | --- |
+| Custo por plataforma | Onde está o gasto | A plataforma de dados custa mais que as duas de e-mail |
+
+```grafico
+aba: Inventário
+tipo: colunas
+titulo: A plataforma de dados custa mais que as duas de e-mail
+categorias: Plataforma
+valores: Custo anual
+```
+"""
+
+
+def tem_pacote(nome: str) -> bool:
+    try:
+        __import__(nome)
+        return True
+    except ImportError:
+        return False
+
+
+def testar_gerador(tmp: Path) -> None:
+    print("Gerador de arquivos")
+    projeto = tmp / "gerador"
+    projeto.mkdir()
+    instalar(projeto)
+    pasta = montar_exemplo(projeto)
+    saida = pasta / "saida"
+    materiais = projeto / "entregaveis/_intake/materiais"
+    marca = projeto / "entregaveis/_projeto/marca.md"
+    marca_em_branco = marca.read_text(encoding="utf-8")
+
+    def gerar(*opcoes: str) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/gerar.py", *opcoes], projeto)
+
+    (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+    grande = CONTEUDO_COM_VISUAIS.replace("Mídia | 1\n", "".join(f"Função {n} | {n}\n" for n in range(40)))
+    (pasta / "conteudo.md").write_text(grande, encoding="utf-8")
+    confere("os dados de um bloco de gráfico não contam como texto da página", "[densidade]" not in validar(projeto, "diag").stdout)
+    (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+    confere("recusa formato que o script não gera", gerar("diag", "--formato", "html").returncode != 0)
+    confere("recusa entregável que não existe", gerar("nada").returncode != 0)
+
+    if not tem_pacote("pptx"):
+        sem = gerar("diag")
+        confere("sem o pacote, diz como instalar", sem.returncode != 0 and "pip install python-pptx" in sem.stdout + sem.stderr, sem.stdout + sem.stderr)
+        print("  (python-pptx não está instalado: testes de PowerPoint pulados)")
+    else:
+        from pptx import Presentation
+        from pptx.dml.color import RGBColor
+
+        def textos(slide) -> str:
+            return "\n".join(f.text_frame.text for f in slide.shapes if f.has_text_frame)
+
+        (pasta / "storyline.md").write_text(STORYLINE.replace("aprovada: sim", "aprovada: nao"), encoding="utf-8")
+        recusa = gerar("diag")
+        confere("recusa gerar sem storyline aprovada", recusa.returncode != 0 and "storyline" in recusa.stdout + recusa.stderr and not saida.exists(), recusa.stdout + recusa.stderr)
+        (pasta / "storyline.md").write_text(STORYLINE, encoding="utf-8")
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS + "\nA equipe aprova — e segue.\n", encoding="utf-8")
+        reprovado = gerar("diag")
+        confere("recusa gerar o que reprova nas checagens", reprovado.returncode != 0 and "[texto]" in reprovado.stdout and not (saida / "diag.pptx").exists(), reprovado.stdout + reprovado.stderr)
+        rascunho = gerar("diag", "--rascunho")
+        confere("--rascunho gera com a marca de rascunho em cada página", rascunho.returncode == 0 and all("RASCUNHO" in textos(s) for s in Presentation(str(saida / "diag-rascunho.pptx")).slides), rascunho.stdout + rascunho.stderr)
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+
+        neutro = gerar("diag")
+        confere("gera o PowerPoint e avisa que não há modelo", neutro.returncode == 0 and "desenho neutro" in neutro.stdout and (saida / "diag.pptx").is_file(), neutro.stdout + neutro.stderr)
+        slides = list(Presentation(str(saida / "diag.pptx")).slides)
+        confere("uma página por slide, com o título de cada uma", [s.shapes.title.text_frame.text for s in slides] == ["Diagnóstico de martech", "Duas plataformas de e-mail fazem o mesmo trabalho", "A diretoria aprova o desligamento até dezembro"])
+        confere("a capa leva o texto para o subtítulo", "Para a diretoria de marketing." in textos(slides[0]))
+        confere("as notas vão para as notas de quem apresenta", "campanha de aniversário" in slides[1].notes_slide.notes_text_frame.text and "campanha de aniversário" not in textos(slides[1]))
+        confere("a lista e o negrito chegam ao slide", "A plataforma B cobre só campanhas." in textos(slides[1]) and any(c.font.bold for f in slides[1].shapes if f.has_text_frame for par in f.text_frame.paragraphs for c in par.runs))
+        graficos = [f.chart for f in slides[1].shapes if getattr(f, "has_chart", False)]
+        confere("o bloco de gráfico vira gráfico nativo com os dados", len(graficos) == 1 and list(graficos[0].plots[0].categories) == ["E-mail", "Dados", "Mídia"] and list(graficos[0].plots[0].series[0].values) == [2, 1, 1])
+        pontos = graficos[0].plots[0].series[0].points
+        confere("o destaque fica na categoria citada e o resto em cinza", pontos[0].format.fill.fore_color.rgb == RGBColor.from_string("0B5CAD") and pontos[1].format.fill.fore_color.rgb == RGBColor.from_string("A9B3BD"))
+        confere("a página que cita evidência ganha a linha de fonte", "Fonte: Inventário de contratos, 2026-10-01." in textos(slides[1]) and "Fonte:" not in textos(slides[2]))
+        tabelas = [f.table for f in slides[2].shapes if getattr(f, "has_table", False)]
+        confere("a tabela Markdown vira tabela", len(tabelas) == 1 and len(tabelas[0].rows) == 3 and tabelas[0].cell(2, 1).text == "Migra as jornadas")
+
+        # Sobre um modelo: layouts com nome próprio e páginas de exemplo
+        modelo = Presentation()
+        for indice, nome in ((0, "Capa da casa"), (1, "Texto da casa"), (2, "Divisor da casa"), (5, "Só título da casa")):
+            modelo.slide_layouts[indice].name = nome
+        for _ in range(2):
+            modelo.slides.add_slide(modelo.slide_layouts[1]).shapes.title.text_frame.text = "EXEMPLO DO MODELO"
+        modelo.save(str(materiais / "modelo.pptx"))
+        marca.write_text(
+            marca_em_branco.replace("| Modelo de apresentação | | |", "| Modelo de apresentação | entregaveis/_intake/materiais/modelo.pptx | M-001 |")
+            .replace("| Cores de destaque em gráficos | | |", "| Cores de destaque em gráficos | #C2410C e #D4D4D8 | M-001 |")
+            .replace("| Tipo de página | Layout |\n| --- | --- |\n| | |", "| Tipo de página | Layout |\n| --- | --- |\n| pedido | Só título da casa |"),
+            encoding="utf-8",
+        )
+        com_modelo = gerar("diag")
+        slides = list(Presentation(str(saida / "diag.pptx")).slides)
+        confere("gera sobre o modelo registrado na marca", com_modelo.returncode == 0 and "sobre modelo.pptx" in com_modelo.stdout and "desenho neutro" not in com_modelo.stdout, com_modelo.stdout + com_modelo.stderr)
+        confere("as páginas de exemplo do modelo saem", len(slides) == 3 and not any("EXEMPLO DO MODELO" in textos(s) for s in slides))
+        confere("o layout é escolhido pelo tipo de página e pela tabela da marca", [s.slide_layout.name for s in slides] == ["Capa da casa", "Texto da casa", "Só título da casa"], str([s.slide_layout.name for s in slides]))
+        ponto = [f.chart for f in slides[1].shapes if getattr(f, "has_chart", False)][0].plots[0].series[0].points[0]
+        confere("as cores do gráfico vêm da marca", ponto.format.fill.fore_color.rgb == RGBColor.from_string("C2410C"))
+        lista = gerar("--layouts")
+        confere("--layouts lista os layouts do modelo com os campos", lista.returncode == 0 and "Capa da casa: center_title" in lista.stdout, lista.stdout + lista.stderr)
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("<!-- tipo: capa; secao: ; fonte: ; recurso: -->", "<!-- tipo: capa; secao: ; fonte: ; recurso: ; layout: Divisor da casa -->"), encoding="utf-8")
+        gerar("diag")
+        confere("o campo layout da página vence a escolha automática", Presentation(str(saida / "diag.pptx")).slides[0].slide_layout.name == "Divisor da casa")
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+        marca.write_text(marca_em_branco.replace("| Modelo de apresentação | | |", "| Modelo de apresentação | modelos/sumiu.pptx | M-001 |"), encoding="utf-8")
+        sumido = gerar("diag")
+        confere("modelo registrado e não encontrado é erro, não desenho neutro", sumido.returncode != 0 and "sumiu.pptx" in sumido.stdout + sumido.stderr)
+        marca.write_text(marca_em_branco, encoding="utf-8")
+
+        # Modelo exportado por outro programa: nomes e números de campo repetidos, propriedades ligadas fora do padrão
+        import zipfile
+
+        from pptx.util import Pt
+
+        confere("o título que não cabe no campo tem a letra reduzida, e o que cabe fica como está",
+                slides[0].shapes.title.text_frame.paragraphs[0].runs[0].font.size is None
+                and (slides[1].shapes.title.text_frame.paragraphs[0].runs[0].font.size or Pt(99)) < Pt(44))
+        estranho = Presentation()
+        estranho.slide_layouts[0].name = estranho.slide_layouts[1].name = "Da casa"
+        estranho.slide_layouts[1].placeholders[1]._element.ph.idx = 0
+        estranho.save(str(tmp / "bruto.pptx"))
+        padrao = b"http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"
+        with zipfile.ZipFile(tmp / "bruto.pptx") as origem, zipfile.ZipFile(materiais / "estranho.pptx", "w", zipfile.ZIP_DEFLATED) as copia:
+            for item in origem.infolist():
+                dados = origem.read(item.filename)
+                if item.filename == "_rels/.rels":
+                    dados = dados.replace(padrao, padrao.replace(b"/package/", b"/officedocument/"))
+                copia.writestr(item, dados)
+        lista = gerar("--layouts", str(materiais / "estranho.pptx"))
+        confere("--layouts numera os layouts e avisa dos nomes repetidos", "1. Da casa" in lista.stdout and "2. Da casa" in lista.stdout and "use o número" in lista.stdout, lista.stdout + lista.stderr)
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("<!-- tipo: capa; secao: ; fonte: ; recurso: -->", "<!-- tipo: capa; secao: ; fonte: ; recurso: ; layout: 6 -->"), encoding="utf-8")
+        de_fora = gerar("diag", "--modelo", str(materiais / "estranho.pptx"))
+        slides_de_fora = list(Presentation(str(saida / "diag.pptx")).slides)
+        confere("o layout também é escolhido pelo número", de_fora.returncode == 0 and slides_de_fora[0].slide_layout.name == "Title Only", de_fora.stdout + de_fora.stderr)
+        with zipfile.ZipFile(saida / "diag.pptx") as gerado:
+            confere("as propriedades ligadas fora do padrão não são duplicadas", gerado.namelist().count("docProps/core.xml") == 1)
+        campos = [f for f in slides_de_fora[1].placeholders]
+        confere("com número de campo repetido, o corpo fica na posição do corpo, abaixo do título",
+                len(campos) == 2 and campos[1].top >= campos[0].top + campos[0].height, str([(f.top, f.height) for f in campos]))
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+
+        # Outro idioma
+        (pasta / "conteudo.es.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+        versao = gerar("diag", "--idioma", "es", "--rascunho")
+        confere("--idioma gera a versão com o nome e o rótulo do idioma", versao.returncode == 0 and "Fuente: Inventário" in textos(Presentation(str(saida / "diag-es-rascunho.pptx")).slides[1]), versao.stdout + versao.stderr)
+        (pasta / "conteudo.es.md").unlink()
+
+        pdf = gerar("diag", "--pdf")
+        confere("--pdf gera o PDF, ou diz por que não gerou", pdf.returncode == 0 and ((saida / "diag.pdf").is_file() or "PDF não foi gerado" in pdf.stdout), pdf.stdout + pdf.stderr)
+
+    if not tem_pacote("docx"):
+        print("  (python-docx não está instalado: testes de Word pulados)")
+    else:
+        from docx import Document
+
+        (pasta / "documento.md").write_text(DOCUMENTO, encoding="utf-8")
+        modelo = Document()
+        modelo.add_paragraph("TEXTO DE EXEMPLO DO MODELO")
+        modelo.sections[0].header.paragraphs[0].text = "Cabeçalho da casa"
+        modelo.save(str(materiais / "modelo.docx"))
+        marca.write_text(marca_em_branco.replace("| Modelo de documento | | |", "| Modelo de documento | entregaveis/_intake/materiais/modelo.docx | M-002 |"), encoding="utf-8")
+        feito = gerar("diag", "--formato", "docx")
+        confere("gera o Word sobre o modelo", feito.returncode == 0 and (saida / "diag.docx").is_file() and "sobre modelo.docx" in feito.stdout, feito.stdout + feito.stderr)
+        doc = Document(str(saida / "diag.docx"))
+        estilos = [(par.style.name, par.text) for par in doc.paragraphs if par.text.strip()]
+        confere("título e seções usam os estilos do modelo", ("Title", "Diagnóstico de martech") in estilos and ("Heading 1", "O pedido") in estilos, str(estilos[:6]))
+        confere("o texto de exemplo sai e o cabeçalho do modelo fica", not any("EXEMPLO" in texto for _, texto in estilos) and doc.sections[0].header.paragraphs[0].text == "Cabeçalho da casa")
+        confere("listas e tabela chegam ao documento", ("List Bullet", "A plataforma B cobre só campanhas.") in estilos and ("List Number", "Operações migra as jornadas.") in estilos and len(doc.tables) == 1 and doc.tables[0].cell(1, 1).text == "2")
+        confere("as evidências citadas formam a seção de fontes", ("Heading 1", "Fontes") in estilos and any(texto.startswith("E-001: Inventário de contratos") for _, texto in estilos))
+        marca.write_text(marca_em_branco, encoding="utf-8")
+        (pasta / "documento.md").unlink()
+
+    if not tem_pacote("openpyxl"):
+        print("  (openpyxl não está instalado: testes de Excel pulados)")
+    else:
+        from openpyxl import load_workbook
+
+        (pasta / "planilha.md").write_text(PLANILHA, encoding="utf-8")
+        (pasta / "dados").mkdir()
+        (pasta / "dados/inventario.csv").write_text("Plataforma;Função;Custo anual;Usuários\nA;E-mail;120000;14\nB;E-mail;95000,50;6\nC;Dados;300000;22\n", encoding="utf-8")
+        feito = gerar("diag", "--formato", "xlsx")
+        confere("gera o Excel", feito.returncode == 0 and (saida / "diag.xlsx").is_file(), feito.stdout + feito.stderr)
+        livro = load_workbook(str(saida / "diag.xlsx"))
+        confere("a planilha tem leitura, gráficos, dados e dicionário", livro.sheetnames == ["Leitura", "Gráficos", "Inventário", "Dicionário"], str(livro.sheetnames))
+        dados = livro["Inventário"]
+        confere("os números entram como números, com a vírgula decimal lida", dados["C2"].value == 120000 and dados["C3"].value == 95000.5 and dados["A2"].value == "A")
+        confere("a aba de dados tem cabeçalho fixo e filtro", dados.freeze_panes == "A2" and dados.auto_filter.ref == "A1:D4" and dados["A1"].font.bold)
+        confere("a aba de leitura diz a pergunta e a origem dos dados", any("Que plataformas estão contratadas" in str(c.value) for c in livro["Leitura"]["A"]) and any("Inventário de contratos" in str(c.value) for linha in livro["Leitura"].iter_rows() for c in linha))
+        confere("o gráfico é nativo e o dicionário traz a definição", len(livro["Gráficos"]._charts) == 1 and livro["Dicionário"]["C2"].value == "Valor do contrato em doze meses")
+        (pasta / "planilha.md").write_text(PLANILHA.replace("valores: Custo anual", "valores: Custo mensal"), encoding="utf-8")
+        errado = gerar("diag", "--formato", "xlsx")
+        confere("gráfico que cita coluna inexistente é erro", errado.returncode != 0 and "Custo mensal" in errado.stdout + errado.stderr)
+
+
 def testar_pacotes(tmp: Path) -> None:
     print("Pacotes")
     pacotes = sorted(p for p in (HARNESS / "pacotes").iterdir() if p.is_dir())
@@ -963,6 +1230,7 @@ def main() -> int:
         testar_interativos(tmp)
         testar_dominio(tmp)
         testar_repositorio(tmp)
+        testar_gerador(tmp)
         testar_pacotes(tmp)
         testar_levantamento(tmp)
     finally:
