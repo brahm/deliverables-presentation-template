@@ -1150,6 +1150,79 @@ def testar_gerador(tmp: Path) -> None:
         confere("gráfico que cita coluna inexistente é erro", errado.returncode != 0 and "Custo mensal" in errado.stdout + errado.stderr)
 
 
+def testar_fases(tmp: Path) -> None:
+    print("Fases do projeto")
+    projeto = tmp / "fases"
+    projeto.mkdir()
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    brief = base / "_projeto/brief.md"
+    registro = base / "_projeto/fases.md"
+
+    def fase(*opcoes: str) -> subprocess.CompletedProcess:
+        return rodar([PY, "entregaveis/_harness/scripts/fase.py", *opcoes], projeto)
+
+    cedo = fase("--nova", "--tipo", "mídia", "--origem", "vendida")
+    confere("não abre fase em projeto que não foi iniciado", cedo.returncode != 0 and "iniciar-projeto" in cedo.stdout + cedo.stderr and not (base / "_projeto/fases").exists(), cedo.stdout + cedo.stderr)
+    pasta = montar_exemplo(projeto)
+    brief.write_text(BRIEF.replace("tipo: assessment de martech e adtech", "tipo: proposta") + "\n## Regra da casa\n\nSeção própria do projeto.\n", encoding="utf-8")
+    antes = brief.read_text(encoding="utf-8")
+    confere("um projeto sem o campo fase está na fase 1", "Fase 2" not in rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout)
+    primeira = fase("--data", "2026-11-01")
+    confere("registra a fase 1 com o tipo do brief", primeira.returncode == 0 and "| 1 | 2026-11-01 |  | proposta |" in registro.read_text(encoding="utf-8"), primeira.stdout + primeira.stderr)
+    confere("não registra a fase 1 duas vezes", registro.read_text(encoding="utf-8").count("| 1 |") == 1 and fase().returncode == 0 and registro.read_text(encoding="utf-8").count("| 1 |") == 1)
+    confere("recusa pacote que não existe", fase("--nova", "--tipo", "mídia", "--pacotes", "nao-existe", "--origem", "vendida").returncode != 0 and brief.read_text(encoding="utf-8") == antes)
+    confere("pede o tipo e a origem da fase nova", fase("--nova", "--tipo", "mídia").returncode != 0 and brief.read_text(encoding="utf-8") == antes)
+    simulada = fase("--nova", "--tipo", "assessment de martech e adtech", "--pacotes", "martech-adtech", "--origem", "proposta vendida", "--simular")
+    confere("--simular mostra a mudança e não grava", simulada.returncode == 0 and "Nada foi gravado" in simulada.stdout and "diag" in simulada.stdout and brief.read_text(encoding="utf-8") == antes and not (base / "_projeto/fases").exists(), simulada.stdout + simulada.stderr)
+
+    aberta = fase("--nova", "--tipo", "assessment de martech e adtech", "--pacotes", "martech-adtech", "--origem", "proposta vendida | em reunião", "--data", "2026-11-20")
+    guarda = base / "_projeto/fases/fase-1"
+    novo = brief.read_text(encoding="utf-8")
+    meta = dict(l.split(":", 1) for l in novo.split("---")[1].strip().splitlines())
+    confere("abre a fase nova", aberta.returncode == 0 and "Fase nova aberta" in aberta.stdout, aberta.stdout + aberta.stderr)
+    confere("guarda o brief da fase encerrada, igual ao que era", (guarda / "brief.md").read_text(encoding="utf-8") == antes)
+    confere("o brief passa a ser o da fase nova", meta["fase"].strip() == "2" and meta["tipo"].strip() == "assessment de martech e adtech" and meta["pacotes"].strip() == "martech-adtech" and meta["iniciado"].strip() == "sim", str(meta))
+    confere("as seções da fase voltam ao modelo e as outras ficam", "Um diagnóstico das plataformas" not in novo and "A diretoria escolhe" not in novo and novo.count("PREENCHER") == 2 and "Seção própria do projeto." in novo, novo[-600:])
+    linhas = registro.read_text(encoding="utf-8")
+    confere("o registro fecha a fase 1 e abre a 2, sem quebrar a tabela", "| 1 | 2026-11-01 | 2026-11-20 | proposta |" in linhas and "| Encerrada |" in linhas and "| 2 | 2026-11-20 |  | assessment de martech e adtech | martech-adtech | proposta vendida / em reunião | Em andamento |" in linhas, linhas[-400:])
+    passagem = (guarda / "passagem.md").read_text(encoding="utf-8")
+    confere("a passagem nasce com as fases e os entregáveis em aberto", "da_fase: 1" in passagem and "para_a_fase: 2" in passagem and "| diag | " in passagem and "PREENCHER" in passagem, passagem[:300])
+    confere("o pacote da fase nova é ativado", (projeto / ".claude/skills/pacote-martech-adtech/SKILL.md").is_file())
+    confere("nada do que existia é apagado", (pasta / "conteudo.md").read_text(encoding="utf-8") == CONTEUDO and "E-001" in (base / "_projeto/evidencias.tsv").read_text(encoding="utf-8"))
+
+    estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout
+    confere("o estado mostra a fase, a passagem por escrever e o brief por fechar", "Fase 2 do projeto, aberta por: proposta vendida" in estado and "passagem da fase 1 para a 2" in estado and "brief da fase 2" in estado, estado)
+    confere("o estado marca o entregável que veio da fase anterior", "- diag (fase 1, " in estado, estado)
+    achados = validar(projeto).stdout
+    confere("a validação cobra o brief e a passagem da fase nova", "[projeto]" in achados and "passagem da fase 1" in achados, achados)
+    criado = rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--entregavel", "relatorio", "--tipo", "documento", "--veiculo", "documento", "--formato", "docx"], projeto)
+    confere("um entregável novo nasce na fase atual", criado.returncode == 0 and "fase: 2" in (base / "relatorio/briefing.md").read_text(encoding="utf-8"))
+    (pasta / "briefing.md").write_text(BRIEFING.replace("estado: revisao", "estado: entregue").replace("estado: redacao", "estado: entregue"), encoding="utf-8")
+    rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--entregavel", "diag"], projeto)
+    confere("preparar de novo um entregável antigo não troca a fase dele", "fase: 2" not in (pasta / "briefing.md").read_text(encoding="utf-8"))
+    estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout
+    confere("o entregue de fase anterior vira uma linha de história", "Entregues em fases anteriores: 1" in estado and "- diag (" not in estado, estado)
+
+    # Com a passagem e o brief escritos, a fase está aberta de verdade
+    (guarda / "passagem.md").write_text(re.sub(r"PREENCHER[^\n|]*", "Proposta vendida em reunião com a diretoria.", passagem), encoding="utf-8")
+    brief.write_text(re.sub(r"PREENCHER[^\n|]*", "Assessment das plataformas de marketing.", novo), encoding="utf-8")
+    estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout
+    confere("com a passagem e o brief escritos, o estado só mostra a fase", "Fase 2 do projeto" in estado and "passagem da fase" not in estado and "brief da fase" not in estado, estado)
+    terceira = fase("--nova", "--tipo", "processos agênticos", "--pacotes", "processos-agenticos", "--origem", "extensão contratada", "--data", "2026-12-10")
+    linhas = registro.read_text(encoding="utf-8")
+    confere("a extensão abre a fase 3 e guarda o brief da 2", terceira.returncode == 0 and (base / "_projeto/fases/fase-2/brief.md").is_file() and "Assessment das plataformas" in (base / "_projeto/fases/fase-2/brief.md").read_text(encoding="utf-8") and linhas.count("| Encerrada |") == 2 and "| 3 | 2026-12-10 |" in linhas, terceira.stdout + terceira.stderr)
+    confere("o brief guardado da fase 1 não muda", (guarda / "brief.md").read_text(encoding="utf-8") == antes)
+    mostra = fase()
+    confere("mostra as três fases", mostra.stdout.count("Fase ") == 3 and "extensão contratada" in mostra.stdout, mostra.stdout)
+
+    hooks = projeto / "entregaveis/_harness/hooks"
+    aviso = rodar([PY, hooks / "mensagem.py"], projeto, json.dumps({"cwd": str(projeto), "prompt": "a proposta foi vendida, agora começa o assessment"}))
+    confere("mensagem: avisa quando o pedido parece mudança de fase", "evoluir-projeto" in aviso.stdout and "registrar-decisao" in aviso.stdout, aviso.stdout)
+    comum_ = rodar([PY, hooks / "mensagem.py"], projeto, json.dumps({"cwd": str(projeto), "prompt": "inclua uma página sobre mídia paga"}))
+    confere("mensagem: não avisa de fase em pedido comum", "evoluir-projeto" not in comum_.stdout, comum_.stdout)
+
+
 def testar_pacotes(tmp: Path) -> None:
     print("Pacotes")
     pacotes = sorted(p for p in (HARNESS / "pacotes").iterdir() if p.is_dir())
@@ -1238,6 +1311,7 @@ def main() -> int:
         testar_dominio(tmp)
         testar_repositorio(tmp)
         testar_gerador(tmp)
+        testar_fases(tmp)
         testar_pacotes(tmp)
         testar_levantamento(tmp)
     finally:

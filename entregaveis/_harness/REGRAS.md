@@ -33,6 +33,7 @@ que você abre quando a tarefa pede.
    | Antes de dizer que um entregável está pronto | `revisar-entregavel` |
    | A revisão passou | `preparar-entrega` |
    | O material foi apresentado ou enviado | `fechar-entregavel` |
+   | O projeto muda de natureza: a proposta foi vendida, uma extensão foi contratada, o trabalho é de outro tipo | `evoluir-projeto` |
    | O consultor decide, ou você decide o que ele deixou em aberto | `registrar-decisao` |
    | Algo pedido não será feito agora | `adiar-trabalho` |
    | O consultor corrige você, ou um erro se repete | `registrar-licao` |
@@ -53,6 +54,13 @@ que você abre quando a tarefa pede.
      `entregaveis/_projeto/decisoes.md` como `Vigente (assumida)` e liste
      no relatório. O consultor confirma ou troca.
    - Você decide o resto, que é o como.
+   - Mudança de escopo não é mudança de projeto. Quando mudam os
+     entregáveis, um prazo ou uma audiência dentro do mesmo contrato e
+     do mesmo tipo de trabalho, registre a decisão e siga. Quando muda o
+     contrato, o tipo de trabalho ou a decisão que o projeto precisa
+     provocar, o projeto entra em uma fase nova, que herda o contexto e
+     o histórico: aplique `evoluir-projeto`. Na dúvida, diga qual das
+     duas você entendeu e pergunte uma vez.
 4. Sempre pergunte do que é o projeto. Não presuma o tipo de trabalho, a
    audiência, o idioma nem o formato. O que o consultor responder define os
    pacotes, as skills e as checagens que o projeto usa. As referências,

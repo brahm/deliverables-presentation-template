@@ -15,6 +15,7 @@
 | `scripts/estado.py` | O estado do projeto em poucas linhas | No início da sessão |
 | `scripts/validar.py` | As checagens em script | A cada gravação (hook), antes da revisão e no pull request |
 | `scripts/preparar.py` | Cria os registros e as pastas de entregável e ativa pacotes | No início do projeto e a cada entregável novo |
+| `scripts/fase.py` | Mostra as fases do projeto e abre uma fase nova, guardando o brief da anterior e criando a página de passagem | Quando o projeto muda de natureza |
 | `scripts/levantar.py` | Levanta o que já existe em um projeto em andamento | Na adoção |
 | `scripts/gerar.py` | Gera PowerPoint, Word, PDF e Excel a partir da fonte em Markdown, sobre o modelo do projeto. Pede `python-pptx`, `python-docx` e `openpyxl` | Depois da redação e a cada correção da fonte |
 | `scripts/repositorio.py` | Diz se o remoto do git é local, privado ou público, e registra a confirmação do consultor | No início do projeto, a cada gravação de registro e a cada envio |

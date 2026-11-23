@@ -72,6 +72,23 @@ def linhas_de_dominio() -> list[str]:
     return ["Domínio do projeto ainda não calibrado: quando o consultor fornecer referências, métodos, contexto e objetivo, aplique a skill calibrar-dominio."]
 
 
+def linhas_de_fase() -> list[str]:
+    """A fase em que o projeto está e o que a abertura dela deixou por fazer."""
+    atual = comum.fase_atual()
+    if atual < 2:
+        return []
+    registro = [l for l in comum.tabela(comum.ler(comum.PROJETO / "fases.md")) if l.get("fase", "").strip() == str(atual)]
+    origem = registro[0].get("origem", "") if registro else ""
+    linhas = [f"Fase {atual} do projeto" + (f", aberta por: {origem}" if origem else "") + ". As fases anteriores estão em _projeto/fases.md."]
+    passagem = comum.PROJETO / "fases" / f"fase-{atual - 1}" / "passagem.md"
+    if comum.MARCA in comum.ler(passagem):
+        linhas.append(f"A passagem da fase {atual - 1} para a {atual} ainda tem trechos por escrever ({comum.relativo(passagem)}): siga a skill evoluir-projeto.")
+    _, corpo = comum.cabecalho(comum.ler(comum.PROJETO / "brief.md"))
+    if comum.MARCA in corpo:
+        linhas.append(f"O brief da fase {atual} ainda não foi fechado com o consultor: siga a skill evoluir-projeto antes de abrir entregáveis.")
+    return linhas
+
+
 def linhas_de_estado() -> list[str]:
     brief = comum.PROJETO / "brief.md"
     meta, _ = comum.cabecalho(comum.ler(brief))
@@ -85,13 +102,24 @@ def linhas_de_estado() -> list[str]:
         f"Projeto: {meta.get('projeto', '?')} | tipo: {meta.get('tipo', '?')} | pacotes: {meta.get('pacotes', 'nenhum') or 'nenhum'}",
         f"Idiomas dos entregáveis: {meta.get('idiomas_dos_entregaveis', '?')} | classificação: {meta.get('classificacao', '?')}",
     ]
+    linhas += linhas_de_fase()
     linhas += linhas_de_dominio()
     pastas = comum.entregaveis()
     if not pastas:
         linhas.append("Nenhum entregável aberto. Crie um com scripts/preparar.py --entregavel ID.")
+    atual = comum.fase_atual()
+    entregues_antes = 0
     for pasta in pastas:
         m, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))
-        linhas.append(f"- {pasta.name} ({m.get('formato', '?')}, etapa {comum.ETAPAS[comum.etapa(m)]}): {proximo_passo(pasta)}")
+        etapa = comum.ETAPAS[comum.etapa(m)]
+        fase = comum.fase_do_entregavel(m)
+        if fase < atual and etapa == "entregue":
+            entregues_antes += 1  # o que as fases anteriores entregaram fica guardado e não pede ação
+            continue
+        de_antes = f"fase {fase}, " if fase < atual else ""
+        linhas.append(f"- {pasta.name} ({de_antes}{m.get('formato', '?')}, etapa {etapa}): {proximo_passo(pasta)}")
+    if entregues_antes:
+        linhas.append(f"Entregues em fases anteriores: {entregues_antes}. Eles seguem nas pastas deles, como história e como fonte.")
     pendentes = [l for l in comum.ler_tsv(comum.INTAKE / "registro.tsv") if comum.normalizar(l.get("estado", "")) in ("pedido", "em falta")]
     if pendentes:
         nomes = ", ".join(l.get("material", "?") for l in pendentes[:4])

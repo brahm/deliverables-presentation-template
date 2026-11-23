@@ -55,6 +55,8 @@ def preparar_entregavel(ident: str, campos: dict) -> list[str]:
     briefing = pasta / "briefing.md"
     texto = briefing.read_text(encoding="utf-8")
     campos = {"id": ident, **{k: v for k, v in campos.items() if v}}
+    if comum.relativo(briefing) in criados:
+        campos["fase"] = str(comum.fase_atual())  # a fase em que o entregável nasce, e que não muda sozinha
     for chave, valor in campos.items():
         texto = re.sub(rf"^{chave}:.*$", f"{chave}: {valor}", texto, count=1, flags=re.MULTILINE)
     briefing.write_text(texto, encoding="utf-8")

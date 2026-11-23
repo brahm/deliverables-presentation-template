@@ -62,8 +62,11 @@ sem esperar que ele dite cada passo.
 10. Se o repositório foi criado a partir do template, apague os arquivos
     que só servem ao kit (a lista está em `_harness/kit.md`) e escreva
     um README do projeto.
-11. Quando o brief não tiver mais `PREENCHER`, marque `iniciado: sim` e
-    rode `python3 entregaveis/_harness/scripts/validar.py`.
+11. Quando o brief não tiver mais `PREENCHER`, marque `iniciado: sim`,
+    rode `python3 entregaveis/_harness/scripts/fase.py`, que registra a
+    fase 1 em `_projeto/fases.md`, e depois
+    `python3 entregaveis/_harness/scripts/validar.py`. Quando o projeto
+    mudar de natureza, a skill `evoluir-projeto` abre a fase seguinte.
 12. Relate com `relatar-ao-consultor`: o plano em poucas linhas, cada
     suposição com o id da decisão, os materiais pedidos e as perguntas
     em aberto.

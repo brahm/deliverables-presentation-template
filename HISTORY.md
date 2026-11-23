@@ -3,6 +3,27 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.6.0
+
+- Fases do projeto. Um projeto muda de natureza e continua o mesmo: a
+  proposta vendida vira o trabalho contratado, e uma extensão abre outro
+  tipo de trabalho. A skill `evoluir-projeto` reconhece a mudança pelo
+  que o consultor diz, separa mudança de fase de mudança de escopo e,
+  com o sim dele, abre a fase com `scripts/fase.py`.
+- Abrir uma fase guarda o brief da anterior em `_projeto/fases/`, cria a
+  página de passagem com os compromissos herdados, registra a mudança
+  em `_projeto/fases.md` e ativa os pacotes do tipo novo. Decisões,
+  evidências, glossário, marca, lições, domínio e entregáveis ficam
+  onde estão.
+- O brief ganhou o campo `fase`, e o briefing de cada entregável guarda
+  a fase em que ele nasceu. O estado mostra a fase atual e o que a
+  abertura dela deixou por fazer.
+- O hook de mensagem avisa quando o pedido parece mudança de fase.
+
+O que o projeto precisa fazer: atualize com `--atualizar` e rode
+`python3 entregaveis/_harness/scripts/fase.py`, que registra a fase 1.
+Um projeto sem o campo `fase` é lido como fase 1.
+
 ## 0.5.1
 
 - Quem usa o harness passa a se chamar consultor nas regras, nas
