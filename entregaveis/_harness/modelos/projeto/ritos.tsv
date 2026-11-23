@@ -1,0 +1,5 @@
+# Reuniões que se repetem. A rotina espera uma ata para cada ocorrência e avisa quando ela não chega.
+# cadencia: semanal, quinzenal ou mensal. desde: a data da primeira ocorrência (AAAA-MM-DD). ate: preencha quando o rito acabar.
+# Formato de uma linha, com dados fictícios:
+# Comitê semanal	semanal	2026-09-14		Consultora, diretora de marketing	Segundas, 10h
+rito	cadencia	desde	ate	participantes	observacao

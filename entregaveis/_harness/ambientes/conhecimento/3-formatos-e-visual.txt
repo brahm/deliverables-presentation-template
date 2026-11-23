@@ -1,6 +1,6 @@
 # Formatos, visual e HTML interativo
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.7.1. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.8.0. Gerado por empacotar.py: não edite à mão.
 
 ## Veículos, formatos e idiomas
 

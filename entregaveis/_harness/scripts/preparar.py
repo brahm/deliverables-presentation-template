@@ -2,7 +2,7 @@
 """Cria os registros do projeto e as pastas de entregável a partir dos modelos.
 
 Uso:
-    preparar.py                          cria _projeto/ e _intake/ se faltarem
+    preparar.py                          cria _projeto/, _intake/, _dominio/ e _atas/ se faltarem
     preparar.py --entregavel ID [opções] cria a pasta de um entregável
     preparar.py --pacote NOME            ativa um pacote de tipo de projeto
 
@@ -44,6 +44,12 @@ def preparar_projeto() -> list[str]:
     if not materiais.exists():
         materiais.mkdir(parents=True)
         (materiais / ".gitkeep").write_text("", encoding="utf-8")
+    # As atas e a pasta de entrada ficam fora do git, como o material recebido.
+    criados += copiar_modelos(comum.MODELOS / "atas", comum.BASE / "_atas")
+    entrada = comum.INTAKE / "entrada"
+    if not entrada.exists():
+        entrada.mkdir(parents=True)
+        (entrada / ".gitkeep").write_text("", encoding="utf-8")
     return criados
 
 

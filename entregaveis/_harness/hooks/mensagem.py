@@ -31,6 +31,24 @@ AVISO_DE_FASE = (
     "Na dúvida, pergunte uma vez ao consultor."
 )
 
+# Sinais de que o consultor dispensa algo: não será feito, ou não depende mais de aprovação.
+DISPENSA = re.compile(
+    r"\bn[ãa]o (?:vai|vamos|ser[áa]|precisa(?:mos)?|[ée]|faz) mais\b|\bn[ãa]o (?:depende|precisa) (?:mais )?de aprova[çc][ãa]o\b|"
+    r"\bsem (?:necessidade de )?aprova[çc][ãa]o\b|\bcancel(?:e|a|ar|ei|ou|ado|ada|amos)\b|\bdeix(?:a|ou|aram) de (?:ser|existir)\b|"
+    r"\bdesist(?:i|iu|imos|ir)\b|\bya no (?:se|es|hace)\b|\bno longer\b|\bwon't be\b|\bcancel(?:led|ed)\b",
+    flags=re.IGNORECASE,
+)
+AVISO_DE_DISPENSA = (
+    "Harness de entregáveis: a mensagem pode dizer que algo não será mais feito ou não depende mais de aprovação. Se for, "
+    "aplique a skill registrar-dispensa: registre a decisão com o motivo e leve o efeito aos registros. Não presuma a dispensa."
+)
+# Sinais de que a mensagem traz uma ata ou o relato de uma reunião.
+ATA = re.compile(r"\b(?:atas?|transcri[çc](?:[ãa]o|[õo]es)|actas?|meeting (?:notes|minutes)|minutes of)\b", flags=re.IGNORECASE)
+AVISO_DE_ATA = (
+    "Harness de entregáveis: se a mensagem traz uma ata ou conta o que houve em uma reunião, aplique a skill processar-ata. "
+    "As atas ficam em entregaveis/_atas/, fora do git."
+)
+
 
 def principal() -> int:
     dados = _base.entrada()
@@ -42,6 +60,10 @@ def principal() -> int:
         return 0
     if MUDANCA_DE_FASE.search(str(dados.get("prompt", ""))):
         print(AVISO_DE_FASE)
+    if DISPENSA.search(str(dados.get("prompt", ""))):
+        print(AVISO_DE_DISPENSA)
+    if ATA.search(str(dados.get("prompt", ""))):
+        print(AVISO_DE_ATA)
     linhas = []
     for pasta in comum.entregaveis():
         m, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))

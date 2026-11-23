@@ -12,7 +12,8 @@ que você abre quando a tarefa pede.
 
 1. Comece pelo estado. `python3 entregaveis/_harness/scripts/estado.py`
    diz em poucas linhas o tipo do projeto, a etapa de cada entregável, os
-   materiais pendentes e as decisões à espera do consultor. O Claude Code roda
+   materiais pendentes, as decisões à espera do consultor e o que a
+   rotina do dia tem a tratar. O Claude Code roda
    o script sozinho no início da sessão. Em outro agente, rode-o primeiro.
 2. As skills se aplicam sozinhas. O consultor nunca precisa citar uma. Quando
    chegar um destes momentos, abra `.claude/skills/NOME/SKILL.md` e siga:
@@ -34,6 +35,10 @@ que você abre quando a tarefa pede.
    | A revisão passou | `preparar-entrega` |
    | O material foi apresentado ou enviado | `fechar-entregavel` |
    | O projeto muda de natureza: a proposta foi vendida, uma extensão foi contratada, o trabalho é de outro tipo | `evoluir-projeto` |
+   | O dia de trabalho começa ou termina, ou o estado mostra a rotina do dia | `rotina-diaria` |
+   | Uma ata aparece na pasta de atas, ou o consultor conta o que houve em uma reunião | `processar-ata` |
+   | Um arquivo aparece na pasta de entrada, ou o consultor fez um material à mão | `incorporar-material` |
+   | O consultor diz que algo não será mais feito ou não depende mais de aprovação | `registrar-dispensa` |
    | O consultor decide, ou você decide o que ele deixou em aberto | `registrar-decisao` |
    | Algo pedido não será feito agora | `adiar-trabalho` |
    | O consultor corrige você, ou um erro se repete | `registrar-licao` |
@@ -129,9 +134,23 @@ que você abre quando a tarefa pede.
     uma checagem antes de uma regra, uma regra mais precisa antes de uma
     regra nova.
 
+## O dia a dia do projeto
+
+18. As atas entram pela pasta. O consultor salva atas e transcrições em
+    `entregaveis/_atas/`, e o que chegou ou foi feito à mão em
+    `entregaveis/_intake/entrada/`. As duas pastas ficam fora do git.
+    Cada item extraído leva a reunião de origem. O que toca o contrato
+    ou sai do projeto espera o sim do consultor.
+19. O cronograma manda nos avisos. Um item dentro do prazo recebe no
+    máximo um aviso leve. Prazo próximo e prazo vencido são avisados
+    sempre. O vencido pede uma de três respostas: concluído, nova data
+    ou não é mais necessário. Um prazo só muda com
+    `python3 entregaveis/_harness/scripts/rotina.py --remarcar`, que
+    guarda a data anterior. Uma dispensa nunca é presumida.
+
 ## Relatório e idioma
 
-18. Relate ao consultor no idioma dele, com o resultado primeiro. Depois diga
+20. Relate ao consultor no idioma dele, com o resultado primeiro. Depois diga
     o que foi checado, o que você assumiu e o que ficou por fazer.
-19. As instruções e os registros do harness ficam em português. Os
+21. As instruções e os registros do harness ficam em português. Os
     entregáveis ficam nos idiomas definidos no brief do projeto.

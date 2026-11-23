@@ -16,10 +16,29 @@ conhecimento, que você envia ao projeto ou ao agente.
 | Registros do projeto | Arquivos em `entregaveis/_projeto/` | Um registro único, que o agente atualiza e você guarda |
 | Arquivo final sobre o modelo | `gerar.py` | Depende do ambiente: ele gera o arquivo ou entrega a fonte página por página |
 | Domínio do projeto | Regras com casos de teste | Texto no arquivo `5-projeto`, conferido à mão |
+| Atas, prazos e rotina diária | `rotina.py` lê a pasta de atas e calcula os avisos | Você anexa a ata, e o agente atualiza o registro e confere os prazos à mão a cada conversa |
+| Requisitos da máquina | Python 3.9 ou mais novo, conferido por `ambiente.py` | Nenhum: nada é instalado |
 
 O que se perde é a garantia. Sem trava e sem checagem automática, o
 resultado depende de o agente seguir as instruções. Para material que vai
 ao cliente, a revisão final no Claude Code continua valendo a pena.
+
+## Conferir o ambiente
+
+O harness confere o ambiente no início de um projeto novo e na
+instalação em um projeto em andamento. O que ele confere depende de onde
+você trabalha.
+
+| Onde você trabalha | O que é conferido | Quem confere |
+| --- | --- | --- |
+| Um agente que roda comandos na pasta do projeto, como o Claude Code e os que leem `AGENTS.md` | Python 3.9 ou mais novo, o comando `python3`, o Git e os pacotes e programas do gerador de arquivos | O script `ambiente.py`. Ele lista o que falta com o comando de cada item, e o agente se oferece para instalar ou passa o passo a passo |
+| Um aplicativo de conversa com projeto, como o Claude desktop e o ChatGPT desktop | Se o agente lê os arquivos anexados, roda código e cria PowerPoint, Word e Excel | O próprio agente, na primeira conversa, pelas instruções coladas |
+| Só o navegador, como o Copilot web | O mesmo. Nada pode ser instalado | O próprio agente, na primeira conversa |
+
+Na pasta do projeto, o comando é
+`python3 entregaveis/_harness/scripts/ambiente.py`. Em uma máquina em
+que você não pode instalar nada, use um dos caminhos sem instalação
+desta página: o método vale inteiro, sem as checagens automáticas.
 
 ## Os arquivos
 
@@ -62,8 +81,8 @@ pasta `entregaveis/_ambiente/` fica fora do git.
 ## Passo a passo
 
 Os nomes dos menus mudam com a versão e com o idioma do aplicativo. Os
-limites abaixo foram conferidos na documentação de cada produto em
-novembro de 2026.
+limites e os formatos abaixo foram conferidos na documentação de cada
+produto em novembro de 2026.
 
 ### Claude desktop
 
@@ -92,6 +111,37 @@ novembro de 2026.
    20 arquivos, e Markdown não é aceito: por isso os arquivos são
    `.txt`. O envio de arquivos depende da licença da sua organização.
 4. Abra o agente e diga do que é o trabalho.
+
+### Só o Copilot web, sem instalar nada
+
+Para quem só pode usar o Copilot no navegador, em
+`m365.cloud.microsoft/chat`. Há três caminhos. Use o primeiro que a sua
+conta oferecer.
+
+1. Um caderno do Copilot (Copilot Notebooks) para o projeto. Em "More
+   options" e depois "Instructions", cole o conteúdo de `instrucoes.md`.
+   Acrescente os arquivos de `conhecimento/` como arquivos de
+   referência. O registro do projeto fica no caderno, como mais um
+   arquivo de referência, que você troca quando ele muda.
+2. Um agente, como descrito acima, quando a sua conta mostra "New
+   agent".
+3. A conversa comum. Anexe os arquivos de `conhecimento/` e o registro
+   do projeto, e cole o conteúdo de `instrucoes.md` como primeira
+   mensagem. Se o Copilot recusar o texto pelo tamanho, anexe
+   `instrucoes.md` salvo como `.txt` e escreva: "Siga as instruções do
+   arquivo anexado em toda esta conversa". Repita em cada conversa nova.
+
+O Copilot no navegador aceita anexos em `.txt`, `.md`, `.docx` e `.pdf`,
+entre outros formatos. A documentação da Microsoft não diz quantos
+arquivos cabem por conversa nem o tamanho máximo da mensagem. Se o
+limite não comportar todos os arquivos, envie nesta ordem: `5-projeto`,
+`1-procedimentos`, `2-metodo-e-texto`, o pacote do tipo de projeto,
+`4-modelos` e `3-formatos-e-visual`.
+
+Sem instalação não há Python: as checagens, as contas de prazo e a
+revisão são feitas pelo agente, à mão, e ele diz isso no relatório. As
+atas entram como anexo da conversa. No fim de cada conversa, peça o
+registro atualizado e salve no OneDrive ou no caderno.
 
 ## Trazer o trabalho de volta
 

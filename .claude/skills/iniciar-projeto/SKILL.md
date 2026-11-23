@@ -10,7 +10,15 @@ metadata:
 O consultor diz o que quer com as palavras dele. O resto é seu, de uma vez,
 sem esperar que ele dite cada passo.
 
-1. Confira onde o projeto vai ficar, antes de escrever qualquer coisa
+1. Confira a máquina: `python3 entregaveis/_harness/scripts/ambiente.py`.
+   Se faltar algo, diga o que falta e para que serve, e ofereça as duas
+   saídas: você instala, com o sim do consultor, ou ele segue o passo a
+   passo que o script imprime. O que é essencial vem antes de tudo. O
+   que só um formato de arquivo pede pode esperar a hora de gerar. Se o
+   Python não roda, confira com `python --version` e `py -3 --version`.
+   Onde nada pode ser instalado, leve o consultor ao caminho sem
+   instalação de `entregaveis/_harness/ambientes/LEIA-ME.md`.
+2. Confira onde o projeto vai ficar, antes de escrever qualquer coisa
    sobre o cliente: `python3 entregaveis/_harness/scripts/repositorio.py`.
    Um projeto só é iniciado em pasta sem git, em git local ou em
    repositório privado. Se o remoto for público, pare e leve ao consultor as
@@ -19,12 +27,12 @@ sem esperar que ele dite cada passo.
    não pôde ser verificado, pergunte ao consultor se ele é privado e registre
    a resposta com `repositorio.py --confirmar "palavras do consultor"`.
    Depois rode `python3 entregaveis/_harness/scripts/preparar.py`. Ele
-   cria `_projeto/`, `_intake/` e `_dominio/` a partir dos modelos. Se o projeto já tem
+   cria `_projeto/`, `_intake/`, `_dominio/` e `_atas/` a partir dos modelos. Se o projeto já tem
    apresentações, documentos, dados ou regras de agente anteriores ao
    harness, pare aqui e siga `adotar-projeto`.
-2. Leia o que o consultor já escreveu e tire dali o que der: cliente, tipo de
+3. Leia o que o consultor já escreveu e tire dali o que der: cliente, tipo de
    trabalho, decisão esperada, entregáveis, prazos e idiomas.
-3. Pergunte uma vez, em uma mensagem só, cada pergunta com a resposta
+4. Pergunte uma vez, em uma mensagem só, cada pergunta com a resposta
    que você assumiria. Se o consultor mandar decidir ou não puder responder
    agora, siga com as suposições.
    - Do que é o projeto e que decisão ele precisa provocar. Esta você
@@ -40,33 +48,36 @@ sem esperar que ele dite cada passo.
    - Os materiais: modelos de apresentação, documento e planilha, guia
      de marca, apresentações de referência, escopo contratado e uma
      amostra de texto do consultor.
-4. Preencha `_projeto/brief.md`, `audiencia.md` e
+   - As reuniões que se repetem, com a frequência e a data da
+     primeira. Elas vão para `_projeto/ritos.tsv`. Diga que as atas são
+     salvas em `entregaveis/_atas/` e que a rotina do dia parte dali.
+5. Preencha `_projeto/brief.md`, `audiencia.md` e
    `regras-de-material.md`. Ponha em `confidencial.tsv` os nomes que não
    podem aparecer em entregáveis.
-5. Ative os pacotes do tipo de trabalho com
+6. Ative os pacotes do tipo de trabalho com
    `preparar.py --pacote NOME`. Os que existem estão listados em
    `entregaveis/_harness/pacotes/LEIA-ME.md`. Um pacote é ponto de
    partida genérico. O que é próprio deste trabalho entra no domínio do
    projeto: assim que o consultor fornecer referências, métodos, contexto e
    objetivo, aplique `calibrar-dominio`, que escreve o método, as
    regras de checagem e os casos de teste em `_dominio/`.
-6. Abra o intake com `receber-materiais`: uma linha por material pedido,
+7. Abra o intake com `receber-materiais`: uma linha por material pedido,
    mais a lista de pedido de dados do pacote.
-7. Adapte o harness ao projeto. Um procedimento que vai se repetir vira
+8. Adapte o harness ao projeto. Um procedimento que vai se repetir vira
    uma skill, um limite diferente vai para `limites.tsv` e os termos do
    cliente abrem o glossário.
-8. Registre as decisões com `registrar-decisao`. As do consultor ficam
+9. Registre as decisões com `registrar-decisao`. As do consultor ficam
    `Vigente`, e as suas `Vigente (assumida)`.
-9. Crie a pasta de cada entregável previsto com
+10. Crie a pasta de cada entregável previsto com
    `preparar.py --entregavel ID --tipo T --veiculo V --formato F --idiomas I`.
-10. Se o repositório foi criado a partir do template, apague os arquivos
+11. Se o repositório foi criado a partir do template, apague os arquivos
     que só servem ao kit (a lista está em `_harness/kit.md`) e escreva
     um README do projeto.
-11. Quando o brief não tiver mais `PREENCHER`, marque `iniciado: sim`,
+12. Quando o brief não tiver mais `PREENCHER`, marque `iniciado: sim`,
     rode `python3 entregaveis/_harness/scripts/fase.py`, que registra a
     fase 1 em `_projeto/fases.md`, e depois
     `python3 entregaveis/_harness/scripts/validar.py`. Quando o projeto
     mudar de natureza, a skill `evoluir-projeto` abre a fase seguinte.
-12. Relate com `relatar-ao-consultor`: o plano em poucas linhas, cada
+13. Relate com `relatar-ao-consultor`: o plano em poucas linhas, cada
     suposição com o id da decisão, os materiais pedidos e as perguntas
     em aberto.

@@ -16,6 +16,13 @@ pasta do projeto, como o Claude Code. O harness pede Python 3.9 ou mais
 novo, sem pacotes extras. Só o gerador de arquivos pede `python-pptx`,
 `python-docx` e `openpyxl`, e o LibreOffice para o PDF.
 
+Você não precisa conferir isso à mão. Antes de instalar e no início do
+projeto, o agente confere a máquina, mostra o que falta com o comando do
+seu sistema e pergunta se instala ele mesmo ou se você prefere seguir o
+passo a passo. Quem não pode instalar nada, ou só tem o Microsoft
+Copilot no navegador, usa o método sem instalação:
+[ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md).
+
 ### Projeto novo, pelo site do GitHub
 
 1. Entre na sua conta do GitHub e abra o formulário
@@ -93,6 +100,13 @@ estão em [INSTALL.md](INSTALL.md).
    modelo, com o que foi checado, o que foi assumido e o que ficou por
    fazer. Quem envia ao cliente é você.
 
+No dia a dia, salve as atas das reuniões em `entregaveis/_atas/`. O
+agente lê cada uma, atualiza os registros com a reunião de origem e
+mostra no resumo do dia o que mudou. Os avisos seguem o cronograma: um
+item parado dentro do prazo, um prazo próximo e um prazo vencido, que
+pede uma de três respostas: concluído, nova data ou não é mais
+necessário. A data anterior fica guardada.
+
 Quando o projeto muda de natureza, diga o que aconteceu: a proposta foi
 vendida, uma extensão foi contratada. O agente abre uma fase nova, que
 herda as decisões, as evidências e tudo o que foi produzido.
@@ -109,6 +123,8 @@ python3 entregaveis/_harness/scripts/gerar.py ID      # PowerPoint, Word, PDF ou
 python3 entregaveis/_harness/scripts/fase.py          # as fases do projeto: proposta, trabalho vendido, extensão
 python3 entregaveis/_harness/scripts/dominio.py       # os casos de teste do domínio
 python3 entregaveis/_harness/scripts/repositorio.py   # o remoto é local, privado ou público
+python3 entregaveis/_harness/scripts/rotina.py        # o resumo do dia: atas novas, prazos e o que espera o seu sim
+python3 entregaveis/_harness/scripts/ambiente.py      # o que a máquina tem e como instalar o que falta
 ```
 
 ## Ver um exemplo
@@ -136,7 +152,8 @@ O resto são checagens que rodam a cada gravação e devolvem o que
 corrigir: título que é rótulo, texto acima do limite do veículo, número
 sem fonte, vício de texto gerado por IA em português, espanhol e inglês,
 termo fora do glossário, material confidencial, HTML que depende de
-arquivo externo e as regras do domínio do projeto.
+arquivo externo, ação sem dono ou com prazo vencido sem resposta e as
+regras do domínio do projeto.
 
 Em outros agentes que leem `AGENTS.md` e rodam comandos, valem as
 regras, as skills e as checagens, sem os hooks.

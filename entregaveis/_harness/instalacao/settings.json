@@ -16,6 +16,9 @@
       "Bash(node entregaveis/_harness/scripts/conferir_interativo.js *)",
       "Bash(python3 entregaveis/_harness/scripts/gerar.py *)",
       "Bash(python3 entregaveis/_harness/scripts/repositorio.py)",
+      "Bash(python3 entregaveis/_harness/scripts/rotina.py)",
+      "Bash(python3 entregaveis/_harness/scripts/rotina.py *)",
+      "Bash(python3 entregaveis/_harness/scripts/ambiente.py)",
       "Bash(python3 entregaveis/_harness/scripts/dominio.py)",
       "Bash(python3 entregaveis/_harness/scripts/dominio.py *)"
     ]

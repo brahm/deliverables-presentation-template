@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import comum  # noqa: E402
 import repositorio  # noqa: E402
+import rotina  # noqa: E402
 import validar  # noqa: E402
 
 
@@ -131,6 +132,7 @@ def linhas_de_estado() -> list[str]:
     adiados = [l for l in comum.ler_tsv(comum.PROJETO / "adiados.tsv") if comum.normalizar(l.get("estado", "")) == "aberto"]
     if adiados:
         linhas.append(f"Itens adiados em aberto: {len(adiados)} (ver _projeto/adiados.tsv).")
+    linhas += rotina.linha_de_estado()
     return linhas
 
 

@@ -1,6 +1,6 @@
 # Procedimentos
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.7.1. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.8.0. Gerado por empacotar.py: não edite à mão.
 
 Estes procedimentos foram escritos para um agente que lê e grava arquivos e roda comandos. Neste ambiente, onde o texto manda rodar um script, faça a conferência à mão pelas regras de 2-metodo-e-texto. Onde manda gravar em um arquivo de `entregaveis/_projeto/` ou na pasta de um entregável, atualize a seção correspondente do registro do projeto. As skills citadas pelo nome são os procedimentos deste arquivo.
 
@@ -11,7 +11,15 @@ Quando: de imediato, sem esperar pedido, quando o estado diz que o projeto não 
 O consultor diz o que quer com as palavras dele. O resto é seu, de uma vez,
 sem esperar que ele dite cada passo.
 
-1. Confira onde o projeto vai ficar, antes de escrever qualquer coisa
+1. Confira a máquina: `python3 entregaveis/_harness/scripts/ambiente.py`.
+   Se faltar algo, diga o que falta e para que serve, e ofereça as duas
+   saídas: você instala, com o sim do consultor, ou ele segue o passo a
+   passo que o script imprime. O que é essencial vem antes de tudo. O
+   que só um formato de arquivo pede pode esperar a hora de gerar. Se o
+   Python não roda, confira com `python --version` e `py -3 --version`.
+   Onde nada pode ser instalado, leve o consultor ao caminho sem
+   instalação de `entregaveis/_harness/ambientes/LEIA-ME.md`.
+2. Confira onde o projeto vai ficar, antes de escrever qualquer coisa
    sobre o cliente: `python3 entregaveis/_harness/scripts/repositorio.py`.
    Um projeto só é iniciado em pasta sem git, em git local ou em
    repositório privado. Se o remoto for público, pare e leve ao consultor as
@@ -20,12 +28,12 @@ sem esperar que ele dite cada passo.
    não pôde ser verificado, pergunte ao consultor se ele é privado e registre
    a resposta com `repositorio.py --confirmar "palavras do consultor"`.
    Depois rode `python3 entregaveis/_harness/scripts/preparar.py`. Ele
-   cria `_projeto/`, `_intake/` e `_dominio/` a partir dos modelos. Se o projeto já tem
+   cria `_projeto/`, `_intake/`, `_dominio/` e `_atas/` a partir dos modelos. Se o projeto já tem
    apresentações, documentos, dados ou regras de agente anteriores ao
    harness, pare aqui e siga `adotar-projeto`.
-2. Leia o que o consultor já escreveu e tire dali o que der: cliente, tipo de
+3. Leia o que o consultor já escreveu e tire dali o que der: cliente, tipo de
    trabalho, decisão esperada, entregáveis, prazos e idiomas.
-3. Pergunte uma vez, em uma mensagem só, cada pergunta com a resposta
+4. Pergunte uma vez, em uma mensagem só, cada pergunta com a resposta
    que você assumiria. Se o consultor mandar decidir ou não puder responder
    agora, siga com as suposições.
    - Do que é o projeto e que decisão ele precisa provocar. Esta você
@@ -41,34 +49,37 @@ sem esperar que ele dite cada passo.
    - Os materiais: modelos de apresentação, documento e planilha, guia
      de marca, apresentações de referência, escopo contratado e uma
      amostra de texto do consultor.
-4. Preencha `_projeto/brief.md`, `audiencia.md` e
+   - As reuniões que se repetem, com a frequência e a data da
+     primeira. Elas vão para `_projeto/ritos.tsv`. Diga que as atas são
+     salvas em `entregaveis/_atas/` e que a rotina do dia parte dali.
+5. Preencha `_projeto/brief.md`, `audiencia.md` e
    `regras-de-material.md`. Ponha em `confidencial.tsv` os nomes que não
    podem aparecer em entregáveis.
-5. Ative os pacotes do tipo de trabalho com
+6. Ative os pacotes do tipo de trabalho com
    `preparar.py --pacote NOME`. Os que existem estão listados em
    `entregaveis/_harness/pacotes/LEIA-ME.md`. Um pacote é ponto de
    partida genérico. O que é próprio deste trabalho entra no domínio do
    projeto: assim que o consultor fornecer referências, métodos, contexto e
    objetivo, aplique `calibrar-dominio`, que escreve o método, as
    regras de checagem e os casos de teste em `_dominio/`.
-6. Abra o intake com `receber-materiais`: uma linha por material pedido,
+7. Abra o intake com `receber-materiais`: uma linha por material pedido,
    mais a lista de pedido de dados do pacote.
-7. Adapte o harness ao projeto. Um procedimento que vai se repetir vira
+8. Adapte o harness ao projeto. Um procedimento que vai se repetir vira
    uma skill, um limite diferente vai para `limites.tsv` e os termos do
    cliente abrem o glossário.
-8. Registre as decisões com `registrar-decisao`. As do consultor ficam
+9. Registre as decisões com `registrar-decisao`. As do consultor ficam
    `Vigente`, e as suas `Vigente (assumida)`.
-9. Crie a pasta de cada entregável previsto com
+10. Crie a pasta de cada entregável previsto com
    `preparar.py --entregavel ID --tipo T --veiculo V --formato F --idiomas I`.
-10. Se o repositório foi criado a partir do template, apague os arquivos
+11. Se o repositório foi criado a partir do template, apague os arquivos
     que só servem ao kit (a lista está em `_harness/kit.md`) e escreva
     um README do projeto.
-11. Quando o brief não tiver mais `PREENCHER`, marque `iniciado: sim`,
+12. Quando o brief não tiver mais `PREENCHER`, marque `iniciado: sim`,
     rode `python3 entregaveis/_harness/scripts/fase.py`, que registra a
     fase 1 em `_projeto/fases.md`, e depois
     `python3 entregaveis/_harness/scripts/validar.py`. Quando o projeto
     mudar de natureza, a skill `evoluir-projeto` abre a fase seguinte.
-12. Relate com `relatar-ao-consultor`: o plano em poucas linhas, cada
+13. Relate com `relatar-ao-consultor`: o plano em poucas linhas, cada
     suposição com o id da decisão, os materiais pedidos e as perguntas
     em aberto.
 
@@ -585,6 +596,198 @@ diz o que aconteceu, e você reconhece a mudança.
 12. Relate com `relatar-ao-consultor`: a fase que fechou, a que abriu, os
     compromissos herdados, o destino de cada entregável em aberto, o que
     você assumiu e as perguntas que ficaram.
+
+## rotina-diaria
+
+Quando: na primeira sessão de cada dia de trabalho, quando o estado mostra a linha da rotina do dia, quando o consultor pergunta o que há para hoje e quando ele encerra o dia. Coleta atas e materiais novos, confere os prazos pelo cronograma, mostra o resumo do dia em uma tela e grava o diário do projeto.
+
+O consultor só confirma. Você coleta, atualiza os registros e mostra o
+que mudou. Os avisos seguem o cronograma: o prazo de cada item manda, e
+os limites de `entregaveis/_projeto/cadencias.tsv` só dizem quando
+avisar dentro da janela dele.
+
+### Abertura do dia
+
+1. Rode `python3 entregaveis/_harness/scripts/rotina.py --abrir`. A
+   saída é o resumo do dia.
+2. Trate o que chegou antes de falar com o consultor. Cada ata nova ou
+   alterada segue `processar-ata`. Cada arquivo da pasta de entrada, e
+   cada arquivo que o consultor fez ou mudou à mão nas pastas de
+   trabalho, segue `incorporar-material`.
+3. Mostre o resumo em uma mensagem só, nesta ordem: os vencidos, o que
+   cada ata mudou, o que espera o sim dele, os prazos próximos, o que
+   parece parado e os avisos de cadência. Um resumo por dia, e não um
+   aviso por item.
+4. Vencido pede uma de três respostas, e não existe adiar sem data:
+   - concluído: `rotina.py --concluir T-nnn`. Material que chegou segue
+     `receber-materiais`;
+   - nova data: `rotina.py --remarcar ID AAAA-MM-DD --motivo "..."`. O
+     comando guarda a data anterior em `_projeto/prazos.tsv`;
+   - não é mais necessário: siga `registrar-dispensa`.
+5. Depois de remarcar, leia o que o comando disse. Na segunda
+   remarcação, o item ganha destaque no status. Na terceira, abra um
+   risco em `_projeto/riscos.tsv` e pergunte se é caso de escalar. Prazo
+   da linha de base ou do contrato pede o acordo do cliente: registre
+   com `registrar-decisao` e deixe a conversa com o consultor. Mostre os
+   itens que dependem do remarcado e peça a data de cada um.
+6. Prazo próximo: pergunte se o item vai cumprir, precisa de ajuda ou
+   já pede data nova.
+7. Parece parado: o aviso é leve e aparece uma vez. Se o item está
+   andando, rode `rotina.py --andando T-nnn`. Se travou, abra um risco.
+   Se não é mais necessário, siga `registrar-dispensa`.
+8. Cadência:
+   - reunião sem ata: pergunte se ela ocorreu. Peça a ata na pasta, ou
+     faça três perguntas (o que foi decidido, quem ficou de fazer o quê
+     e até quando, o que mudou) e siga `processar-ata` com o relato. Se
+     não ocorreu, rode `rotina.py --sem-ata DATA --rito R --motivo "..."`;
+   - rito sem ata há dois ciclos: pergunte se as atas pararam ou se o
+     rito mudou, e ajuste `_projeto/ritos.tsv`;
+   - projeto sem registro: pergunte se ele está pausado. Em pausa, rode
+     `rotina.py --pausar AAAA-MM-DD`, com a data de retomada.
+
+### Fechamento do dia
+
+9. Quando o consultor encerrar o dia, pergunte em uma linha se houve
+   reunião ou conversa que não está registrada e se algo deixou de ser
+   necessário. Trate a resposta com `processar-ata` e
+   `registrar-dispensa`.
+10. Grave o diário: `rotina.py --fechar "o que chegou, o que mudou e o
+    que ficou à espera"`.
+11. Para um status, `rotina.py --datas` lista as datas deslocadas.
+
+Nada sai do projeto por esta rotina. Mensagem ao cliente, cobrança e
+envio são do consultor. Relate com `relatar-ao-consultor`.
+
+## processar-ata
+
+Quando: quando aparece um arquivo novo ou alterado na pasta de atas, quando o consultor cola ou conta o que houve em uma reunião e quando o resumo do dia lista uma ata. Lê a ata, leva cada trecho ao registro certo com a reunião de origem, propõe as tarefas e mostra ao consultor o que mudou.
+
+O consultor salva as atas em `entregaveis/_atas/`, do jeito que a
+ferramenta de reunião exporta. A pasta fica fora do git. Só os itens
+extraídos entram nos registros, cada um com a reunião de origem.
+
+1. Leia a ata com `python3 entregaveis/_harness/scripts/rotina.py --ler
+   ARQUIVO`. O comando lê texto, transcrição com marca de tempo e
+   documento do Word. Outro formato, abra com as suas ferramentas. Na
+   ata alterada depois de processada, o comando mostra só a diferença:
+   trate só ela.
+2. Ligue a ata à reunião: a data, o nome e o rito de
+   `_projeto/ritos.tsv`. Uma reunião fora do calendário entra sem rito.
+3. Leve cada trecho ao seu registro:
+
+| O que a ata traz | Onde entra | Como |
+| --- | --- | --- |
+| Decisão tomada | `_projeto/decisoes.md` | `Vigente`, com quem decidiu e a reunião no motivo |
+| Decisão adiada ou pedida | `_projeto/acoes.tsv`, tipo `decisao` | Com prazo e o que ela trava |
+| Tarefa com dono e prazo | `acoes.tsv`, tipo `tarefa` | `aberta`. Tarefa do cliente leva `lado: cliente` |
+| Tarefa sem dono ou sem prazo | `acoes.tsv` | `proposta`, com o dono e o prazo que você sugere |
+| Marco, meta ou prazo novo | `acoes.tsv`, tipo `marco` | Prazo que muda usa `rotina.py --remarcar` |
+| Pedido novo de escopo | `acoes.tsv` e `_projeto/adiados.tsv` | `proposta`, com o efeito no plano |
+| Risco, problema ou preocupação | `_projeto/riscos.tsv` | `proposto`, com causa e efeito |
+| Dado prometido ou entregue | `_intake/registro.tsv` | Prazo novo, ou `recebido` com `receber-materiais` |
+| Pessoa nova ou papel que mudou | `_projeto/audiencia.md` | Com a reação registrada |
+| Compromisso da consultoria | `acoes.tsv`, `lado: consultoria` | Com dono na equipe |
+| Comentário sobre um entregável | A pasta do entregável | Correção com `redigir-conteudo`, ou `adiar-trabalho` |
+| Aprovação dita em reunião | `decisoes.md` | Como aceite verbal. Proponha pedir a confirmação por escrito |
+| Fato ou número citado | `_projeto/evidencias.tsv` | Confiança `baixa`, com a reunião como fonte, a confirmar |
+
+4. Ata gerada por IA erra nomes, troca quem disse o quê e inventa
+   prazos. Por isso:
+   - todo item leva a origem (`A-nnn`) e, em `observacao`, o trecho;
+   - a ação e a decisão que já existem são atualizadas, e não criadas
+     de novo;
+   - o que toca o contrato ou sai do projeto entra como `proposta` e
+     espera o sim do consultor: escopo novo, data da linha de base,
+     aceite e qualquer mensagem ao cliente;
+   - a aprovação de uma storyline só vale quando vem do consultor.
+5. Os ids seguem o registro: ações `T-nnn`, riscos `RS-nnn`, decisões
+   `D-nnn`. Em toda ação, `inicio` é o dia em que ela nasceu e
+   `movida_em` é hoje.
+6. Registre a ata processada:
+   `rotina.py --ata ARQUIVO --data AAAA-MM-DD --reuniao "NOME" --rito "R"
+   --fonte "FERRAMENTA" --participantes "..." --resultado "2 decisões, 3
+   ações, 1 risco"`. Um relato sem arquivo usa `--ata` sem o nome do
+   arquivo, e a fonte vira relato de memória.
+7. Uma decisão nova pode mudar entregáveis: siga o passo 7 de
+   `registrar-decisao`.
+8. Mostre ao consultor o que mudou por causa desta ata, item por item,
+   com o que espera o sim dele. Ele corrige ou desfaz com uma resposta.
+9. Redija a nota de decisões e ações da reunião, para o consultor
+   enviar se quiser. Quem envia é ele.
+
+## incorporar-material
+
+Quando: quando aparece um arquivo na pasta de entrada, quando o consultor cria ou altera à mão uma apresentação, um documento ou uma planilha fora do fluxo e quando o resumo do dia lista um arquivo sem classificar. Classifica o arquivo, leva ao lugar certo sem pedir que o consultor refaça nada e confere se ele contradiz os registros.
+
+A pasta de entrada é `entregaveis/_intake/entrada/`, fora do git. O
+consultor larga ali o que chegou ou o que fez, e você leva cada arquivo
+ao lugar dele. Nada fica na entrada.
+
+1. Antes de abrir, veja em `_projeto/regras-de-material.md` se você
+   pode ler o arquivo.
+2. Classifique. Pergunte uma vez só quando não der para inferir.
+
+| O arquivo é | Para onde vai | O que fazer |
+| --- | --- | --- |
+| Ata ou transcrição | `entregaveis/_atas/` | Siga `processar-ata` |
+| Material do cliente | `_intake/materiais/` | Marque `recebido` no intake e siga `receber-materiais` |
+| Entregável feito à mão | A pasta do entregável | Adote, como no passo 3 |
+| Nota solta ou mensagem salva | `_intake/materiais/` | Extraia o que ela traz, como no passo 4 |
+
+3. Entregável feito à mão, como um deck montado fora do fluxo:
+   - se o entregável ainda não existe, crie a pasta com
+     `python3 entregaveis/_harness/scripts/preparar.py --entregavel ID`
+     e ponha o caminho do arquivo no campo `origem` do briefing;
+   - registre a etapa em que ele está, sem voltar o trabalho ao começo;
+   - preencha o briefing e a storyline a partir do que o arquivo diz, e
+     leve ao consultor o que não der para tirar dele;
+   - não reescreva o arquivo. Ele fica como está.
+4. Extraia decisões, compromissos e números. As decisões seguem
+   `registrar-decisao`. Os compromissos entram em `_projeto/acoes.tsv`.
+   Os números entram em `_projeto/evidencias.tsv` com confiança `baixa`,
+   a confirmar, e o arquivo como fonte.
+5. Confira o conteúdo contra o glossário, as decisões vigentes e as
+   evidências. Aponte cada contradição ao consultor, com os dois lados.
+6. Quando o consultor edita à mão um arquivo que o harness gerou, a
+   versão dele passa a valer. Não gere por cima. Leve a mudança à fonte
+   em Markdown, ou pergunte se a fonte deixa de ser usada, e registre a
+   resposta com `registrar-decisao`.
+7. Diga no resumo do dia o que entrou, para onde foi e o que contradiz
+   os registros.
+
+## registrar-dispensa
+
+Quando: quando o consultor diz que algo não será mais feito, que não depende mais de aprovação, que um risco, uma reunião ou um material deixou de existir, ou que não quer mais um aviso. Registra a decisão com o motivo, cancela o item sem apagar nada e leva o efeito a todos os registros que citam o item.
+
+Uma dispensa nunca é presumida. Ela vem das palavras do consultor, e o
+que deixa de ser feito é registrado como decisão, nunca apagado.
+
+1. Peça o motivo uma vez, em uma linha, se ele não veio.
+2. Registre a decisão com `registrar-decisao`, com as palavras do
+   consultor.
+3. Leve o efeito ao registro do item:
+
+| O consultor informa | O que registrar | O que mais muda |
+| --- | --- | --- |
+| Uma ação não será mais feita | `rotina.py --dispensar T-nnn --motivo "..."` | Os avisos do item param |
+| Um material não é mais necessário | `rotina.py --dispensar M-nnn --motivo "..."` | Feche as lacunas que só esperavam por ele |
+| Um entregável ou uma análise sai do plano | Uma linha em `_projeto/adiados.tsv` | Cancele as ações que só serviam a ele |
+| O item cancelado estava no contrato | O mesmo, e avise o consultor | A mudança pede o acordo do cliente |
+| Algo não depende mais de aprovação | A decisão, e `rotina.py --concluir` na ação de aprovação | Pare as cobranças ligadas a ela |
+| A aprovação dispensada era aceite do contrato | O mesmo, e um risco em `_projeto/riscos.tsv` | Pergunte se a dispensa está mantida |
+| Um risco ou uma dependência não existe mais | Estado `fechado` em `riscos.tsv`, com o motivo | Libere o que estava travado |
+| Uma reunião ou um rito acabou | A data em `ate`, em `_projeto/ritos.tsv` | A rotina para de esperar as atas dele |
+| O prazo mudou | `rotina.py --remarcar ID DATA --motivo "..."` | A data anterior fica em `prazos.tsv` |
+| O projeto parou por um tempo | `rotina.py --pausar AAAA-MM-DD` | Os avisos voltam na data de retomada |
+
+4. O comando é `python3 entregaveis/_harness/scripts/rotina.py`.
+5. Procure o item nos outros registros e nos entregáveis: páginas que o
+   citam, pedidos de material que só serviam a ele, ações que dependiam
+   dele. Atualize cada um.
+6. Mudança que toca o contrato, o tipo de trabalho ou a decisão que o
+   projeto precisa provocar não é dispensa: siga `evoluir-projeto` ou
+   leve ao consultor como mudança de escopo.
+7. No relatório seguinte, liste o que saiu do plano, com o motivo.
 
 ## registrar-decisao
 

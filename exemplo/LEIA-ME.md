@@ -44,6 +44,7 @@ nunca citou uma skill: o agente aplicou cada uma no momento certo.
 | 3 de novembro | | Revisou com a rubrica. A página 5 reprovou por trazer o fluxo como lista, e virou um desenho | [revisao.md](entregaveis/leitura-executiva/revisao.md) |
 | 4 de novembro | | Preparou a versão curta, as perguntas previstas, o roteiro e a pré-leitura | [entrega.md](entregaveis/leitura-executiva/entrega.md) |
 | 5 e 6 de novembro | Apresentou e contou o que a diretoria decidiu e perguntou | Registrou as decisões, respondeu à pergunta sobre a multa e guardou a lição | [fechamento.md](entregaveis/leitura-executiva/fechamento.md), D-008, D-009 e L-002 |
+| 6 de novembro | Contou a reunião sem ata e deu data nova aos relatórios de uso | Registrou a reunião como relato da consultora, abriu as três tarefas com dono e prazo e guardou a data anterior do pedido | [reunioes.tsv](entregaveis/_projeto/reunioes.tsv), [acoes.tsv](entregaveis/_projeto/acoes.tsv), [prazos.tsv](entregaveis/_projeto/prazos.tsv) |
 
 ## Se você tem cinco minutos
 
@@ -71,10 +72,16 @@ Na pasta nova, estes comandos mostram o harness trabalhando:
 python3 entregaveis/_harness/scripts/estado.py
 python3 entregaveis/_harness/scripts/validar.py --rigoroso
 python3 entregaveis/_harness/scripts/gerar.py leitura-executiva --pdf --imagens
+python3 entregaveis/_harness/scripts/rotina.py --hoje 2026-11-27
+python3 entregaveis/_harness/scripts/rotina.py --datas
 ```
 
 O estado lista um material em falta, uma decisão assumida e um item
-adiado. Eles fazem parte da história do exemplo. O gerador pede o pacote
+adiado. Eles fazem parte da história do exemplo. A rotina compara uma
+data com os prazos das três tarefas da reunião: com `--hoje`, você vê o
+resumo de qualquer dia, com o que está parado, o que vence logo e o que
+venceu. O segundo comando mostra a data que mudou, com a original e o
+motivo. O gerador pede o pacote
 `python-pptx`, e o PDF e as imagens pedem o LibreOffice.
 
 Para experimentar, abra a pasta com o seu agente e peça uma mudança, por
@@ -85,7 +92,8 @@ checagem devolve o que corrigir.
 
 O exemplo tem uma fase, um entregável e um idioma. Ele não traz modelo
 de apresentação do cliente, documento em Word, planilha, peça interativa
-nem versão em espanhol ou inglês. O método de cada uma dessas partes
+nem versão em espanhol ou inglês. A pasta de atas está vazia, porque a
+única reunião foi contada pela consultora. O método de cada uma dessas partes
 está em `entregaveis/_harness/metodo/`.
 
 ## Em um projeto seu

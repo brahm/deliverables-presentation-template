@@ -3,6 +3,49 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.8.0
+
+- Atas pela pasta. O consultor salva atas e transcrições em
+  `entregaveis/_atas/`, e a skill `processar-ata` leva cada trecho ao
+  registro certo com a reunião de origem. Só espera o sim do consultor o
+  que toca o contrato ou sai do projeto. Uma ata alterada é lida de novo
+  só na diferença, e uma reunião sem ata entra pelo relato do consultor.
+- Rotina do dia. `scripts/rotina.py` mostra em uma tela o que chegou, o
+  que espera o sim, os prazos e o que parou, e grava o diário do
+  projeto. A skill `rotina-diaria` abre e fecha o dia, e o estado ganhou
+  a linha da rotina.
+- Avisos pelo cronograma, em três fases: parado dentro do prazo, com
+  aviso leve dado uma vez, prazo próximo e prazo vencido. O vencido pede
+  uma de três respostas: concluído, nova data ou não é mais necessário.
+  A data nova guarda a anterior em `_projeto/prazos.tsv`, a segunda
+  mudança do mesmo item é destacada e a terceira vira risco. Os limites
+  ficam em `_projeto/cadencias.tsv`.
+- Registros novos em `_projeto/`: `reunioes.tsv`, `ritos.tsv`,
+  `acoes.tsv`, `riscos.tsv`, `prazos.tsv`, `cadencias.tsv`,
+  `alertas.tsv` e `diario.md`. A checagem "Prazos" confere as ações.
+- Duas skills para o que foge do fluxo: `incorporar-material`, para o
+  que o consultor fez à mão ou recebeu por outro caminho e pôs em
+  `entregaveis/_intake/entrada/`, e `registrar-dispensa`, para o que não
+  será mais feito ou não depende mais de aprovação.
+- Conferência do ambiente. `scripts/ambiente.py` diz o que a máquina tem
+  e o comando que instala cada falta em Windows, macOS e Linux, e
+  `--instalar` instala os pacotes do gerador. O instalador mostra o que
+  falta, e as skills `iniciar-projeto` e `adotar-projeto` começam por
+  essa conferência, com a oferta de o agente configurar tudo ou repassar
+  o passo a passo.
+- Outros agentes. As instruções para o Claude desktop, o ChatGPT desktop
+  e o Microsoft Copilot mandam o agente conferir o próprio ambiente e
+  trazem as atas e os prazos. `ambientes/LEIA-ME.md` ganhou o passo a
+  passo de quem só tem o Copilot web, sem instalar nada.
+- O exemplo ganhou a reunião de fechamento, as três tarefas que saíram
+  dela e uma data remarcada.
+
+O que o projeto precisa fazer: atualize com `--atualizar`. Ele cria os
+registros novos em branco, a pasta de atas e a pasta de entrada, e põe
+as duas fora do git. Depois diga ao agente quais reuniões se repetem,
+para ele preencher `_projeto/ritos.tsv`, e leve às ações os prazos que
+hoje estão só em atas ou em mensagens.
+
 ## 0.7.1
 
 - Um exemplo completo. A pasta `exemplo/` traz um projeto fictício do

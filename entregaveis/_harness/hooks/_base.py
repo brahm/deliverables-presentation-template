@@ -59,7 +59,7 @@ def area_de_projeto(arquivo: Path) -> bool:
         return False
     if not partes or partes[0] == "_harness" or partes[0].startswith("."):
         return False
-    if partes[0] in ("_projeto", "_intake", "_dominio"):
+    if partes[0] in ("_projeto", "_intake", "_dominio", "_atas"):
         return True
     return arquivo.name == "briefing.md" or (comum.BASE / partes[0] / "briefing.md").is_file()
 

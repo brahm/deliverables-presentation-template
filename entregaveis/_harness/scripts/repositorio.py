@@ -184,15 +184,17 @@ def aceita(geral: str) -> bool:
 
 
 def tem_projeto() -> bool:
-    """Diz se já há conteúdo de projeto: brief iniciado, entregável, domínio ou material recebido."""
+    """Diz se já há conteúdo de projeto: brief iniciado, entregável, domínio, material recebido ou ata."""
     meta, _ = comum.cabecalho(comum.ler(comum.PROJETO / "brief.md"))
     if comum.normalizar(meta.get("iniciado", "nao")) == "sim" or comum.entregaveis():
         return True
     dominio = comum.ler(comum.BASE / "_dominio" / "dominio.md")
     if dominio and comum.MARCA not in dominio:
         return True
-    materiais = comum.INTAKE / "materiais"
-    return materiais.is_dir() and any(a.name != ".gitkeep" for a in materiais.iterdir())
+    for pasta in (comum.INTAKE / "materiais", comum.INTAKE / "entrada", comum.BASE / "_atas"):
+        if pasta.is_dir() and any(a.name not in (".gitkeep", "LEIA-ME.md") for a in pasta.iterdir()):
+            return True
+    return False
 
 
 def explicar(geral: str, linhas: list[tuple[str, str, str]]) -> str:
