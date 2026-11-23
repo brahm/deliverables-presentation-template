@@ -14,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import comum  # noqa: E402
+import repositorio  # noqa: E402
 import validar  # noqa: E402
 
 
@@ -42,6 +43,35 @@ def proximo_passo(pasta: Path) -> str:
     return "entregue; fechar com follow-up e lições (skill fechar-entregavel)"
 
 
+def linha_do_repositorio() -> list[str]:
+    """Uma linha quando o repositório não serve para guardar um projeto de cliente."""
+    try:
+        geral, remotos = repositorio.situacao()
+    except Exception:  # noqa: BLE001 - o estado nunca deixa de sair por causa desta linha
+        return []
+    if repositorio.aceita(geral):
+        return []
+    if geral == repositorio.PUBLICO:
+        return [
+            "Repositório PÚBLICO: um projeto de cliente não pode ser iniciado nem mantido aqui. "
+            "O dono cria um repositório privado, torna este privado ou remove o remoto e segue em git local. "
+            "Enquanto isso o harness bloqueia a gravação dos registros do projeto"
+            + (" e o envio ao remoto." if repositorio.tem_projeto() else ".")
+        ]
+    return [
+        "Repositório remoto não verificado: pergunte ao dono se ele é privado e registre com "
+        "scripts/repositorio.py --confirmar. O harness bloqueia a gravação de registros e o envio enquanto isso."
+    ]
+
+
+def linhas_de_dominio() -> list[str]:
+    """Uma linha enquanto o domínio do projeto não foi calibrado."""
+    texto = comum.ler(comum.BASE / "_dominio" / "dominio.md")
+    if texto and comum.MARCA not in texto:
+        return []
+    return ["Domínio do projeto ainda não calibrado: quando o dono fornecer referências, métodos, contexto e objetivo, aplique a skill calibrar-dominio."]
+
+
 def linhas_de_estado() -> list[str]:
     brief = comum.PROJETO / "brief.md"
     meta, _ = comum.cabecalho(comum.ler(brief))
@@ -50,11 +80,12 @@ def linhas_de_estado() -> list[str]:
             "Harness de entregáveis: o projeto ainda não foi iniciado.",
             "Antes de qualquer outro trabalho, aplique a skill iniciar-projeto.",
             "Se o projeto já estava em andamento quando o harness chegou, aplique adotar-projeto.",
-        ]
-    linhas = [
+        ] + linha_do_repositorio()
+    linhas = linha_do_repositorio() + [
         f"Projeto: {meta.get('projeto', '?')} | tipo: {meta.get('tipo', '?')} | pacotes: {meta.get('pacotes', 'nenhum') or 'nenhum'}",
         f"Idiomas dos entregáveis: {meta.get('idiomas_dos_entregaveis', '?')} | classificação: {meta.get('classificacao', '?')}",
     ]
+    linhas += linhas_de_dominio()
     pastas = comum.entregaveis()
     if not pastas:
         linhas.append("Nenhum entregável aberto. Crie um com scripts/preparar.py --entregavel ID.")

@@ -22,11 +22,13 @@ que você abre quando a tarefa pede.
    | O harness chegou a um projeto que está começando | `iniciar-projeto` |
    | O harness foi instalado em um projeto já em andamento | `adotar-projeto` |
    | Falta um material, ou um material chegou | `receber-materiais` |
+   | O dono forneceu referências, métodos, contexto ou objetivo do projeto | `calibrar-dominio` |
    | Um entregável novo foi pedido | `preparar-briefing` |
    | O briefing está completo | `construir-storyline` |
    | O dono aprovou a storyline | `montar-storyboard` |
    | O storyboard está pronto | `redigir-conteudo` |
    | Uma página mostra dados, relação entre itens ou imagem | `desenhar-visual` |
+   | A audiência entende melhor mexendo, ou o dono pede uma peça interativa | `construir-interativo` |
    | Um texto de entregável foi escrito ou alterado | `humanizar-texto` |
    | Antes de dizer que um entregável está pronto | `revisar-entregavel` |
    | A revisão passou | `preparar-entrega` |
@@ -53,7 +55,11 @@ que você abre quando a tarefa pede.
    - Você decide o resto, que é o como.
 4. Sempre pergunte do que é o projeto. Não presuma o tipo de trabalho, a
    audiência, o idioma nem o formato. O que o dono responder define os
-   pacotes, as skills e as checagens que o projeto usa.
+   pacotes, as skills e as checagens que o projeto usa. As referências,
+   os métodos, o contexto e o objetivo que ele fornecer viram o domínio
+   do projeto, em `entregaveis/_dominio/`: o método, as regras de
+   checagem e um caso de teste que acusa e outro que passa para cada
+   regra. O domínio é escrito no projeto e nunca volta ao template.
 
 ## Antes de escrever
 
@@ -74,7 +80,9 @@ que você abre quando a tarefa pede.
 
 9. O veículo define a forma. Um slide projetado, um deck de leitura, um
    relatório e uma planilha têm limites diferentes, descritos em
-   [metodo/formatos.md](metodo/formatos.md).
+   [metodo/formatos.md](metodo/formatos.md). Um HTML interativo é uma
+   peça de apoio em arquivo único, sem recurso externo, e segue
+   [metodo/interativo.md](metodo/interativo.md).
 10. Todo texto segue [metodo/texto.md](metodo/texto.md). As checagens
     rodam sozinhas a cada gravação e devolvem o que corrigir. Um recurso
     retórico só fica no texto quando foi planejado na storyline.
@@ -87,7 +95,12 @@ que você abre quando a tarefa pede.
     checagens do seu idioma.
 13. Siga `entregaveis/_projeto/regras-de-material.md`. Material recebido
     fica fora do git. Nenhum entregável cita outro cliente, e nenhuma
-    credencial entra em arquivo algum.
+    credencial entra em arquivo algum. Um projeto iniciado só vive em
+    git local ou em repositório privado: o harness bloqueia a gravação
+    dos registros e o envio enquanto o remoto for público ou não tiver
+    sido verificado. Confira com
+    `python3 entregaveis/_harness/scripts/repositorio.py` e não contorne
+    a trava.
 14. Trabalhe enxuto. Abra uma página do método quando a tarefa tocar
     nela, leia do material recebido só o que a página pede e rode em
     paralelo o que for independente.

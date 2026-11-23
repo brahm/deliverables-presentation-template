@@ -35,7 +35,14 @@ Cada pacote é uma pasta com:
 | `glossario.tsv` | Termos do domínio, para somar ao glossário do projeto |
 | `skill/SKILL.md` | A skill `pacote-NOME`, que diz que parte do pacote abrir em cada momento |
 
-Quando nenhum pacote serve ao projeto, o agente monta um pacote próprio
-em `entregaveis/_projeto/pacote/`, com o mesmo formato, a partir do que o
-dono contou e do que ele conhece do domínio. Cada escolha entra em
-`decisoes.md` como decisão assumida, para o dono confirmar.
+## O que um pacote não traz
+
+Um pacote é ponto de partida genérico, escrito com prática corrente de
+mercado. Ele não traz o método de nenhuma organização nem o contexto de
+nenhum cliente, porque o template é público.
+
+O que é próprio de um projeto é escrito dentro dele, em
+`entregaveis/_dominio/`, pela skill `calibrar-dominio`: o método, as
+regras de checagem e os casos de teste, a partir das referências, do
+contexto e do objetivo que o dono fornece. Onde o domínio do projeto e
+um pacote dizem coisas diferentes, vale o do projeto.

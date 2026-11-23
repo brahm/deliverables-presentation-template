@@ -15,7 +15,7 @@ estado: briefing
 Campos do cabeçalho. `tipo`: apresentacao, documento, proposta, planilha
 ou treinamento. `veiculo`: projetado (alguém apresenta), leitura (deck
 lido sem apresentador), documento, planilha ou workshop. `formato`: pptx,
-docx, pdf ou xlsx. `origem`: o arquivo já existente, quando o entregável
+docx, pdf, xlsx ou html. `origem`: o arquivo já existente, quando o entregável
 foi adotado de um projeto em andamento. `estado`: briefing, storyline,
 storyboard, redacao, revisao ou entregue.
 

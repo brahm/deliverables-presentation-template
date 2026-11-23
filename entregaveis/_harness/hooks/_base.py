@@ -51,10 +51,23 @@ def entregavel_do_arquivo(arquivo: Path) -> Path | None:
     return comum.BASE / partes[0]
 
 
+def area_de_projeto(arquivo: Path) -> bool:
+    """Diz se o arquivo é registro, material, domínio ou entregável do projeto."""
+    try:
+        partes = arquivo.relative_to(comum.BASE).parts
+    except ValueError:
+        return False
+    if not partes or partes[0] == "_harness" or partes[0].startswith("."):
+        return False
+    if partes[0] in ("_projeto", "_intake", "_dominio"):
+        return True
+    return arquivo.name == "briefing.md" or (comum.BASE / partes[0] / "briefing.md").is_file()
+
+
 def e_conteudo(arquivo: Path, pasta: Path) -> bool:
     """Diz se o arquivo é o corpo do entregável ou um arquivo de saída."""
     relativo = arquivo.relative_to(pasta).parts
-    if relativo[0] in ("saida", "paginas"):
+    if relativo[0] in ("saida", "paginas", "interativos"):
         return True
     return len(relativo) == 1 and arquivo.name.startswith(ARQUIVOS_PROTEGIDOS) and arquivo.suffix == ".md"
 

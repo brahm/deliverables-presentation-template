@@ -3,6 +3,40 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.4.0
+
+- HTML interativo e animado, em 2D e 3D, como peça de apoio de qualquer
+  entregável. É um arquivo único, sem biblioteca, fonte, imagem ou
+  chamada de rede de fora. Três modelos de partida (`fluxo`,
+  `camadas-3d` e `simulador`), a página `metodo/interativo.md`, a skill
+  `construir-interativo`, a checagem `interativo` e
+  `preparar.py --entregavel ID --interativo NOME --base MODELO`.
+  `scripts/conferir_interativo.js` abre a peça em um navegador sem
+  interface, onde há Node e Playwright.
+- Domínio por projeto. O template traz o esqueleto e o motor. O método,
+  as regras de checagem e os casos de teste são escritos dentro de cada
+  projeto, em `_dominio/`, pela skill `calibrar-dominio`, a partir das
+  referências, dos métodos, do contexto e do objetivo que o dono
+  fornece. Uma regra só vale com um caso que acusa e um que passa.
+  `scripts/dominio.py` roda os casos. Nada de `_dominio/` volta ao
+  template.
+- Projeto só em git local ou em repositório privado.
+  `scripts/repositorio.py` faz ao remoto o pedido de clone sem
+  credencial. Com o remoto público ou não verificado, o harness bloqueia
+  a gravação dos registros do projeto e o `git push`. Quando o servidor
+  não responde, vale a confirmação do dono, registrada em
+  `_projeto/repositorio.tsv`. É a terceira trava do harness, com um
+  hook novo, `antes_de_comando.py`.
+- README resumido, com foco em instalar e usar. As tabelas de checagens
+  e de travas foram para `_harness/kit.md`.
+
+O que o projeto precisa fazer: rode o instalador com `--atualizar`, que
+cria `_dominio/` e liga o hook novo. Rode
+`python3 entregaveis/_harness/scripts/repositorio.py`. Se o remoto for
+público, torne-o privado ou remova-o antes de seguir. Se o projeto
+montou um pacote próprio em `_projeto/pacote/`, leve o conteúdo para
+`_dominio/` com a skill `calibrar-dominio`.
+
 ## 0.3.0
 
 - Seis pacotes novos, no mesmo formato do primeiro:

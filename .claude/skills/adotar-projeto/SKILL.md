@@ -13,7 +13,12 @@ levante, encaixe e pergunte.
 
 1. Não mova, não renomeie e não apague nada do que já existe. A adoção
    só acrescenta registros.
-2. Rode `python3 entregaveis/_harness/scripts/preparar.py` e depois
+2. Rode `python3 entregaveis/_harness/scripts/repositorio.py`. Um
+   projeto de cliente só fica em git local ou em repositório privado.
+   Se o remoto for público, pare e leve ao dono as saídas: tornar o
+   repositório privado ou remover o remoto. Se não pôde ser verificado,
+   pergunte ao dono e registre a resposta com `--confirmar`. Depois rode
+   `python3 entregaveis/_harness/scripts/preparar.py` e
    `python3 entregaveis/_harness/scripts/levantar.py`. Leia a saída.
 3. Leia as instruções para agentes que o projeto já tem. Elas continuam
    valendo. Onde uma delas conflita com `_harness/REGRAS.md`, anote o
@@ -47,7 +52,9 @@ levante, encaixe e pergunte.
      mudar;
    - o que do material existente deve ser refeito pelo método.
 9. Ative os pacotes do tipo de trabalho e abra o intake para o que falta,
-   como nos passos 5 a 8 de `iniciar-projeto`.
+   como nos passos 5 a 8 de `iniciar-projeto`. Os métodos e os padrões
+   que o projeto já segue entram no domínio, com a skill
+   `calibrar-dominio`.
 10. Marque `iniciado: sim`, rode `validar.py` e relate com
     `relatar-ao-dono`: o que você encontrou, onde cada coisa foi
     encaixada, os conflitos, o que o material existente reprova e as

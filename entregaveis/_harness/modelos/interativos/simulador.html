@@ -1,0 +1,357 @@
+<!doctype html>
+<!-- interativo
+titulo: PREENCHER
+mensagem: PREENCHER
+apoia: PREENCHER
+fontes: PREENCHER
+idioma: pt-BR
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PREENCHER</title>
+<style>
+/* Desenho: premissas à esquerda, resultado à direita. A barra do cenário simulado leva a cor de destaque e a de hoje fica em cinza, as duas na mesma escala. */
+:root {
+  --fundo: #f5f6f8; --superficie: #ffffff; --texto: #17212b; --texto-2: #55626f; --linha: #d3d9df;
+  --cinza: #a9b3bd; --destaque: #0b5cad; --destaque-suave: #dce9f6; --sobre-destaque: #ffffff;
+  --sobe: #1d6b45; --desce: #a3382c;
+  --fonte: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --raio: 6px; --tempo: 360ms;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fundo: #10161d; --superficie: #19222c; --texto: #e7ecf1; --texto-2: #a2b0be; --linha: #2d3a48;
+    --cinza: #5c6a78; --destaque: #6fb4f3; --destaque-suave: #17324d; --sobre-destaque: #0b1622;
+    --sobe: #6fcf9c; --desce: #f0968b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fundo: #10161d; --superficie: #19222c; --texto: #e7ecf1; --texto-2: #a2b0be; --linha: #2d3a48;
+  --cinza: #5c6a78; --destaque: #6fb4f3; --destaque-suave: #17324d; --sobre-destaque: #0b1622;
+  --sobe: #6fcf9c; --desce: #f0968b; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--fundo); color: var(--texto); font: 16px/1.5 var(--fonte); }
+.pagina { max-width: 1080px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 24px; }
+.sobre { color: var(--texto-2); font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase; margin: 0; }
+h1 { font-size: clamp(1.4rem, 1rem + 1.8vw, 2.1rem); line-height: 1.2; margin: 4px 0 0; text-wrap: balance; max-width: 26ch; }
+.apoio { color: var(--texto-2); margin: 8px 0 0; max-width: 65ch; }
+h2 { font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texto-2); font-weight: 600; margin: 0 0 12px; }
+
+.mesa { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px; align-items: start; }
+.mesa > * { min-width: 0; }
+
+.cenarios { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.botao { font: inherit; font-weight: 600; padding: 8px 14px; border-radius: var(--raio); border: 1.5px solid var(--linha); background: var(--superficie); color: var(--texto); cursor: pointer; }
+.botao:hover { border-color: var(--destaque); }
+.botao[aria-pressed="true"] { background: var(--destaque); border-color: var(--destaque); color: var(--sobre-destaque); }
+.botao:focus-visible, input[type="range"]:focus-visible { outline: 3px solid var(--destaque); outline-offset: 2px; }
+
+.premissa { padding: 12px 0; border-top: 1px solid var(--linha); }
+.premissa label { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-weight: 600; }
+.premissa output { font-variant-numeric: tabular-nums; color: var(--destaque); white-space: nowrap; }
+.premissa input[type="range"] { width: 100%; margin: 10px 0 4px; accent-color: var(--destaque); min-height: 28px; }
+.faixa { display: flex; justify-content: space-between; color: var(--texto-2); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.origem { color: var(--texto-2); font-size: 0.8125rem; margin: 6px 0 0; }
+
+.resultado { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio); padding: 20px; display: grid; gap: 20px; }
+.principal { display: grid; gap: 2px; }
+.principal .rotulo { color: var(--texto-2); font-size: 0.875rem; }
+.principal .numero { font-size: clamp(2rem, 1.4rem + 2.6vw, 3rem); font-weight: 650; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.diferenca { font-weight: 600; font-variant-numeric: tabular-nums; }
+.diferenca.sobe { color: var(--sobe); }
+.diferenca.desce { color: var(--desce); }
+
+.barras { display: grid; gap: 14px; }
+.grupo { display: grid; gap: 4px; }
+.grupo .nome { font-size: 0.875rem; font-weight: 600; }
+.linha-barra { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 0.8125rem; color: var(--texto-2); }
+.trilho { height: 14px; background: transparent; border-left: 1px solid var(--texto-2); }
+.barra { height: 100%; width: 0; background: var(--cinza); border-radius: 0 3px 3px 0; transition: width var(--tempo) ease-out; }
+.barra.simulada { background: var(--destaque); }
+.linha-barra .valor { font-variant-numeric: tabular-nums; color: var(--texto); min-width: 5.5rem; text-align: right; }
+
+.leitura { margin: 0; max-width: 60ch; }
+.rodape { border-top: 1px solid var(--linha); padding-top: 12px; color: var(--texto-2); font-size: 0.8125rem; display: flex; flex-wrap: wrap; gap: 4px 24px; }
+.rodape p { margin: 0; }
+
+@media (max-width: 760px) {
+  .mesa { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .resultado { order: -1; }
+}
+@media (prefers-reduced-motion: reduce) { :root { --tempo: 0ms; } }
+@media print {
+  body { background: #fff; color: #000; }
+  .cenarios, .premissa input[type="range"], .faixa { display: none; }
+  .mesa { grid-template-columns: minmax(0, 1fr); }
+  .resultado { border-color: #000; }
+  .barra { background: #999; }
+  .barra.simulada { background: #000; }
+}
+</style>
+</head>
+<body>
+<main class="pagina">
+  <header>
+    <p class="sobre">PREENCHER: nome do entregável</p>
+    <h1>PREENCHER: o título diz o que o cenário recomendado muda</h1>
+    <p class="apoio">PREENCHER: uma frase que diz o que testar e o que observar no resultado.</p>
+  </header>
+
+  <div class="mesa">
+    <section aria-labelledby="t-premissas">
+      <h2 id="t-premissas">Premissas</h2>
+      <div class="cenarios" id="cenarios" role="group" aria-label="Cenários prontos"></div>
+      <div id="premissas"></div>
+    </section>
+
+    <section class="resultado" aria-labelledby="t-resultado">
+      <h2 id="t-resultado" style="margin:0">Resultado</h2>
+      <div class="principal" aria-live="polite" aria-atomic="true">
+        <span class="rotulo" id="principal-rotulo"></span>
+        <span class="numero" id="principal-numero"></span>
+        <span class="diferenca" id="principal-diferenca"></span>
+      </div>
+      <div class="barras" id="barras"></div>
+      <p class="leitura" id="leitura"></p>
+      <p class="origem">As barras de hoje e do cenário simulado usam a mesma escala em cada medida.</p>
+    </section>
+  </div>
+
+  <noscript>
+    <p>PREENCHER: a mensagem da peça, o resultado de hoje e o do cenário recomendado, para quem abre o arquivo sem script.</p>
+  </noscript>
+
+  <footer class="rodape">
+    <p>Fonte: PREENCHER, com a data do dado.</p>
+    <p>PREENCHER: marcação exigida pelo projeto.</p>
+  </footer>
+</main>
+
+<!--
+Os dados ficam aqui, separados do código. Troque pelo conteúdo do projeto.
+"hoje" é o valor atual de cada premissa e serve de base de comparação.
+Cada premissa traz a origem: o identificador da evidência ou a palavra "suposição".
+-->
+<script type="application/json" id="dados">
+{
+  "moeda": "R$",
+  "premissas": [
+    { "id": "verba", "nome": "Exemplo: verba mensal", "unidade": "R$", "min": 50000, "max": 500000, "passo": 10000, "hoje": 200000, "origem": "Exemplo: suposição" },
+    { "id": "custo", "nome": "Exemplo: custo por visita", "unidade": "R$", "min": 0.5, "max": 5, "passo": 0.1, "hoje": 2, "origem": "Exemplo: suposição" },
+    { "id": "conversao", "nome": "Exemplo: conversão", "unidade": "%", "min": 0.5, "max": 5, "passo": 0.1, "hoje": 1.5, "origem": "Exemplo: suposição" },
+    { "id": "ticket", "nome": "Exemplo: valor médio do pedido", "unidade": "R$", "min": 50, "max": 600, "passo": 10, "hoje": 250, "origem": "Exemplo: suposição" }
+  ],
+  "cenarios": [
+    { "nome": "Hoje", "valores": {} },
+    { "nome": "Exemplo: recomendado", "valores": { "custo": 1.6, "conversao": 2.1 } }
+  ]
+}
+</script>
+<script>
+(function () {
+  "use strict";
+  var dados = JSON.parse(document.getElementById("dados").textContent);
+  var semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  /*
+   * O cálculo do projeto fica nesta função. Ela recebe os valores das premissas
+   * e devolve as medidas, na ordem em que aparecem. A primeira é o resultado principal.
+   * Medidas com o mesmo "grupo" dividem a escala das barras.
+   */
+  function calcular(v) {
+    var visitas = v.verba / v.custo;
+    var pedidos = visitas * v.conversao / 100;
+    var receita = pedidos * v.ticket;
+    return [
+      { nome: "Exemplo: receita mensal", valor: receita, unidade: "R$", grupo: "dinheiro" },
+      { nome: "Exemplo: verba mensal", valor: v.verba, unidade: "R$", grupo: "dinheiro" },
+      { nome: "Exemplo: pedidos", valor: pedidos, unidade: "", grupo: "pedidos" }
+    ];
+  }
+
+  /* A frase de leitura diz em palavras o que as barras mostram. */
+  function ler(hoje, simulado) {
+    var d = simulado[0].valor - hoje[0].valor;
+    if (Math.abs(d) < 0.005 * Math.abs(hoje[0].valor)) { return "O cenário simulado é igual ao de hoje."; }
+    return "Com estas premissas, " + simulado[0].nome.toLowerCase() + " fica " + formatar(Math.abs(d), simulado[0].unidade) +
+      (d > 0 ? " acima" : " abaixo") + " do valor de hoje.";
+  }
+
+  function formatar(n, unidade) {
+    var casas = Math.abs(n) < 10 && n % 1 !== 0 ? 1 : 0;
+    var texto;
+    if (Math.abs(n) >= 1e6) { texto = (n / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " mi"; }
+    else { texto = n.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas }); }
+    if (unidade === "%") { return texto + "%"; }
+    return unidade ? unidade + " " + texto : texto;
+  }
+
+  var base = {};
+  var valores = {};
+  dados.premissas.forEach(function (p) { base[p.id] = p.hoje; valores[p.id] = p.hoje; });
+  var medidasHoje = calcular(base);
+
+  // Premissas
+  var areaPremissas = document.getElementById("premissas");
+  var campos = {};
+  dados.premissas.forEach(function (p) {
+    var bloco = document.createElement("div");
+    bloco.className = "premissa";
+    var rotulo = document.createElement("label");
+    rotulo.htmlFor = "p-" + p.id;
+    var nome = document.createElement("span");
+    nome.textContent = p.nome;
+    var saida = document.createElement("output");
+    saida.htmlFor = "p-" + p.id;
+    rotulo.appendChild(nome);
+    rotulo.appendChild(saida);
+    var campo = document.createElement("input");
+    campo.type = "range";
+    campo.id = "p-" + p.id;
+    campo.min = p.min; campo.max = p.max; campo.step = p.passo; campo.value = p.hoje;
+    campo.addEventListener("input", function () {
+      valores[p.id] = Number(campo.value);
+      marcarCenario(null);
+      atualizar();
+    });
+    var faixa = document.createElement("div");
+    faixa.className = "faixa";
+    var menor = document.createElement("span"); menor.textContent = formatar(p.min, p.unidade);
+    var hoje = document.createElement("span"); hoje.textContent = "hoje " + formatar(p.hoje, p.unidade);
+    var maior = document.createElement("span"); maior.textContent = formatar(p.max, p.unidade);
+    faixa.appendChild(menor); faixa.appendChild(hoje); faixa.appendChild(maior);
+    var origem = document.createElement("p");
+    origem.className = "origem";
+    origem.textContent = "Origem: " + p.origem;
+    bloco.appendChild(rotulo); bloco.appendChild(campo); bloco.appendChild(faixa); bloco.appendChild(origem);
+    areaPremissas.appendChild(bloco);
+    campos[p.id] = { campo: campo, saida: saida, premissa: p };
+  });
+
+  // Cenários prontos
+  var areaCenarios = document.getElementById("cenarios");
+  var botoes = [];
+  dados.cenarios.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "botao";
+    b.textContent = c.nome;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      dados.premissas.forEach(function (p) {
+        valores[p.id] = Object.prototype.hasOwnProperty.call(c.valores, p.id) ? c.valores[p.id] : p.hoje;
+        campos[p.id].campo.value = valores[p.id];
+      });
+      marcarCenario(i);
+      atualizar();
+    });
+    areaCenarios.appendChild(b);
+    botoes.push(b);
+  });
+  function marcarCenario(i) {
+    botoes.forEach(function (b, n) { b.setAttribute("aria-pressed", n === i ? "true" : "false"); });
+  }
+
+  // Barras: uma dupla por medida, hoje e simulado, na mesma escala.
+  var areaBarras = document.getElementById("barras");
+  var linhas = medidasHoje.map(function (m) {
+    var grupo = document.createElement("div");
+    grupo.className = "grupo";
+    var nome = document.createElement("span");
+    nome.className = "nome";
+    nome.textContent = m.nome;
+    grupo.appendChild(nome);
+    function linha(rotulo, simulada) {
+      var l = document.createElement("div");
+      l.className = "linha-barra";
+      var r = document.createElement("span"); r.textContent = rotulo;
+      var trilho = document.createElement("div"); trilho.className = "trilho";
+      var barra = document.createElement("div"); barra.className = "barra" + (simulada ? " simulada" : "");
+      trilho.appendChild(barra);
+      var valor = document.createElement("span"); valor.className = "valor";
+      l.appendChild(r); l.appendChild(trilho); l.appendChild(valor);
+      grupo.appendChild(l);
+      return { barra: barra, valor: valor };
+    }
+    var par = { hoje: linha("Hoje", false), simulado: linha("Simulado", true) };
+    areaBarras.appendChild(grupo);
+    return par;
+  });
+
+  // As barras de um grupo dividem a escala. O teto cobre hoje, os cenários prontos e o que está simulado.
+  var tetoDosCenarios = (function () {
+    var t = {};
+    dados.cenarios.forEach(function (c) {
+      var v = {};
+      dados.premissas.forEach(function (p) { v[p.id] = Object.prototype.hasOwnProperty.call(c.valores, p.id) ? c.valores[p.id] : p.hoje; });
+      calcular(v).forEach(function (m) { if (isFinite(m.valor)) { t[m.grupo] = Math.max(t[m.grupo] || 0, m.valor); } });
+    });
+    return t;
+  })();
+  function tetos(simulado) {
+    var t = {};
+    Object.keys(tetoDosCenarios).forEach(function (g) { t[g] = tetoDosCenarios[g]; });
+    simulado.forEach(function (m) { if (isFinite(m.valor)) { t[m.grupo] = Math.max(t[m.grupo] || 0, m.valor); } });
+    return t;
+  }
+
+  var numeroMostrado = medidasHoje[0].valor;
+  var quadro = null;
+  function animarNumero(alvo, unidade) {
+    var el = document.getElementById("principal-numero");
+    if (quadro) { cancelAnimationFrame(quadro); quadro = null; }
+    if (semMovimento.matches || document.hidden) { numeroMostrado = alvo; el.textContent = formatar(alvo, unidade); return; }
+    var de = numeroMostrado, inicio = null, duracao = 360;
+    function passo(agora) {
+      if (inicio === null) { inicio = agora; }
+      var t = Math.min(1, (agora - inicio) / duracao);
+      var suave = 1 - Math.pow(1 - t, 3);
+      numeroMostrado = de + (alvo - de) * suave;
+      el.textContent = formatar(numeroMostrado, unidade);
+      quadro = t < 1 ? requestAnimationFrame(passo) : null;
+    }
+    quadro = requestAnimationFrame(passo);
+  }
+  // Ao sair da aba, o número vai direto ao valor final e a animação para.
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden && quadro) { cancelAnimationFrame(quadro); quadro = null; atualizar(); }
+  });
+
+  function atualizar() {
+    Object.keys(campos).forEach(function (id) {
+      var c = campos[id];
+      c.saida.textContent = formatar(valores[id], c.premissa.unidade);
+      c.campo.setAttribute("aria-valuetext", formatar(valores[id], c.premissa.unidade));
+    });
+    var simulado = calcular(valores);
+    var tetoAtual = tetos(simulado);
+    simulado.forEach(function (m, i) {
+      var teto = tetoAtual[m.grupo] || 1;
+      linhas[i].hoje.barra.style.width = Math.max(0, Math.min(100, 100 * medidasHoje[i].valor / teto)) + "%";
+      linhas[i].simulado.barra.style.width = Math.max(0, Math.min(100, 100 * m.valor / teto)) + "%";
+      linhas[i].hoje.valor.textContent = formatar(medidasHoje[i].valor, m.unidade);
+      linhas[i].simulado.valor.textContent = formatar(m.valor, m.unidade);
+    });
+    var principal = simulado[0], antes = medidasHoje[0];
+    document.getElementById("principal-rotulo").textContent = principal.nome + ", cenário simulado";
+    animarNumero(principal.valor, principal.unidade);
+    var d = principal.valor - antes.valor;
+    var dif = document.getElementById("principal-diferenca");
+    var igual = Math.abs(d) < 0.005 * Math.abs(antes.valor);
+    dif.className = "diferenca" + (igual ? "" : d > 0 ? " sobe" : " desce");
+    dif.textContent = igual ? "Igual a hoje" :
+      (d > 0 ? "▲ " : "▼ ") + formatar(Math.abs(d), principal.unidade) + " em relação a hoje (" +
+      (d > 0 ? "+" : "−") + Math.abs(100 * d / antes.valor).toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + "%)";
+    document.getElementById("leitura").textContent = ler(medidasHoje, simulado);
+  }
+
+  marcarCenario(0);
+  atualizar();
+})();
+</script>
+</body>
+</html>

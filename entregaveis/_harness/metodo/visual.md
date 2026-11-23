@@ -105,3 +105,7 @@ audiência não tenha visto.
 Só quando ela explica algo: a ordem de um fluxo, as partes de um
 conjunto, uma mudança de estado. Uma lista que aparece item a item ajuda
 quem apresenta a controlar o ritmo. Efeito sem função distrai.
+
+Quando a audiência precisa mexer para entender, a animação deixa a
+página e vira uma peça própria: um HTML interativo de arquivo único,
+descrito em [interativo.md](interativo.md).

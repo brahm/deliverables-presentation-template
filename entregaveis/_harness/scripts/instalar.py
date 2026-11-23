@@ -224,7 +224,7 @@ class Instalador:
         saida = subprocess.run([sys.executable, str(script)], capture_output=True, text=True, timeout=60)
         criados = [l.strip() for l in saida.stdout.splitlines() if l.startswith("  ")]
         if criados:
-            self.nota(f"{len(criados)} registros do projeto criados em {self.pasta}/_projeto e {self.pasta}/_intake")
+            self.nota(f"{len(criados)} registros do projeto criados em {self.pasta}/_projeto, {self.pasta}/_intake e {self.pasta}/_dominio")
 
     def instalar(self) -> int:
         base = self.destino / self.pasta

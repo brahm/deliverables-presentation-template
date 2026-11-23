@@ -74,6 +74,21 @@ Olhe o arquivo gerado, página por página.
 | Perguntas | As perguntas difíceis previsíveis têm resposta preparada. |
 | Marcação | A capa e o rodapé trazem o que as regras do projeto exigem. |
 
+## Peça interativa
+
+Para entregáveis com arquivos em `interativos/`. Abra cada peça no
+navegador antes de marcar.
+
+| Critério | Passa quando |
+| --- | --- |
+| Motivo | A audiência entende mexendo algo que não entenderia lendo a página. |
+| Mensagem | A peça diz uma mensagem da storyline, e ela é lida sem clicar em nada. |
+| Movimento | Cada animação explica uma mudança. Nenhuma só decora. |
+| Terceira dimensão | Em peça 3D, a profundidade carrega informação e há a leitura em 2D na mesma página. |
+| Escala | Barras, áreas e distâncias estão em escala, e o destaque está no que a mensagem cita. |
+| Sem a peça | A página que ela apoia se sustenta sozinha, com uma imagem do estado principal. |
+| Renderizada | A peça foi aberta no computador e no celular, nos dois temas, com teclado, com movimento reduzido e na impressão. |
+
 ## Material de treinamento
 
 Para entregáveis do tipo `treinamento`.

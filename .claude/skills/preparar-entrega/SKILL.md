@@ -23,7 +23,9 @@ o resultado em `entrega.md`, na pasta do entregável.
    `documento.xx.md`, para o leitor daquele idioma. Números, fontes e
    títulos dizem o mesmo em todas as versões. Valide cada versão.
 6. Arquivo final. Gere em `saida/` com a skill `desenhar-visual`, no
-   padrão de nome do projeto, e confira a marcação obrigatória.
+   padrão de nome do projeto, e confira a marcação obrigatória. As
+   peças de `interativos/` vão junto, cada uma com uma linha que diz
+   para que serve e como abrir.
 7. Em apresentação remota, prepare as instruções de acesso, um plano
    para falha de tecnologia e os momentos de interação.
 8. Escreva o texto de envio: o pedido na primeira frase, o prazo e o que

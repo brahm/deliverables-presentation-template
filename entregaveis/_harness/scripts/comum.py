@@ -261,6 +261,39 @@ def arquivos_de_conteudo(pasta: Path) -> list[Path]:
     return achados
 
 
+def interativos(pasta: Path) -> list[Path]:
+    """Os HTML interativos do entregável: um arquivo único por peça."""
+    return sorted((pasta / "interativos").glob("*.html"))
+
+
+def cabecalho_do_interativo(texto: str) -> dict:
+    """Campos do comentário '<!-- interativo ... -->' que abre o arquivo."""
+    m = re.search(r"<!--\s*interativo\b(.*?)-->", texto, flags=re.DOTALL)
+    campos: dict[str, str] = {}
+    if m:
+        for linha in m.group(1).splitlines():
+            if ":" in linha:
+                chave, valor = linha.split(":", 1)
+                campos[normalizar(chave)] = valor.strip()
+    return campos
+
+
+def texto_visivel(html: str) -> list[tuple[int, str]]:
+    """Linhas de texto que a pessoa lê em um HTML, com o número da linha.
+
+    Scripts, estilos e comentários somem, mas as quebras de linha ficam,
+    para que o número da linha continue valendo.
+    """
+    def apagar(m: re.Match) -> str:
+        return "\n" * m.group(0).count("\n")
+
+    limpo = re.sub(r"<!--.*?-->", apagar, html, flags=re.DOTALL)
+    limpo = re.sub(r"<(script|style)\b.*?</\1\s*>", apagar, limpo, flags=re.DOTALL | re.IGNORECASE)
+    limpo = re.sub(r"<[^>]*>", lambda m: " " + apagar(m), limpo, flags=re.DOTALL)
+    limpo = re.sub(r"&nbsp;|&#160;", " ", limpo)
+    return [(n, linha.strip()) for n, linha in enumerate(limpo.splitlines(), start=1) if linha.strip()]
+
+
 def idiomas_do_arquivo(arquivo: Path, meta: dict) -> list[str]:
     """Idiomas a aplicar nas listas de texto: 'pt', 'es', 'en'.
 
@@ -287,7 +320,7 @@ def carimbo(pasta: Path) -> str:
     revisão anterior deixa de valer.
     """
     resumo = hashlib.sha256()
-    for arquivo in arquivos_de_conteudo(pasta):
+    for arquivo in arquivos_de_conteudo(pasta) + interativos(pasta):
         resumo.update(arquivo.name.encode())
         resumo.update(arquivo.read_bytes())
     return resumo.hexdigest()[:16]
@@ -295,6 +328,8 @@ def carimbo(pasta: Path) -> str:
 
 def tem_paginas_reais(pasta: Path) -> bool:
     """Diz se o entregável já tem conteúdo além do modelo."""
+    if any(MARCA not in ler(arquivo) for arquivo in interativos(pasta)):
+        return True
     for arquivo in arquivos_de_conteudo(pasta):
         texto = ler(arquivo)
         if MARCA not in texto and contar_palavras(cabecalho(texto)[1]) > 20:

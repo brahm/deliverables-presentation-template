@@ -9,12 +9,14 @@ Uso: python3 tools/testar_kit.py
 """
 from __future__ import annotations
 
+import http.server
 import json
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -143,7 +145,7 @@ def testar_instalador(tmp: Path) -> None:
     ajustes = json.loads((andamento / ".claude/settings.json").read_text(encoding="utf-8"))
     comandos = [h["command"] for g in ajustes["hooks"]["PostToolUse"] for h in g["hooks"]]
     confere("mantém os hooks e os ajustes do projeto", "npm run lint" in comandos and ajustes["model"] == "opus" and ajustes["permissions"]["deny"] == ["Read(.env)"] and "Bash(npm test)" in ajustes["permissions"]["allow"])
-    confere("acrescenta os cinco hooks", all(e in ajustes["hooks"] for e in ("SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop")))
+    confere("acrescenta os seis hooks", all(e in ajustes["hooks"] for e in ("SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop")) and sum(len(g["hooks"]) for grupos in ajustes["hooks"].values() for g in grupos if "_harness/hooks/" in g["hooks"][0]["command"]) == 6)
     confere("mantém a skill do projeto que tem o mesmo nome", (andamento / ".claude/skills/humanizar-texto/SKILL.md").read_text(encoding="utf-8") == "minha skill\n" and "não veio do kit" in saida.stdout, saida.stdout)
     confere("não toca na pasta de entregáveis que já existia", (andamento / "entregaveis/final/deck.pptx").read_text(encoding="utf-8") == "x" and "já existia" in saida.stdout)
     de_novo = instalar(andamento)
@@ -504,6 +506,376 @@ def testar_hooks(tmp: Path) -> None:
     confere("fim do turno: volta a cobrar quando o conteúdo muda depois da revisão", hook("fim_do_turno.py", {"session_id": "s3"}).returncode == 2)
 
 
+def preencher_interativo(html: str) -> str:
+    """Troca as marcas e os exemplos de um modelo de HTML interativo por conteúdo de projeto."""
+    html = re.sub(
+        r"<!-- interativo.*?-->",
+        "<!-- interativo\ntitulo: Caminho de uma campanha\nmensagem: A aprovação consome metade do prazo de uma campanha.\n"
+        "apoia: página 2\nfontes: E-001\nidioma: pt-BR\n-->",
+        html, count=1, flags=re.S,
+    )
+    html = html.replace("<title>PREENCHER</title>", "<title>Caminho de uma campanha</title>")
+    html = html.replace("Fonte: PREENCHER, com a data do dado.", "Fonte: inventário de plataformas, março de 2026.")
+    html = re.sub(r"PREENCHER[^<\n]*", "A aprovação consome metade do prazo de uma campanha.", html)
+    return html.replace('"Exemplo: ', '"').replace('"Exemplo. ', '"').replace("Exemplo: ", "")
+
+
+def testar_interativos(tmp: Path) -> None:
+    print("HTML interativo")
+    projeto = tmp / "interativos"
+    projeto.mkdir()
+    instalar(projeto)
+    pasta = montar_exemplo(projeto)
+    preparar = projeto / "entregaveis/_harness/scripts/preparar.py"
+    modelos = sorted((HARNESS / "modelos/interativos").glob("*.html"))
+    confere("há três modelos de HTML interativo", [m.stem for m in modelos] == ["camadas-3d", "fluxo", "simulador"], str(modelos))
+
+    # Criação pelo preparar.py
+    (pasta / "storyline.md").write_text(STORYLINE.replace("aprovada: sim", "aprovada: nao"), encoding="utf-8")
+    recusa = rodar([PY, preparar, "--entregavel", "diag", "--interativo", "caminho", "--base", "fluxo"], projeto)
+    confere("preparar: recusa a peça sem storyline aprovada", recusa.returncode != 0 and not (pasta / "interativos/caminho.html").exists(), recusa.stdout + recusa.stderr)
+    (pasta / "storyline.md").write_text(STORYLINE, encoding="utf-8")
+    for modelo in modelos:
+        feito = rodar([PY, preparar, "--entregavel", "diag", "--interativo", f"peca-{modelo.stem}", "--base", modelo.stem], projeto)
+        confere(f"preparar: cria a peça a partir de '{modelo.stem}'", feito.returncode == 0 and (pasta / f"interativos/peca-{modelo.stem}.html").is_file(), feito.stdout + feito.stderr)
+    confere("preparar: recusa modelo que não existe", rodar([PY, preparar, "--entregavel", "diag", "--interativo", "x1", "--base", "nada"], projeto).returncode != 0)
+    confere("preparar: não mexe no briefing ao criar a peça", (pasta / "briefing.md").read_text(encoding="utf-8") == BRIEFING)
+    cru = validar(projeto, "--so", "interativo")
+    confere("modelo recém-criado: só avisos enquanto está em redação", cru.returncode == 0 and "PREENCHER" in cru.stdout, cru.stdout[-600:])
+    rigor = validar(projeto, "--so", "interativo", "--rigoroso")
+    confere("modelo recém-criado: reprova na revisão por marca e dado de exemplo", rigor.returncode != 0 and "dado(s) de exemplo" in rigor.stdout, rigor.stdout[-600:])
+
+    # Modelos preenchidos passam, inclusive na revisão
+    for modelo in modelos:
+        (pasta / f"interativos/peca-{modelo.stem}.html").write_text(preencher_interativo(modelo.read_text(encoding="utf-8")), encoding="utf-8")
+    limpo = validar(projeto, "--so", "interativo", "--rigoroso")
+    confere("modelos preenchidos passam na checagem rigorosa", limpo.returncode == 0 and "Nenhum erro e nenhum aviso" in limpo.stdout, limpo.stdout[-900:])
+    for modelo in modelos:
+        html = modelo.read_text(encoding="utf-8")
+        confere(f"modelo '{modelo.stem}': sem endereço de rede", not re.search(r"https?://|//cdn|@import", html))
+
+    # Arquivo único: cada tipo de recurso de fora reprova
+    alvo = pasta / "interativos/peca-fluxo.html"
+    bom = alvo.read_text(encoding="utf-8")
+
+    def com(trecho: str, nome: str, espera: str = "arquivo único", antes: str = "</body>", deve_reprovar: bool = True) -> None:
+        alvo.write_text(bom.replace(antes, trecho + antes, 1), encoding="utf-8")
+        saida = validar(projeto, "--so", "interativo")
+        ok = (saida.returncode != 0 and espera in saida.stdout) if deve_reprovar else saida.returncode == 0
+        confere(nome, ok, saida.stdout[-500:])
+        alvo.write_text(bom, encoding="utf-8")
+
+    com('<script src="https://cdn.exemplo.com/grafico.js"></script>', "reprova script de fora")
+    com('<script src="lib/grafico.js"></script>', "reprova script em pasta ao lado")
+    com('<link rel="stylesheet" href="estilo.css">', "reprova folha de estilo de fora", antes="</head>")
+    com('<img src="imagens/mapa.png" alt="Mapa">', "reprova imagem em pasta ao lado")
+    com('<iframe src="https://exemplo.com/painel"></iframe>', "reprova quadro embutido")
+    com("<style>@font-face { font-family: Marca; src: url(fontes/marca.woff2); }</style>", "reprova fonte em arquivo ao lado", antes="</head>")
+    com('<style>@import "tema.css";</style>', "reprova importação de estilo", antes="</head>")
+    com('<script>fetch("https://api.exemplo.com/dados").then(function () {});</script>', "reprova chamada de rede")
+    com('<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="Ponto">', "aceita imagem embutida no arquivo", deve_reprovar=False)
+    com('<svg viewBox="0 0 10 10" role="img" aria-label="Marca"><defs><linearGradient id="g"></linearGradient></defs><rect width="10" height="10" fill="url(#g)"></rect></svg>', "aceita SVG desenhado no arquivo", deve_reprovar=False)
+
+    # Estrutura e movimento
+    alvo.write_text(bom.replace("prefers-reduced-motion", "prefers-outra-coisa"), encoding="utf-8")
+    parado = validar(projeto, "--so", "interativo")
+    confere("reprova animação sem movimento reduzido", parado.returncode != 0 and "prefers-reduced-motion" in parado.stdout, parado.stdout[-400:])
+    alvo.write_text(bom.replace('<meta name="viewport" content="width=device-width, initial-scale=1">', ""), encoding="utf-8")
+    confere("reprova arquivo sem viewport", validar(projeto, "--so", "interativo").returncode != 0)
+    alvo.write_text(bom.replace("fontes: E-001", "fontes: E-777"), encoding="utf-8")
+    perdida = validar(projeto, "--so", "interativo")
+    confere("reprova evidência que não está no registro", perdida.returncode != 0 and "E-777" in perdida.stdout, perdida.stdout[-400:])
+    alvo.write_text(bom.replace("</main>", "<p>A equipe aprova — e segue.</p></main>"), encoding="utf-8")
+    vicio = validar(projeto, "--so", "interativo")
+    confere("o texto visível da peça passa pelas checagens de texto", vicio.returncode != 0 and "[interativo]" in vicio.stdout, vicio.stdout[-400:])
+    alvo.write_text(bom, encoding="utf-8")
+
+    # Hooks
+    hooks = projeto / "entregaveis/_harness/hooks"
+
+    def hook(nome: str, caminho: str) -> subprocess.CompletedProcess:
+        dados = {"cwd": str(projeto), "session_id": "i1", "tool_name": "Write", "tool_input": {"file_path": caminho}}
+        return rodar([PY, hooks / nome], projeto, json.dumps(dados))
+
+    confere("antes de gravar: deixa gravar a peça com storyline aprovada", hook("antes_de_gravar.py", "entregaveis/diag/interativos/peca-fluxo.html").returncode == 0)
+    (pasta / "storyline.md").write_text(STORYLINE.replace("aprovada: sim", "aprovada: nao"), encoding="utf-8")
+    confere("antes de gravar: bloqueia a peça sem storyline aprovada", hook("antes_de_gravar.py", "entregaveis/diag/interativos/peca-fluxo.html").returncode == 2)
+    (pasta / "storyline.md").write_text(STORYLINE, encoding="utf-8")
+    confere("depois de gravar: peça limpa passa", hook("depois_de_gravar.py", "entregaveis/diag/interativos/peca-fluxo.html").returncode == 0)
+    alvo.write_text(bom.replace("</body>", '<script src="https://cdn.exemplo.com/grafico.js"></script></body>'), encoding="utf-8")
+    devolvido = hook("depois_de_gravar.py", "entregaveis/diag/interativos/peca-fluxo.html")
+    confere("depois de gravar: devolve o recurso de fora ao agente", devolvido.returncode == 2 and "arquivo único" in devolvido.stderr, devolvido.stdout + devolvido.stderr)
+    alvo.write_text(bom, encoding="utf-8")
+
+    # A revisão registrada vale para a versão da peça que foi revisada
+    (pasta / "revisao.md").write_text(REVISAO, encoding="utf-8")
+    validar(projeto, "--carimbar", "diag")
+    codigo = "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import comum; print(comum.carimbo(comum.BASE / 'diag'))"
+    antes = rodar([PY, "-c", codigo], projeto).stdout.strip()
+    alvo.write_text(bom.replace("Caminho de uma campanha", "Caminho de uma campanha de mídia"), encoding="utf-8")
+    depois = rodar([PY, "-c", codigo], projeto).stdout.strip()
+    confere("o carimbo da revisão muda quando a peça muda", bool(antes) and antes != depois, f"{antes} {depois}")
+
+
+DOMINIO = """---
+estado: rascunho
+calibrado_em: 2026-11-23
+materiais: M-001
+---
+# Domínio do projeto
+
+## Contexto e objetivo
+
+A diretoria decide que plataformas ficam. Origem: brief.
+
+## Métodos e frameworks
+
+Inventário por função e por dono. Origem: M-001.
+"""
+
+REGRAS_DO_DOMINIO = (
+    "id\ttipo\taplica\tonde\tpadrao\tmensagem\tnivel\torigem\n"
+    "D-001\tjunto\t*\tconteudo\tnota de maturidade => crit[ée]rio\tToda nota de maturidade vem com o critério que a justifica.\terro\tM-001\n"
+    "D-002\tproibido\tapresentacao\ttitulos\t\\bferramentas?\\b\tO projeto chama de plataforma, não de ferramenta.\terro\tM-001\n"
+    "D-003\tobrigatorio\t*\tconteudo\tplataformas contratadas\tO material diz quantas plataformas estão contratadas.\terro\tM-001\n"
+    "D-004\tordem\t*\tconteudo\tDiagn[óo]stico => desligamento\tO pedido de desligamento só vem depois do diagnóstico.\taviso\tM-001\n"
+)
+
+CASOS_DO_DOMINIO = (
+    "checagem\tespera\ttexto\n"
+    "D-001\tacusa\tA nota de maturidade da frente de dados é 2.\n"
+    "D-001\tpassa\tA nota de maturidade da frente de dados é 2. O critério: não há identificador único.\n"
+    "D-001\tacusa\tA nota de maturidade é 2.\\n\\nO critério está em outra página.\n"
+    "D-002\tacusa\tTrês ferramentas fazem o mesmo trabalho\n"
+    "D-002\tpassa\tTrês plataformas fazem o mesmo trabalho\n"
+    "D-003\tacusa\tDuas enviam e-mail para a mesma base.\n"
+    "D-003\tpassa\tDas 14 plataformas contratadas, duas enviam e-mail.\n"
+    "D-004\tacusa\tA diretoria aprova o desligamento.\\n\\nDiagnóstico de martech.\n"
+    "D-004\tpassa\tDiagnóstico de martech.\\n\\nA diretoria aprova o desligamento.\n"
+)
+
+
+def testar_dominio(tmp: Path) -> None:
+    print("Domínio do projeto")
+    modelos = HARNESS / "modelos/dominio"
+    regras_do_modelo = [l for l in (modelos / "checagens.tsv").read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
+    casos_do_modelo = [l for l in (modelos / "casos.tsv").read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
+    confere("o template traz só o esqueleto: nenhuma regra e nenhum caso de domínio", len(regras_do_modelo) == 1 and len(casos_do_modelo) == 1, str(regras_do_modelo + casos_do_modelo))
+    confere("o método do template está em branco", "PREENCHER" in (modelos / "dominio.md").read_text(encoding="utf-8") and "REGRAS = {}" in (modelos / "checagens_extra.py").read_text(encoding="utf-8"))
+    na_raiz = RAIZ / "entregaveis/_dominio"
+    confere("a raiz do template não tem domínio, registros nem materiais de projeto", not any((RAIZ / "entregaveis" / n).exists() for n in ("_dominio", "_projeto", "_intake")), str(na_raiz))
+
+    projeto = tmp / "dominio"
+    projeto.mkdir()
+    instalar(projeto)
+    dominio = projeto / "entregaveis/_dominio"
+    script = projeto / "entregaveis/_harness/scripts/dominio.py"
+    confere("a instalação cria _dominio com os cinco arquivos do esqueleto", sorted(a.name for a in dominio.iterdir()) == ["LEIA-ME.md", "casos.tsv", "checagens.tsv", "checagens_extra.py", "dominio.md"], str(list(dominio.iterdir())))
+    vazio = rodar([PY, script], projeto)
+    confere("sem regras, o teste do domínio passa e diz que não há regra", vazio.returncode == 0 and "nenhuma regra" in vazio.stdout, vazio.stdout + vazio.stderr)
+
+    pasta = montar_exemplo(projeto)
+    estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto)
+    confere("o estado avisa que o domínio não foi calibrado", "calibrar-dominio" in estado.stdout, estado.stdout)
+    aviso = validar(projeto, "--so", "dominio")
+    confere("a validação avisa do domínio não calibrado, sem reprovar", aviso.returncode == 0 and "calibrar-dominio" in aviso.stdout, aviso.stdout)
+
+    (dominio / "dominio.md").write_text(DOMINIO, encoding="utf-8")
+    sem_regra = validar(projeto, "--so", "dominio")
+    confere("domínio descrito e sem regra gera aviso", sem_regra.returncode == 0 and "nenhuma regra" in sem_regra.stdout, sem_regra.stdout)
+    (dominio / "checagens.tsv").write_text(REGRAS_DO_DOMINIO, encoding="utf-8")
+    sem_caso = rodar([PY, script], projeto)
+    confere("regra sem caso de teste reprova", sem_caso.returncode == 1 and "falta caso de teste" in sem_caso.stdout and sem_caso.stdout.count("D-00") >= 4, sem_caso.stdout)
+    confere("a validação do projeto reprova regra sem caso", validar(projeto, "--so", "dominio").returncode == 1)
+    (dominio / "casos.tsv").write_text(CASOS_DO_DOMINIO, encoding="utf-8")
+    provado = rodar([PY, script], projeto)
+    confere("regras com os dois casos passam", provado.returncode == 0 and "4 regra(s) provada(s) em 9 caso(s)" in provado.stdout, provado.stdout + provado.stderr)
+    lista = rodar([PY, script, "--listar"], projeto)
+    confere("--listar mostra cada regra com os casos", lista.returncode == 0 and "D-001\tjunto" in lista.stdout and "3 caso(s)" in lista.stdout, lista.stdout)
+    limpo = validar(projeto, "--so", "dominio")
+    confere("o exemplo correto passa nas regras do domínio", limpo.returncode == 0 and "Nenhum erro e nenhum aviso" in limpo.stdout, limpo.stdout)
+    confere("o estado para de avisar depois da calibração", "calibrar-dominio" not in rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto).stdout)
+
+    def com(antes: str, depois: str, espera: str, nome: str, reprova: bool = True) -> None:
+        (pasta / "conteudo.md").write_text(CONTEUDO.replace(antes, depois), encoding="utf-8")
+        saida = validar(projeto, "--so", "dominio")
+        confere(nome, (saida.returncode != 0) == reprova and espera in saida.stdout, saida.stdout[-500:])
+        (pasta / "conteudo.md").write_text(CONTEUDO, encoding="utf-8")
+
+    com("Para a diretoria de marketing.", "A nota de maturidade de dados é 2.", "D-001", "junto: acusa a nota sem o critério na mesma página")
+    com("Para a diretoria de marketing.", "A nota de maturidade de dados é 2. O critério é a base única.", "Nenhum erro", "junto: aceita a nota com o critério", reprova=False)
+    com("## 2. Duas plataformas de e-mail", "## 2. Duas ferramentas de e-mail", "D-002", "proibido: acusa o termo no título")
+    com("Das 14 plataformas contratadas, duas", "Das 14 ferramentas contratadas, duas", "D-003", "proibido em títulos não olha o corpo, e obrigatório acusa a falta")
+    com("## 1. Diagnóstico de martech", "## 1. Visão geral de martech", "D-004", "ordem: avisa do pedido antes do diagnóstico", reprova=False)
+    (pasta / "briefing.md").write_text(BRIEFING.replace("tipo: apresentacao", "tipo: documento"), encoding="utf-8")
+    com("## 2. Duas plataformas de e-mail", "## 2. Duas ferramentas de e-mail", "Nenhum erro", "aplica: a regra de apresentação não vale para outro tipo", reprova=False)
+    (pasta / "briefing.md").write_text(BRIEFING, encoding="utf-8")
+
+    # Regra com defeito e caso que contradiz a regra
+    (dominio / "checagens.tsv").write_text(REGRAS_DO_DOMINIO + "D-005\tproibido\t*\ttudo\t(aberto\tNão feche.\terro\tM-001\nD-006\tsempre\t*\ttudo\tx\tTipo que não existe.\terro\tM-001\n", encoding="utf-8")
+    defeito = rodar([PY, script], projeto)
+    confere("expressão inválida e tipo desconhecido são apontados", defeito.returncode == 1 and "D-005: expressão inválida" in defeito.stdout and "D-006: tipo" in defeito.stdout, defeito.stdout)
+    confere("regra com defeito não derruba a validação do entregável", validar(projeto, "diag", "--so", "dominio").returncode == 0)
+    (dominio / "checagens.tsv").write_text(REGRAS_DO_DOMINIO, encoding="utf-8")
+    (dominio / "casos.tsv").write_text(CASOS_DO_DOMINIO + "D-002\tpassa\tTrês ferramentas repetidas\nD-009\tacusa\tx\n", encoding="utf-8")
+    contradiz = rodar([PY, script], projeto)
+    confere("caso que contradiz a regra e caso de regra inexistente reprovam", contradiz.returncode == 1 and "esperava 'passa'" in contradiz.stdout and "'D-009' não existe" in contradiz.stdout, contradiz.stdout)
+    (dominio / "casos.tsv").write_text(CASOS_DO_DOMINIO, encoding="utf-8")
+
+    # Regra em Python
+    (dominio / "checagens_extra.py").write_text(
+        "import re\n\n\ndef parcelas(texto):\n    partes = [int(n) for n in re.findall(r'(\\d+)%', texto)]\n"
+        "    if len(partes) > 1 and sum(partes) != 100:\n        return 'As parcelas não somam 100%.'\n    return None\n\n\nREGRAS = {'D-900': parcelas}\n",
+        encoding="utf-8",
+    )
+    confere("regra em Python também exige os dois casos", rodar([PY, script], projeto).returncode == 1)
+    (dominio / "casos.tsv").write_text(CASOS_DO_DOMINIO + "D-900\tacusa\tMídia paga 60% e mídia própria 30%.\nD-900\tpassa\tMídia paga 60% e mídia própria 40%.\n", encoding="utf-8")
+    python_ok = rodar([PY, script], projeto)
+    confere("regra em Python é provada pelos casos", python_ok.returncode == 0 and "5 regra(s)" in python_ok.stdout, python_ok.stdout + python_ok.stderr)
+    com("Para a diretoria de marketing.", "Mídia paga leva 60% e mídia própria 30%.", "D-900", "regra em Python acusa no entregável")
+    (dominio / "checagens_extra.py").write_text("REGRAS = {'D-900': lambda texto: 1 / 0}\nisto não é python\n", encoding="utf-8")
+    quebrado = rodar([PY, script], projeto)
+    confere("arquivo Python com defeito vira achado, sem derrubar o validador", quebrado.returncode == 1 and "não carrega" in quebrado.stdout and validar(projeto, "diag", "--so", "texto").returncode == 0, quebrado.stdout + quebrado.stderr)
+    (dominio / "checagens_extra.py").write_text((modelos / "checagens_extra.py").read_text(encoding="utf-8"), encoding="utf-8")
+    (dominio / "casos.tsv").write_text(CASOS_DO_DOMINIO, encoding="utf-8")
+
+    # Hooks: o achado do domínio volta na gravação, e gravar uma regra roda os casos
+    hooks = projeto / "entregaveis/_harness/hooks"
+
+    def hook(nome: str, caminho: str) -> subprocess.CompletedProcess:
+        dados = {"cwd": str(projeto), "session_id": "d1", "tool_name": "Write", "tool_input": {"file_path": caminho}}
+        return rodar([PY, hooks / nome], projeto, json.dumps(dados))
+
+    (pasta / "conteudo.md").write_text(CONTEUDO.replace("## 2. Duas plataformas de e-mail", "## 2. Duas ferramentas de e-mail"), encoding="utf-8")
+    devolvido = hook("depois_de_gravar.py", "entregaveis/diag/conteudo.md")
+    confere("depois de gravar: devolve o achado do domínio ao agente", devolvido.returncode == 2 and "[dominio]" in devolvido.stderr and "D-002" in devolvido.stderr, devolvido.stdout + devolvido.stderr)
+    (pasta / "conteudo.md").write_text(CONTEUDO, encoding="utf-8")
+    confere("depois de gravar: regras provadas passam", hook("depois_de_gravar.py", "entregaveis/_dominio/checagens.tsv").returncode == 0)
+    (dominio / "casos.tsv").write_text("checagem\tespera\ttexto\n", encoding="utf-8")
+    cobrado = hook("depois_de_gravar.py", "entregaveis/_dominio/checagens.tsv")
+    confere("depois de gravar: regra sem caso volta ao agente", cobrado.returncode == 2 and "falta caso de teste" in cobrado.stderr, cobrado.stdout + cobrado.stderr)
+
+    # Atualizar o kit não toca no domínio do projeto
+    (dominio / "casos.tsv").write_text(CASOS_DO_DOMINIO, encoding="utf-8")
+    instalar(projeto, "--atualizar")
+    confere("--atualizar preserva o domínio do projeto", (dominio / "checagens.tsv").read_text(encoding="utf-8") == REGRAS_DO_DOMINIO and (dominio / "dominio.md").read_text(encoding="utf-8") == DOMINIO)
+
+
+class _ServidorDeGit(http.server.BaseHTTPRequestHandler):
+    """Responde como um servidor de git: um repositório aberto, um fechado e um que devolve uma página."""
+
+    def do_GET(self):  # noqa: N802 - nome exigido pela biblioteca
+        if self.path.startswith("/time/aberto.git/info/refs"):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-git-upload-pack-advertisement")
+            self.end_headers()
+            self.wfile.write(b"001e# service=git-upload-pack\n0000")
+        elif self.path.startswith("/time/pagina.git/info/refs"):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.end_headers()
+            self.wfile.write(b"<html>entre</html>")
+        else:
+            self.send_response(401)
+            self.end_headers()
+
+    def log_message(self, *args):
+        pass
+
+
+def testar_repositorio(tmp: Path) -> None:
+    print("Repositório local ou privado")
+    if shutil.which("git") is None:
+        print("  (sem git nesta máquina: testes do repositório pulados)")
+        return
+    servidor = http.server.ThreadingHTTPServer(("127.0.0.1", 0), _ServidorDeGit)
+    threading.Thread(target=servidor.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{servidor.server_address[1]}/time"
+    try:
+        projeto = tmp / "repositorio"
+        projeto.mkdir()
+        instalar(projeto)
+        script = projeto / "entregaveis/_harness/scripts/repositorio.py"
+        hooks = projeto / "entregaveis/_harness/hooks"
+
+        def situacao() -> subprocess.CompletedProcess:
+            return rodar([PY, script], projeto)
+
+        def gravar(caminho: str) -> subprocess.CompletedProcess:
+            dados = {"cwd": str(projeto), "session_id": "r1", "tool_name": "Write", "tool_input": {"file_path": caminho}}
+            return rodar([PY, hooks / "antes_de_gravar.py"], projeto, json.dumps(dados))
+
+        def comando(texto: str) -> subprocess.CompletedProcess:
+            dados = {"cwd": str(projeto), "session_id": "r1", "tool_name": "Bash", "tool_input": {"command": texto}}
+            return rodar([PY, hooks / "antes_de_comando.py"], projeto, json.dumps(dados))
+
+        def remoto(url: str | None) -> None:
+            rodar(["git", "remote", "remove", "origin"], projeto)
+            if url:
+                rodar(["git", "remote", "add", "origin", url], projeto)
+
+        sem_git = situacao()
+        confere("pasta sem git é aceita", sem_git.returncode == 0 and "Sem repositório remoto" in sem_git.stdout, sem_git.stdout + sem_git.stderr)
+        rodar(["git", "init", "-q"], projeto)
+        confere("git local sem remoto é aceito", situacao().returncode == 0 and gravar("entregaveis/_projeto/brief.md").returncode == 0)
+        remoto("/srv/git/projeto.git")
+        confere("remoto em disco conta como local", situacao().returncode == 0)
+
+        # Remoto público
+        remoto(f"{base}/aberto.git")
+        publico = situacao()
+        confere("remoto que entrega o clone sem credencial é público", publico.returncode == 1 and "PÚBLICO" in publico.stdout and "privado" in publico.stdout, publico.stdout + publico.stderr)
+        barrado = gravar("entregaveis/_projeto/brief.md")
+        confere("antes de gravar: bloqueia o brief em repositório público", barrado.returncode == 2 and "público" in barrado.stderr, barrado.stderr)
+        confere("antes de gravar: bloqueia o domínio e o intake em repositório público", gravar("entregaveis/_dominio/dominio.md").returncode == 2 and gravar("entregaveis/_intake/registro.tsv").returncode == 2)
+        confere("antes de gravar: bloqueia o briefing de um entregável novo", gravar("entregaveis/novo/briefing.md").returncode == 2)
+        confere("antes de gravar: não barra o resto do repositório", gravar("src/app.py").returncode == 0 and gravar("entregaveis/_harness/REGRAS.md").returncode == 0 and gravar("README.md").returncode == 0)
+        estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto)
+        confere("o estado diz que o repositório é público", "PÚBLICO" in estado.stdout, estado.stdout)
+        confere("antes de comando: sem projeto, o envio do template passa", comando("git push -u origin main").returncode == 0)
+        confere("sem projeto, a validação não cobra o repositório", "[repositorio]" not in validar(projeto).stdout)
+        negada = rodar([PY, script, "--confirmar", "é privado, pode seguir"], projeto)
+        confere("um remoto público não aceita confirmação", negada.returncode == 1 and not (projeto / "entregaveis/_projeto/repositorio.tsv").exists(), negada.stdout)
+
+        montar_exemplo(projeto)
+        envio = comando("git add -A && git commit -m x && git push -u origin main")
+        confere("antes de comando: com projeto, bloqueia o envio a repositório público", envio.returncode == 2 and "público" in envio.stderr, envio.stderr)
+        confere("antes de comando: não olha os outros comandos", comando("git status").returncode == 0 and comando("python3 entregaveis/_harness/scripts/validar.py").returncode == 0)
+        confere("antes de comando: bloqueia tornar o repositório público", comando("gh repo create cliente-x --public --source .").returncode == 2 and comando("gh repo edit --visibility public").returncode == 2)
+        confere("antes de comando: deixa criar repositório privado", comando("gh repo create cliente-x --private --source .").returncode == 0)
+        reprovado = validar(projeto, "--so", "repositorio")
+        confere("com projeto, a validação reprova o repositório público", reprovado.returncode == 1 and "[repositorio]" in reprovado.stdout, reprovado.stdout)
+
+        # Remoto privado
+        remoto(f"{base}/fechado.git")
+        privado = situacao()
+        confere("remoto que pede identificação é privado", privado.returncode == 0 and "privado" in privado.stdout, privado.stdout + privado.stderr)
+        confere("em repositório privado, a gravação e o envio passam", gravar("entregaveis/_projeto/brief.md").returncode == 0 and comando("git push origin main").returncode == 0 and validar(projeto, "--so", "repositorio").returncode == 0)
+
+        # Remoto que não dá para verificar
+        for nome, url in (("servidor que não responde", "http://127.0.0.1:1/time/sumido.git"), ("resposta que não é de git", f"{base}/pagina.git")):
+            remoto(url)
+            duvida = situacao()
+            confere(f"{nome}: fica como não verificado e não é aceito", duvida.returncode == 1 and "não verificado" in duvida.stdout and "--confirmar" in duvida.stdout, duvida.stdout + duvida.stderr)
+        confere("antes de gravar e antes de comando: bloqueiam o remoto não verificado", gravar("entregaveis/_projeto/brief.md").returncode == 2 and comando("git push").returncode == 2)
+        confirmada = rodar([PY, script, "--confirmar", "sim, é o repositório privado do time"], projeto)
+        registro = projeto / "entregaveis/_projeto/repositorio.tsv"
+        confere("a confirmação do dono fica registrada com as palavras dele", confirmada.returncode == 0 and "sim, é o repositório privado do time" in registro.read_text(encoding="utf-8"), confirmada.stdout + confirmada.stderr)
+        confere("depois da confirmação, o remoto não verificado é aceito", situacao().returncode == 0 and gravar("entregaveis/_projeto/brief.md").returncode == 0 and comando("git push").returncode == 0)
+        remoto(f"{base}/aberto.git")
+        confere("a confirmação de um remoto não vale para outro", situacao().returncode == 1)
+
+        codigo = (
+            "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import repositorio as r; "
+            "print(r.endereco('git@github.com:time/projeto.git'), r.endereco('ssh://git@git.exemplo.com:2222/time/projeto.git'), "
+            "r.endereco('https://usuario@gitlab.com/grupo/sub/projeto.git'), r.endereco('../outro'), r.endereco('C:/git/projeto'))"
+        )
+        lidos = rodar([PY, "-c", codigo], projeto).stdout
+        confere("lê endereços de remoto em ssh, https e disco", "('https', 'github.com', 'time/projeto') ('https', 'git.exemplo.com', 'time/projeto') ('https', 'gitlab.com', 'grupo/sub/projeto') None None" in lidos, lidos)
+    finally:
+        servidor.shutdown()
+
+
 def testar_pacotes(tmp: Path) -> None:
     print("Pacotes")
     pacotes = sorted(p for p in (HARNESS / "pacotes").iterdir() if p.is_dir())
@@ -588,6 +960,9 @@ def main() -> int:
         testar_instalador(tmp)
         testar_checagens(tmp)
         testar_hooks(tmp)
+        testar_interativos(tmp)
+        testar_dominio(tmp)
+        testar_repositorio(tmp)
         testar_pacotes(tmp)
         testar_levantamento(tmp)
     finally:

@@ -34,3 +34,6 @@ formatos em `metodo/formatos.md`.
    gerado de novo.
 9. Uma tabela com mais linhas do que a página comporta vai para a
    planilha. A página mostra o recorte que prova o título.
+10. Quando a audiência entende melhor mexendo (percorrer um fluxo,
+    girar uma arquitetura, testar uma premissa), a página ganha uma
+    peça de apoio com a skill `construir-interativo`.

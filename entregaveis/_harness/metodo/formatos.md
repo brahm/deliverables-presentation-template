@@ -26,6 +26,7 @@ uma vez e gere os dois.
 | PowerPoint (`pptx`) | Apresentações e decks de leitura | `conteudo.md` |
 | Word (`docx`) e PDF | Relatórios, propostas escritas, apostilas, pré-leituras | `documento.md` |
 | Excel (`xlsx`) | Informação em massa, bases de dados, gráficos e análises | `planilha.md` e a pasta `dados/` |
+| HTML interativo (`html`) | Peça de apoio que a audiência percorre, gira ou simula, em 2D ou 3D | `interativos/NOME.html`, que já é o arquivo final |
 
 A fonte em Markdown é a verdade do entregável. O arquivo final é gerado a
 partir dela, sobre o modelo registrado em `entregaveis/_projeto/marca.md`,
@@ -35,6 +36,14 @@ próxima geração: corrija a fonte e gere de novo.
 Antes de entregar um arquivo gerado, abra o resultado e olhe página por
 página. Texto que estoura a caixa, gráfico cortado e fonte trocada só
 aparecem no arquivo renderizado.
+
+## HTML interativo
+
+Uma peça interativa apoia a leitura de um entregável e não o
+substitui. É um arquivo só, sem biblioteca nem recurso externo, e fica
+em `interativos/` dentro da pasta do entregável. Qualquer entregável
+pode ter uma, depois da storyline aprovada. Quando fazer, como desenhar
+e o que a checagem cobra estão em [interativo.md](interativo.md).
 
 ## Quando a planilha é o entregável certo
 

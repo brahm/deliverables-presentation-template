@@ -14,7 +14,8 @@ metadata:
 3. Aplique a rubrica de `entregaveis/_harness/metodo/rubrica.md` no papel
    do decisor mais difícil do briefing. Se o agente permite um revisor
    independente, entregue a ele o material e o briefing, sem as suas
-   conclusões, e use o que ele achar.
+   conclusões, e use o que ele achar. Aplique também os critérios de
+   revisão do projeto, na tabela do fim de `_dominio/dominio.md`.
 4. Faça dois testes. Leia só os títulos, em ordem, e veja se contam a
    história. Depois percorra o caminho de cinco minutos e veja se ele
    leva ao pedido.
