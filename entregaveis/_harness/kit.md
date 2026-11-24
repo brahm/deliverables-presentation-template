@@ -142,8 +142,10 @@ uma organização ou dizer respeito a um cliente, e por isso:
 
 - um projeto iniciado só vive em pasta sem git, em git local ou em
   repositório privado. `scripts/repositorio.py` faz ao remoto o pedido
-  de clone sem credencial: se o servidor entrega, o repositório é
-  público e o harness bloqueia a gravação dos registros e o envio;
+  de clone sem credencial, seguindo os redirecionamentos: se o servidor
+  entrega, o repositório é público e o harness bloqueia a gravação dos
+  registros e o envio. O endereço de envio do remoto e o endereço
+  escrito no próprio comando de envio passam pela mesma conferência;
 - quando o remoto não responde, vale a confirmação do consultor, registrada
   em `_projeto/repositorio.tsv`;
 - nada de `_dominio/` nem de `_cerebro/` volta ao template, nem como
