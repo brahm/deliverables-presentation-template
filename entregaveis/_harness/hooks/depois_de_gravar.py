@@ -88,4 +88,4 @@ def principal() -> int:
 
 
 if __name__ == "__main__":
-    _base.protegido(principal)
+    _base.protegido(principal, ao_falhar="avisar")

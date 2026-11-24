@@ -5,7 +5,8 @@ Instala o harness em pastas temporárias e confere o instalador, as
 skills, as checagens e os hooks. Cada checagem é provada dos dois lados:
 passa em um exemplo bom e reprova no erro que ela existe para pegar.
 
-Uso: python3 tools/testar_kit.py
+Uso: python3 tools/testar_kit.py            roda tudo
+     python3 tools/testar_kit.py hooks rotina   roda só os grupos citados
 """
 from __future__ import annotations
 
@@ -517,6 +518,103 @@ def testar_hooks(tmp: Path) -> None:
     confere("fim do turno: volta a cobrar quando o conteúdo muda depois da revisão", hook("fim_do_turno.py", {"session_id": "s3"}).returncode == 2)
 
 
+# --- Registros salvos fora do padrão e hooks com defeito ------------------
+
+
+def testar_registros(tmp: Path) -> None:
+    """Um registro salvo pelo Excel não é apagado, e uma trava com defeito não libera."""
+    print("Registros fora do padrão e hooks com defeito")
+    projeto = tmp / "registros"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+    reg = projeto / "entregaveis/_projeto"
+    scripts = projeto / "entregaveis/_harness/scripts"
+    hooks = projeto / "entregaveis/_harness/hooks"
+    modelo = (reg / "reunioes.tsv").read_text(encoding="utf-8")
+    linha = "R-001\t2026-11-10\tReunião de abertura\t\tJoão, Conceição\tanotação\t\t\trealizada\t\t\n"
+
+    def rotina(*args) -> subprocess.CompletedProcess:
+        return rodar([PY, scripts / "rotina.py", *args], projeto)
+
+    def sem_ata(dia: str) -> subprocess.CompletedProcess:
+        return rotina("--sem-ata", dia, "--rito", "semanal", "--motivo", "não ocorreu")
+
+    def hook(nome: str, dados: dict) -> subprocess.CompletedProcess:
+        return rodar([PY, hooks / nome], projeto, json.dumps({"cwd": str(projeto), **dados}))
+
+    for codificacao in ("cp1252", "utf-16", "utf-8-sig"):
+        (reg / "reunioes.tsv").write_bytes((modelo + linha).encode(codificacao))
+        gravado = sem_ata("2026-11-17")
+        depois = (reg / "reunioes.tsv").read_bytes()
+        try:
+            texto = depois.decode("utf-8")
+        except UnicodeDecodeError:
+            texto = ""
+        confere(f"registro em {codificacao}: o comando grava sem perder as linhas que existiam",
+                gravado.returncode == 0 and "João, Conceição" in texto and "sem ata" in texto and texto.count("\n") == modelo.count("\n") + 2, gravado.stdout + gravado.stderr + texto)
+        confere(f"registro em {codificacao}: o arquivo volta em UTF-8 e sem marca de ordem de bytes", bool(texto) and not texto.startswith("\ufeff"))
+        if codificacao != "utf-8-sig":
+            confere(f"registro em {codificacao}: o comando avisa que o arquivo estava fora de UTF-8", "não está em UTF-8" in gravado.stderr, gravado.stderr)
+    confere("gravação de registro não deixa arquivo temporário na pasta", not [a.name for a in reg.iterdir() if a.name.endswith(".tmp")])
+
+    binario = b"\x00\x01\x02\xff\xfe\x81 isto nao e texto"
+    (reg / "reunioes.tsv").write_bytes(binario)
+    recusado = sem_ata("2026-11-18")
+    confere("registro que não é texto: o comando para, diz o motivo e não grava", recusado.returncode != 0 and "não pôde ser lido" in recusado.stderr and (reg / "reunioes.tsv").read_bytes() == binario, recusado.stdout + recusado.stderr)
+    (reg / "reunioes.tsv").write_text("# só comentário, sem a linha de colunas\n", encoding="utf-8")
+    recusado = sem_ata("2026-11-18")
+    confere("registro sem a linha de colunas: o comando para e não grava", recusado.returncode != 0 and "linha de colunas" in recusado.stderr and "sem ata" not in (reg / "reunioes.tsv").read_text(encoding="utf-8"), recusado.stdout + recusado.stderr)
+    (reg / "reunioes.tsv").write_text(modelo.replace("\n", "\r\n") + linha, encoding="utf-8", newline="")
+    confere("registro com fim de linha do Windows é lido como os outros", sem_ata("2026-11-19").returncode == 0 and "João" in (reg / "reunioes.tsv").read_text(encoding="utf-8"))
+    (reg / "reunioes.tsv").write_text(modelo, encoding="utf-8")
+
+    # Uma tabulação a mais em uma linha não derruba quem lê o registro.
+    pasta = montar_exemplo(projeto)
+    with (reg / "evidencias.tsv").open("a", encoding="utf-8") as f:
+        f.write("E-002\tLançamentos atrasados\t3\tRelatório de lançamentos\t2026-10-01\tfato\talta\tdiag\tcampo a mais\toutro\n")
+    com_tab = validar(projeto)
+    confere("linha de registro com campo a mais: a validação roda e não mostra rastro de erro", com_tab.returncode == 0 and "Traceback" not in com_tab.stderr, com_tab.stdout + com_tab.stderr)
+    sys.path.insert(0, str(HARNESS / "scripts"))
+    import comum  # noqa: PLC0415
+
+    linhas = comum.ler_tsv(reg / "evidencias.tsv")
+    confere("linha de registro com campo a mais: os campos do cabeçalho são lidos e o excedente é ignorado",
+            linhas[-1].get("id") == "E-002" and all(isinstance(k, str) and isinstance(v, str) for l in linhas for k, v in l.items()), str(linhas[-1]))
+    (reg / "curto.tsv").write_text("id\tnome\tdata\nX-1\tsó dois campos\n", encoding="utf-8")
+    confere("linha de registro com campo a menos: o que falta vem vazio", comum.ler_tsv(reg / "curto.tsv") == [{"id": "X-1", "nome": "só dois campos", "data": ""}])
+    (reg / "curto.tsv").unlink()
+
+    # Um hook com defeito: as travas barram, os outros avisam.
+    gravacao = {"session_id": "r1", "tool_name": "Write", "tool_input": {"file_path": "entregaveis/diag/conteudo.md"}}
+    envio = {"tool_name": "Bash", "tool_input": {"command": "git push origin main"}}
+    confere("hooks sãos: a gravação e o envio passam em projeto sem remoto", hook("antes_de_gravar.py", gravacao).returncode == 0 and hook("antes_de_comando.py", envio).returncode == 0)
+    original = (scripts / "repositorio.py").read_text(encoding="utf-8")
+    (scripts / "repositorio.py").write_text(original.replace("def aceita(geral: str) -> bool:\n", "def aceita(geral: str) -> bool:\n    raise RuntimeError('defeito plantado')\n"), encoding="utf-8")
+    barrado = hook("antes_de_comando.py", envio)
+    confere("trava de comando com defeito: barra o envio e diz o defeito", barrado.returncode == 2 and "defeito plantado" in barrado.stderr and "não conseguiu conferir" in barrado.stderr, barrado.stdout + barrado.stderr)
+    barrado = hook("antes_de_gravar.py", gravacao)
+    confere("trava de gravação com defeito: barra a gravação no projeto e diz o defeito", barrado.returncode == 2 and "defeito plantado" in barrado.stderr, barrado.stdout + barrado.stderr)
+    fora = hook("antes_de_gravar.py", {"tool_name": "Write", "tool_input": {"file_path": "src/app.py"}})
+    confere("trava de gravação com defeito: arquivo de fora do projeto continua livre", fora.returncode == 0, fora.stderr)
+    confere("trava de comando com defeito: comando que não envia continua livre", hook("antes_de_comando.py", {"tool_input": {"command": "git status"}}).returncode == 0)
+    (scripts / "repositorio.py").write_text(original, encoding="utf-8")
+
+    original = (scripts / "validar.py").read_text(encoding="utf-8")
+    (scripts / "validar.py").write_text(original.replace("def validar_arquivo(", "def validar_arquivo(*_a, **_k):\n    raise RuntimeError('defeito plantado')\n\n\ndef _validar_arquivo_original(", 1), encoding="utf-8")
+    avisado = hook("depois_de_gravar.py", gravacao)
+    confere("hook de depois da gravação com defeito: devolve o defeito ao agente", avisado.returncode == 2 and "defeito plantado" in avisado.stderr and "não rodaram" in avisado.stderr, avisado.stdout + avisado.stderr)
+    (scripts / "validar.py").write_text(original, encoding="utf-8")
+
+    original = (scripts / "estado.py").read_text(encoding="utf-8")
+    (scripts / "estado.py").write_text(original + "\n\ndef linhas_de_estado(*_a, **_k):\n    raise RuntimeError('defeito plantado')\n\n\ndef proximo_passo(*_a, **_k):\n    raise RuntimeError('defeito plantado')\n", encoding="utf-8")
+    for nome, dados in (("sessao.py", {"hook_event_name": "SessionStart"}), ("mensagem.py", {"prompt": "siga"})):
+        avisado = hook(nome, dados)
+        confere(f"{nome} com defeito: não barra e põe o aviso no contexto", avisado.returncode == 0 and "defeito plantado" in avisado.stdout, avisado.stdout + avisado.stderr)
+    (scripts / "estado.py").write_text(original, encoding="utf-8")
+    del pasta
+
+
 def preencher_interativo(html: str) -> str:
     """Troca as marcas e os exemplos de um modelo de HTML interativo por conteúdo de projeto."""
     html = re.sub(
@@ -786,6 +884,24 @@ class _ServidorDeGit(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html")
             self.end_headers()
             self.wfile.write(b"<html>entre</html>")
+        elif self.path.startswith("/antigo/aberto.git/info/refs"):
+            # Um repositório público renomeado: o servidor manda para o endereço novo.
+            self.send_response(301)
+            self.send_header("Location", "/time/aberto.git/info/refs?service=git-upload-pack")
+            self.end_headers()
+        elif self.path.startswith("/antigo/fechado.git/info/refs"):
+            self.send_response(302)
+            self.send_header("Location", "/time/fechado.git/info/refs?service=git-upload-pack")
+            self.end_headers()
+        elif self.path.startswith("/antigo/entrada.git/info/refs"):
+            # Um servidor que manda quem não se identificou para a página de entrada.
+            self.send_response(302)
+            self.send_header("Location", "/time/pagina.git/info/refs")
+            self.end_headers()
+        elif self.path.startswith("/antigo/volta.git/info/refs"):
+            self.send_response(302)
+            self.send_header("Location", "/antigo/volta.git/info/refs")
+            self.end_headers()
         else:
             self.send_response(401)
             self.end_headers()
@@ -875,6 +991,68 @@ def testar_repositorio(tmp: Path) -> None:
         confere("depois da confirmação, o remoto não verificado é aceito", situacao().returncode == 0 and gravar("entregaveis/_projeto/brief.md").returncode == 0 and comando("git push").returncode == 0)
         remoto(f"{base}/aberto.git")
         confere("a confirmação de um remoto não vale para outro", situacao().returncode == 1)
+
+        # Redirecionamento: vale a resposta do fim do caminho.
+        antigo = base.replace("/time", "/antigo")
+        remoto(f"{antigo}/aberto.git")
+        seguido = situacao()
+        confere("remoto público que redireciona continua público", seguido.returncode == 1 and "PÚBLICO" in seguido.stdout, seguido.stdout + seguido.stderr)
+        confere("antes de gravar e antes de comando: bloqueiam o remoto público que redireciona", gravar("entregaveis/_projeto/brief.md").returncode == 2 and comando("git push").returncode == 2)
+        remoto(f"{antigo}/fechado.git")
+        confere("remoto privado que redireciona continua privado", situacao().returncode == 0 and comando("git push").returncode == 0)
+        for nome, url in (("redirecionamento para a página de entrada", f"{antigo}/entrada.git"), ("redirecionamento em círculo", f"{antigo}/volta.git")):
+            remoto(url)
+            duvida = situacao()
+            confere(f"{nome}: fica como não verificado", duvida.returncode == 1 and "não verificado" in duvida.stdout, duvida.stdout + duvida.stderr)
+
+        # O destino escrito no próprio comando é conferido como um remoto.
+        remoto(None)
+        confere("antes de comando: sem remoto, o envio sem destino passa", comando("git push").returncode == 0)
+        for nome, texto in (
+            ("endereço público escrito no envio", f"git push {base}/aberto.git main"),
+            ("endereço público depois de opções", f"git -C . push -o ci.skip --force {base}/aberto.git main"),
+            ("endereço público em --repo", f"git push --repo={base}/aberto.git"),
+            ("remoto público criado no mesmo comando", f"git remote add pub {base}/aberto.git && git push pub main"),
+            ("endereço de envio trocado no mesmo comando", f"git remote set-url --push origin {base}/aberto.git; git push"),
+            ("endereço não verificado escrito no envio", "git push http://127.0.0.1:1/time/sumido.git main"),
+        ):
+            barrado = comando(texto)
+            confere(f"antes de comando: bloqueia {nome}", barrado.returncode == 2 and "comando (1)" in barrado.stderr, barrado.stdout + barrado.stderr)
+        confere("antes de comando: deixa enviar a um endereço privado escrito no comando", comando(f"git push {base}/fechado.git main").returncode == 0)
+        confere("antes de comando: deixa enviar a um repositório em disco", comando("git push /srv/git/projeto.git main").returncode == 0)
+        confere("antes de comando: endereço em mensagem de commit não é destino", comando(f'git commit -m "veja {base}/aberto.git" && git push').returncode == 0)
+        remoto(f"{base}/fechado.git")
+        rodar(["git", "config", "remote.origin.pushurl", f"{base}/aberto.git"], projeto)
+        desviado = situacao()
+        confere("o endereço de envio do remoto (pushurl) é conferido", desviado.returncode == 1 and "origin (envio)" in desviado.stdout and "PÚBLICO" in desviado.stdout, desviado.stdout + desviado.stderr)
+        confere("antes de comando: bloqueia o envio quando o pushurl é público", comando("git push origin main").returncode == 2)
+        rodar(["git", "config", "--unset", "remote.origin.pushurl"], projeto)
+        barrados = [c for c in (
+            "gh repo create cliente-x --internal --source . --push",
+            "gh repo edit --visibility internal",
+            "gh repo edit --visibility=public",
+            "gh api -X PATCH repos/time/cliente-x -f private=false",
+            "gh api -X PATCH repos/time/cliente-x -f visibility=public",
+        ) if comando(c).returncode != 2]
+        confere("antes de comando: bloqueia tornar o repositório interno ou público por qualquer caminho", not barrados, str(barrados))
+        interno = comando("gh repo create cliente-x --internal --source .")
+        confere("antes de comando: diz que o repositório interno é lido por toda a organização", "toda a organização" in interno.stderr, interno.stderr)
+        confere("antes de comando: deixa mudar o repositório para privado", comando("gh api -X PATCH repos/time/cliente-x -f private=true").returncode == 0 and comando("gh repo edit --visibility private").returncode == 0)
+
+        # Credencial no endereço do remoto: não aparece nas mensagens nem no registro.
+        servidor_e_caminho = base.split("://", 1)[1]
+        registro.unlink()
+        remoto(f"http://consultor:segredo-123@{servidor_e_caminho}/pagina.git")
+        mostrado = situacao()
+        barrado = gravar("entregaveis/_projeto/brief.md")
+        confirmada = rodar([PY, script, "--confirmar", "é privado"], projeto)
+        tudo = mostrado.stdout + mostrado.stderr + barrado.stderr + confirmada.stdout + confirmada.stderr + registro.read_text(encoding="utf-8")
+        confere("credencial do endereço do remoto não aparece nas mensagens nem no registro", "segredo-123" not in tudo and "consultor:" not in tudo and f"http://{servidor_e_caminho}/pagina.git" in registro.read_text(encoding="utf-8"), tudo)
+        confere("a confirmação vale para o mesmo remoto com ou sem credencial", situacao().returncode == 0)
+        remoto(f"http://{servidor_e_caminho}/pagina.git")
+        confere("a confirmação vale para o mesmo remoto escrito sem credencial", situacao().returncode == 0)
+        guardado = (projeto / "entregaveis/_harness/.estado/repositorio.json").read_text(encoding="utf-8")
+        confere("credencial do endereço não fica na memória da verificação", "segredo-123" not in guardado, guardado)
 
         codigo = (
             "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import repositorio as r; "
@@ -2942,29 +3120,42 @@ def testar_exemplo(tmp: Path) -> None:
     confere("o arquivo guardado em exemplo/resultado tem os títulos do conteúdo atual", guardado == titulos, str(guardado))
 
 
+GRUPOS = [
+    (testar_skills, False),
+    (testar_referencias, False),
+    (testar_texto_do_kit, False),
+    (testar_instalador, True),
+    (testar_checagens, True),
+    (testar_hooks, True),
+    (testar_registros, True),
+    (testar_interativos, True),
+    (testar_dominio, True),
+    (testar_repositorio, True),
+    (testar_gerador, True),
+    (testar_fases, True),
+    (testar_ambientes, True),
+    (testar_pacotes, True),
+    (testar_levantamento, True),
+    (testar_rotina, True),
+    (testar_governanca, True),
+    (testar_emissao, True),
+    (testar_cerebro, True),
+    (testar_ambiente, True),
+    (testar_exemplo, True),
+]
+
+
 def main() -> int:
+    pedidos = sys.argv[1:]
+    escolhidos = [(f, usa_tmp) for f, usa_tmp in GRUPOS if not pedidos or f.__name__[len("testar_"):] in pedidos]
+    desconhecidos = set(pedidos) - {f.__name__[len("testar_"):] for f, _ in GRUPOS}
+    if desconhecidos:
+        print("Grupo desconhecido: " + ", ".join(sorted(desconhecidos)) + ". Os grupos são: " + ", ".join(f.__name__[len("testar_"):] for f, _ in GRUPOS) + ".")
+        return 2
     tmp = Path(tempfile.mkdtemp(prefix="kit-"))
     try:
-        testar_skills()
-        testar_referencias()
-        testar_texto_do_kit()
-        testar_instalador(tmp)
-        testar_checagens(tmp)
-        testar_hooks(tmp)
-        testar_interativos(tmp)
-        testar_dominio(tmp)
-        testar_repositorio(tmp)
-        testar_gerador(tmp)
-        testar_fases(tmp)
-        testar_ambientes(tmp)
-        testar_pacotes(tmp)
-        testar_levantamento(tmp)
-        testar_rotina(tmp)
-        testar_governanca(tmp)
-        testar_emissao(tmp)
-        testar_cerebro(tmp)
-        testar_ambiente(tmp)
-        testar_exemplo(tmp)
+        for funcao, usa_tmp in escolhidos:
+            funcao(tmp) if usa_tmp else funcao()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print()

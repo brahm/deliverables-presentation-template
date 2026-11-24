@@ -3,8 +3,9 @@
 
 Cada hook recebe um JSON pela entrada padrão e responde pelo código de
 saída: 0 deixa seguir, 2 bloqueia e mostra ao agente o que foi escrito na
-saída de erro. Um hook que falha por defeito próprio sai com 0, para
-nunca travar o trabalho do consultor por causa do harness.
+saída de erro. Um hook que falha por defeito próprio avisa o agente. Só
+as duas travas, a de comando e a de gravação, barram nesse caso: o que
+elas não conseguiram conferir não passa.
 """
 from __future__ import annotations
 
@@ -87,12 +88,40 @@ def gravar_sessao(sessao: str, dados: dict) -> None:
         pass
 
 
-def protegido(funcao):
-    """Roda o hook e garante saída 0 se o próprio hook quebrar."""
+def protegido(funcao, ao_falhar: str = "seguir"):
+    """Roda o hook e decide o que fazer quando o próprio hook quebra.
+
+    'seguir' deixa o trabalho correr: é o caso do hook de fim de turno, em
+    que barrar prenderia o agente. 'contexto' também deixa correr e põe o
+    aviso na saída padrão, que os hooks de sessão e de mensagem levam ao
+    agente. 'avisar' devolve o defeito ao agente depois de uma gravação
+    que já aconteceu. 'bloquear' é o das travas: o que a trava não
+    conseguiu conferir não passa, porque liberar em silêncio é o mesmo que
+    não ter a trava.
+    """
     try:
         sys.exit(funcao() or 0)
-    except SystemExit:
-        raise
-    except Exception as erro:  # noqa: BLE001 - o hook nunca deve travar o trabalho
-        print(f"(hook do harness falhou e foi ignorado: {erro})", file=sys.stderr)
-        sys.exit(0)
+    except SystemExit as saida:
+        if saida.code is None or isinstance(saida.code, int):
+            raise
+        erro = str(saida.code)  # um script parou com uma mensagem
+    except Exception as falha:  # noqa: BLE001 - o defeito do hook é tratado aqui
+        erro = f"{type(falha).__name__}: {falha}"
+    if ao_falhar == "bloquear":
+        print(
+            f"Bloqueado pelo harness: a trava não conseguiu conferir este passo ({erro}). "
+            "O que não foi conferido não passa. Corrija o arquivo que a mensagem aponta, ou rode "
+            f"'python3 {comum.relativo(comum.HARNESS / 'scripts' / 'ambiente.py')}' e conte ao consultor o que apareceu.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    if ao_falhar == "avisar":
+        print(
+            f"O hook do harness falhou e as checagens desta gravação não rodaram ({erro}). "
+            f"Rode 'python3 {comum.relativo(comum.HARNESS / 'scripts' / 'validar.py')}' e corrija o que a mensagem aponta.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    aviso = f"Harness de entregáveis: um hook falhou e foi ignorado ({erro}). Rode 'python3 {comum.relativo(comum.HARNESS / 'scripts' / 'ambiente.py')}'."
+    print(aviso, file=sys.stdout if ao_falhar == "contexto" else sys.stderr)
+    sys.exit(0)
