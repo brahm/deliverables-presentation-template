@@ -22,6 +22,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import threading
 import zipfile
@@ -50,6 +51,120 @@ def rodar(args: list, cwd: Path, entrada: str | None = None) -> subprocess.Compl
 
 def instalar(destino: Path, *opcoes: str) -> subprocess.CompletedProcess:
     return rodar([PY, HARNESS / "scripts" / "instalar.py", "--destino", destino, *opcoes], RAIZ)
+
+
+def testar_uma_linha(tmp: Path) -> None:
+    """O install.sh recebido por um pipe: baixa o kit para fora do projeto e instala na pasta atual."""
+    print("Instalação em uma linha")
+    script = (RAIZ / "install.sh").read_text(encoding="utf-8")
+    confere("install.sh usa fim de linha do Unix e fecha com a chamada da função", "\r" not in script and script.rstrip().endswith('principal "$@"') and script.startswith("#!/bin/sh\n"))
+    confere("o endereço do README é o do install.sh na raiz do repositório", "https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh" in (RAIZ / "README.md").read_text(encoding="utf-8")
+            and "https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh" in (RAIZ / "INSTALL.md").read_text(encoding="utf-8"))
+    confere("o download só aceita HTTPS, inclusive ao ser redirecionado", "--proto '=https' --proto-redir '=https'" in script and "--https-only" in script and "http://" not in script)
+
+    # O pacote como o GitHub entrega: uma pasta só, com o nome do repositório e da referência.
+    pacote = tmp / "kit.tar.gz"
+    fora = {"__pycache__", ".estado"}
+    with tarfile.open(pacote, "w:gz") as tar:
+        for nome in ("install.sh", "entregaveis/_harness", ".claude/skills", "AGENTS.md", "CLAUDE.md", ".gitignore", ".github/workflows/entregaveis.yml"):
+            tar.add(RAIZ / nome, arcname=f"deliverables-presentation-template-main/{nome}", filter=lambda i: None if set(Path(i.name).parts) & fora or i.name.endswith(".pyc") else i)
+    casa = tmp / "casa"
+    casa.mkdir()
+    ambiente = {**os.environ, "HARNESS_ARQUIVO": str(pacote), "HOME": str(casa), "TMPDIR": str(tmp / "temporarios")}
+    (tmp / "temporarios").mkdir()
+    for nome in ("HARNESS_REF", "HARNESS_REPO"):
+        ambiente.pop(nome, None)
+
+    def pipe(pasta: Path, *opcoes: str, texto: str = script, shell: str = "sh", **mais) -> subprocess.CompletedProcess:
+        return subprocess.run([shell, "-s", "--", *opcoes], cwd=pasta, input=texto, capture_output=True, text=True, timeout=120, env={**ambiente, **mais})
+
+    def conteudo(pasta: Path) -> list[str]:
+        return sorted(p.name for p in pasta.iterdir())
+
+    projeto = tmp / "uma-linha"
+    projeto.mkdir()
+    (projeto / "notas.md").write_text("do projeto\n", encoding="utf-8")
+    simulada = pipe(projeto, "--simular")
+    confere("pelo pipe, --simular mostra o que mudaria e não grava nada", simulada.returncode == 0 and "AGENTS.md criado" in simulada.stdout and conteudo(projeto) == ["notas.md"], simulada.stdout + simulada.stderr)
+    instalada = pipe(projeto)
+    versao = (HARNESS / "VERSAO").read_text(encoding="utf-8").strip()
+    confere("pelo pipe, instala na pasta atual e diz a versão do kit", instalada.returncode == 0 and (projeto / "entregaveis/_harness/REGRAS.md").is_file() and (projeto / ".claude/skills/iniciar-projeto/SKILL.md").is_file()
+            and f"Versão do kit: {versao}" in instalada.stdout and "Próximo passo" in instalada.stdout and (projeto / "notas.md").read_text(encoding="utf-8") == "do projeto\n", instalada.stdout + instalada.stderr)
+    confere("o kit baixado não fica no projeto nem na pasta temporária", not list(projeto.glob("*.tar.gz")) and not list(projeto.glob("deliverables-*")) and not list((tmp / "temporarios").iterdir()), str(list((tmp / "temporarios").iterdir())))
+    de_novo = pipe(projeto)
+    confere("rodar a linha de novo em projeto instalado usa o kit baixado e não muda nada", de_novo.returncode == 0 and "Nada a fazer" in de_novo.stdout and "O destino é a própria cópia do kit" not in de_novo.stdout, de_novo.stdout + de_novo.stderr)
+    (projeto / "entregaveis/_harness/VERSAO").write_text("0.0.1\n", encoding="utf-8")
+    (projeto / "entregaveis/_harness/REGRAS.md").write_text("regra velha\n", encoding="utf-8")
+    atualizada = pipe(projeto, "--atualizar")
+    confere("pelo pipe, --atualizar traz a versão nova", atualizada.returncode == 0 and (projeto / "entregaveis/_harness/VERSAO").read_text(encoding="utf-8").strip() == versao and (projeto / "entregaveis/_harness/REGRAS.md").read_text(encoding="utf-8") != "regra velha\n", atualizada.stdout + atualizada.stderr)
+    estado = rodar([PY, "entregaveis/_harness/scripts/estado.py"], projeto)
+    confere("o projeto instalado pelo pipe roda o estado", estado.returncode == 0 and "não foi iniciado" in estado.stdout, estado.stdout + estado.stderr)
+    for shell in ("bash", "dash"):
+        if shutil.which(shell):
+            outro = tmp / f"com-{shell}"
+            outro.mkdir()
+            saida = pipe(outro, "--pasta", "consultoria", shell=shell)
+            confere(f"a linha roda no {shell} e repassa as opções", saida.returncode == 0 and (outro / "consultoria/_harness/VERSAO").is_file() and not (outro / "entregaveis").exists(), saida.stdout + saida.stderr)
+
+    # O destino: a pasta atual, ou a que --destino diz. Nunca a pasta pessoal por engano.
+    na_casa = pipe(casa)
+    confere("na pasta pessoal, sem --destino, o instalador para e explica", na_casa.returncode == 2 and "não é a pasta de um projeto" in na_casa.stderr and conteudo(casa) == [], na_casa.stdout + na_casa.stderr)
+    alvo = tmp / "alvo com espaço"
+    alvo.mkdir()
+    com_destino = pipe(casa, "--destino", alvo)
+    confere("--destino instala em outra pasta, mesmo com espaço no nome, e a pasta atual fica intacta", com_destino.returncode == 0 and (alvo / "entregaveis/_harness/VERSAO").is_file() and conteudo(casa) == [], com_destino.stdout + com_destino.stderr)
+
+    # O que entra no endereço do download é conferido antes de qualquer acesso à rede.
+    limpo = tmp / "limpo"
+    limpo.mkdir()
+    sem_arquivo = {"HARNESS_ARQUIVO": ""}
+    for nome, valor in (("HARNESS_REF", "main;rm -rf x"), ("HARNESS_REF", "../../outro"), ("HARNESS_REF", "-o"), ("HARNESS_REF", "a b"), ("HARNESS_REPO", "so-um-nome"), ("HARNESS_REPO", "a/b/c"), ("HARNESS_REPO", "dono/nome?x=1"), ("HARNESS_REPO", "/nome")):
+        recusa = pipe(limpo, **sem_arquivo, **{nome: valor})
+        confere(f"{nome} fora do formato é recusado sem baixar nada: {valor}", recusa.returncode == 2 and nome in recusa.stderr and "Baixando" not in recusa.stdout and conteudo(limpo) == [], recusa.stdout + recusa.stderr)
+    confere("arquivo de kit que não existe é recusado", pipe(limpo, HARNESS_ARQUIVO=str(tmp / "nao-existe.tar.gz")).returncode == 2 and conteudo(limpo) == [])
+    estragado = tmp / "estragado.tar.gz"
+    estragado.write_bytes(b"isto nao e um pacote")
+    ruim = pipe(limpo, HARNESS_ARQUIVO=str(estragado))
+    confere("pacote estragado é recusado, sem instalar nada", ruim.returncode == 1 and "não é um .tar.gz válido" in ruim.stderr and conteudo(limpo) == [], ruim.stdout + ruim.stderr)
+    alheio = tmp / "alheio.tar.gz"
+    with tarfile.open(alheio, "w:gz") as tar:
+        tar.add(RAIZ / "LICENSE", arcname="outro-projeto-main/LICENSE")
+    outro_repo = pipe(limpo, HARNESS_ARQUIVO=str(alheio))
+    confere("pacote que não é o harness é recusado", outro_repo.returncode == 1 and "não traz o harness" in outro_repo.stderr and conteudo(limpo) == [], outro_repo.stdout + outro_repo.stderr)
+    confere("nenhuma recusa deixa pasta temporária para trás", not list((tmp / "temporarios").iterdir()), str(list((tmp / "temporarios").iterdir())))
+
+    # Download cortado no meio: o shell não pode rodar um pedaço do instalador.
+    cortes = sorted({len(script) * i // 40 for i in range(1, 40)} | {len(script) - 2, len(script) - 8, script.rindex("principal() {") + 5})
+    instalou = []
+    for corte in cortes:
+        pipe(limpo, texto=script[:corte])
+        if conteudo(limpo):
+            instalou.append(corte)
+    confere("um download cortado em qualquer ponto não instala nada", not instalou, str(instalou))
+
+    # Sem Python e sem tar, o instalador diz o que falta.
+    comandos = tmp / "comandos"
+    comandos.mkdir()
+    for nome in ("sh", "cat", "rm", "mkdir", "mktemp", "basename", "dirname", "tar", "gzip"):
+        if shutil.which(nome):
+            (comandos / nome).symlink_to(shutil.which(nome))
+    sem_python = pipe(limpo, PATH=str(comandos))
+    confere("sem Python, o instalador diz como instalar e não grava nada", sem_python.returncode == 2 and "Python 3.9" in sem_python.stderr and "Sem Python" in sem_python.stderr and conteudo(limpo) == [], sem_python.stdout + sem_python.stderr)
+    (comandos / "python3").write_text('#!/bin/sh\ncase "$*" in *"(3, 9)"*) exit 1 ;; esac\nexit 0\n', encoding="utf-8")
+    (comandos / "python3").chmod(0o755)
+    velho = pipe(limpo, PATH=str(comandos))
+    confere("Python mais velho que o 3.9 conta como falta", velho.returncode == 2 and "Python 3.9" in velho.stderr and conteudo(limpo) == [], velho.stdout + velho.stderr)
+    (comandos / "python3").unlink()
+    (comandos / "python3").symlink_to(PY)
+    (comandos / "tar").unlink()
+    sem_tar = pipe(limpo, PATH=str(comandos))
+    confere("sem tar, o instalador diz o que falta", sem_tar.returncode == 2 and "tar" in sem_tar.stderr and conteudo(limpo) == [], sem_tar.stdout + sem_tar.stderr)
+
+    # A partir de uma cópia do kit, o install.sh continua usando o instalador ao lado dele.
+    local = tmp / "local"
+    local.mkdir()
+    copia = rodar(["sh", RAIZ / "install.sh", "--destino", local], RAIZ)
+    confere("sh install.sh --destino instala a partir da cópia local, sem baixar nada", copia.returncode == 0 and (local / "entregaveis/_harness/VERSAO").is_file() and "Baixando" not in copia.stdout and "Abrindo o kit" not in copia.stdout, copia.stdout + copia.stderr)
 
 
 # --- Skills e documentos --------------------------------------------------
@@ -3615,6 +3730,7 @@ GRUPOS = [
     (testar_referencias, False),
     (testar_texto_do_kit, False),
     (testar_instalador, True),
+    (testar_uma_linha, True),
     (testar_checagens, True),
     (testar_hooks, True),
     (testar_registros, True),

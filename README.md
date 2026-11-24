@@ -67,6 +67,33 @@ Crie uma pasta vazia no computador, abra o agente nela e cole o prompt
 da próxima seção. O projeto fica só na sua máquina, o que o harness
 aceita.
 
+### Em uma linha, pelo terminal
+
+Serve a uma pasta nova e a um projeto que já está em andamento, no
+Linux, no macOS e no Windows com WSL. Abra o terminal, entre na pasta do
+projeto e rode:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh
+```
+
+O comando baixa o kit para uma pasta temporária, instala o harness na
+pasta em que você está e apaga o que baixou. Ele não sobrescreve nenhum
+arquivo do projeto e não pede senha de administrador. Precisa do `curl`
+ou do `wget`, do `tar` e do Python 3.9 ou mais novo.
+
+As opções do instalador vão depois de `sh -s --`. Para ver o que mudaria
+sem gravar nada:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh -s -- --simular
+```
+
+No Windows, rode dentro do terminal do WSL e abra o agente nesse mesmo
+terminal. Para ler o instalador antes de rodar, fixar uma versão ou
+atualizar um projeto, veja o [INSTALL.md](INSTALL.md). Depois abra o
+agente na pasta e diga do que é o projeto.
+
 ### Projeto que já está em andamento
 
 Cole no agente, dentro da pasta do projeto:

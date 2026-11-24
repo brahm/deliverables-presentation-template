@@ -13,7 +13,9 @@ metadata:
 ## Trazer a versão nova
 
 1. Clone a origem em uma pasta temporária, ou use a cópia local que o
-   consultor indicar. Sem acesso, diga isso em uma linha e pare.
+   consultor indicar. Sem acesso, diga isso em uma linha e pare. O
+   consultor também pode atualizar sozinho, com a instalação em uma
+   linha do INSTALL.md da origem e a opção `--atualizar`.
 2. Leia o `HISTORY.md` da origem a partir da versão instalada. Sem nada
    novo, diga isso em uma linha e pare.
 3. Rode o instalador da origem com `--simular` e leia o que ele faria.

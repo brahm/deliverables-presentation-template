@@ -1,6 +1,6 @@
 # Pacote martech-adtech
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.13.2. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.14.0. Gerado por empacotar.py: não edite à mão.
 
 Ponto de partida genérico para este tipo de projeto. O domínio do projeto vence o pacote onde os dois se contradizem.
 

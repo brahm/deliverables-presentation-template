@@ -1,0 +1,2 @@
+# O instalador é lido por sh, que não aceita fim de linha do Windows.
+*.sh text eol=lf
