@@ -6,7 +6,13 @@ dezenas. Quem está começando segue a ordem das seções. Quem já tem
 prática vai direto à tabela de recursos e à seção de ajustes.
 
 A instalação está no `README.md` e no `INSTALL.md` do repositório do
-template. Antes de começar, o agente confere se a máquina tem o que o
+template. A forma mais curta é uma linha no terminal, dentro da pasta do
+projeto, no Linux, no macOS e no Windows com WSL:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh
+```
+ Antes de começar, o agente confere se a máquina tem o que o
 harness precisa e resolve com você o que faltar: veja a seção "Ambiente
 da máquina".
 

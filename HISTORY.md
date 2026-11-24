@@ -3,6 +3,25 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.14.0
+
+- Instalação em uma linha, para Linux, macOS e Windows com WSL:
+  `curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh`,
+  dentro da pasta do projeto. O `install.sh` baixa o kit para uma pasta
+  temporária, roda o mesmo instalador na pasta atual e apaga o que
+  baixou. As opções vão depois de `sh -s --`.
+- O download só aceita HTTPS, o corpo do script roda de uma função
+  chamada na última linha, para que um download cortado não execute um
+  pedaço, e o instalador recusa a pasta pessoal e a raiz do disco quando
+  não há `--destino`.
+- `HARNESS_REF` fixa o ramo, a etiqueta ou o commit do kit.
+  `HARNESS_ARQUIVO` instala de um pacote já baixado, sem internet.
+- O `install.sh` passa a exigir o Python 3.9 também quando roda de uma
+  cópia local do kit.
+
+O que o projeto precisa fazer: nada. Para atualizar um projeto por este
+caminho, rode a linha com `sh -s -- --atualizar`.
+
 ## 0.13.2
 
 - O harness deixa de ter registro de horas. Saem o modelo

@@ -7,6 +7,8 @@ sobrescreve um arquivo do projeto.
 
 Para um projeto novo, o passo a passo está na seção "Instalar" do
 [README](README.md): pelo site do GitHub, pelo terminal ou sem GitHub.
+Quem prefere o terminal instala com uma linha, como mostra a primeira
+seção abaixo.
 Esta página é para o projeto que já está em andamento, e serve também
 para a pasta vazia de um projeto novo que vai ficar só no computador.
 
@@ -14,6 +16,57 @@ Um projeto de cliente só fica em pasta sem git, em git local ou em
 repositório privado. O instalador roda em qualquer lugar, mas o harness
 bloqueia a gravação dos registros do projeto e o envio enquanto o remoto
 for público.
+
+## Em uma linha, pelo terminal
+
+No Linux, no macOS e no Windows com WSL, entre na pasta do projeto e
+rode:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh
+```
+
+O `install.sh` baixa o kit do GitHub para uma pasta temporária, roda o
+mesmo instalador das outras formas na pasta atual e apaga o que baixou.
+Nada é instalado no sistema, e o comando não pede `sudo`.
+
+| O que você quer | Comando |
+| --- | --- |
+| Ver o que mudaria, sem gravar | `curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh \| sh -s -- --simular` |
+| Instalar em outra pasta | `... \| sh -s -- --destino /caminho/do/projeto` |
+| Outro nome para a pasta do harness | `... \| sh -s -- --pasta NOME` |
+| Incluir as checagens do GitHub Actions | `... \| sh -s -- --ci` |
+| Atualizar um projeto que já tem o harness | `... \| sh -s -- --atualizar` |
+| Fixar a versão do kit | `curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh \| HARNESS_REF=COMMIT sh` |
+| Usar `wget` no lugar de `curl` | `wget -qO- https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh \| sh` |
+
+O que saber antes de rodar:
+
+- **Onde instala.** Na pasta em que o terminal está. Na sua pasta pessoal
+  ou na raiz do disco o instalador para e pede a pasta do projeto.
+- **O que precisa.** `curl` ou `wget`, `tar` e Python 3.9 ou mais novo.
+  Quando falta um deles, o instalador diz qual e não grava nada.
+- **Windows.** Rode dentro do terminal do WSL, com o Python do WSL
+  (`sudo apt install python3`). O projeto pode ficar em `/mnt/c/...`,
+  que é o disco do Windows. Abra o agente no mesmo terminal, porque os
+  hooks usam o Python desse ambiente.
+- **Ler antes de rodar.** Um comando que vem da internet para o shell
+  merece conferência. Baixe, leia e só então rode:
+
+  ```sh
+  curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh -o install.sh
+  less install.sh
+  sh install.sh
+  rm install.sh
+  ```
+
+- **Versão fixa.** Sem `HARNESS_REF`, o kit vem do ramo `main`. Com o
+  identificador de um commit, a instalação traz sempre o mesmo conteúdo.
+- **Sem internet.** Baixe o pacote `.tar.gz` do repositório em outra
+  máquina e rode `HARNESS_ARQUIVO=/caminho/kit.tar.gz sh install.sh`.
+- **Projeto de cliente.** O kit é público, e o projeto não. Depois de
+  instalar, o harness só deixa o projeto começar em pasta sem git, em
+  git local ou em repositório privado.
 
 ## O prompt pronto
 
