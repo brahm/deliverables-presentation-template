@@ -131,6 +131,8 @@ def gravar(caminho: Path, texto: str) -> None:
     como estava.
     """
     caminho = Path(caminho)
+    if caminho.is_symlink():
+        caminho = caminho.resolve()  # o atalho continua atalho: quem muda é o arquivo para onde ele aponta
     caminho.parent.mkdir(parents=True, exist_ok=True)
     descritor, temporario = tempfile.mkstemp(dir=caminho.parent, prefix=f".{caminho.name}.", suffix=".tmp")
     try:

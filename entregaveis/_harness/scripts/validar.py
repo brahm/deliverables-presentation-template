@@ -65,7 +65,13 @@ def validar_arquivo(arquivo: Path) -> list[Achado]:
     if not (pasta / "briefing.md").is_file():
         return []
     alvo = comum.relativo(arquivo)
-    return [a for a in validar([pasta], gerais=False) if a.arquivo == alvo]
+    # As checagens que leem arquivo por arquivo ficam só neste. As que cruzam
+    # arquivos (storyline com conteúdo, evidências, termos) rodam inteiras.
+    checagens.SO_ARQUIVO = arquivo
+    try:
+        return [a for a in validar([pasta], gerais=False) if a.arquivo == alvo]
+    finally:
+        checagens.SO_ARQUIVO = None
 
 
 def carimbar(pasta: Path) -> int:

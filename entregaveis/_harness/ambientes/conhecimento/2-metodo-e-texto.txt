@@ -1,6 +1,6 @@
 # Método, texto e revisão
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.13.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.13.1. Gerado por empacotar.py: não edite à mão.
 
 ## O método, etapa por etapa
 

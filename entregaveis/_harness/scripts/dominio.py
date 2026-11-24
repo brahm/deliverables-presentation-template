@@ -102,11 +102,27 @@ def _regra_da_linha(linha: dict) -> Regra:
     return regra
 
 
+_CARGA: dict = {}
+
+
 def _regras_em_python() -> tuple[list[Regra], str]:
-    """Regras escritas em Python no projeto: um dicionário REGRAS de id para função(texto) -> mensagem ou None."""
+    """Regras escritas em Python no projeto: um dicionário REGRAS de id para função(texto) -> mensagem ou None.
+
+    O arquivo roda uma vez por execução, e de novo só quando muda: validar
+    dez entregáveis não executa dez vezes o código do projeto.
+    """
     arquivo = PASTA / "checagens_extra.py"
     if not arquivo.is_file():
         return [], ""
+    dados = arquivo.read_bytes()
+    chave = (str(arquivo.resolve()), dados)
+    if _CARGA.get("chave") != chave:
+        _CARGA["chave"], _CARGA["valor"] = chave, _carregar(arquivo)
+    lista, defeito = _CARGA["valor"]
+    return list(lista), defeito
+
+
+def _carregar(arquivo: Path) -> tuple[list[Regra], str]:
     try:
         especificacao = importlib.util.spec_from_file_location("checagens_extra_do_projeto", arquivo)
         modulo = importlib.util.module_from_spec(especificacao)
@@ -213,24 +229,38 @@ def avaliar(regra: Regra, trechos: list[Unidade]) -> list[tuple[str, int, str]]:
     return acusados
 
 
-def _vale_para(regra: Regra, pasta: Path) -> bool:
+def _proprios(pasta: Path) -> set[str]:
+    """Os nomes pelos quais uma regra pode citar o entregável: o id, o tipo, o veículo e o formato."""
+    meta, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))
+    return {comum.normalizar(pasta.name)} | {comum.normalizar(meta.get(c, "")) for c in ("tipo", "veiculo", "formato")}
+
+
+def _vale_para(regra: Regra, pasta: Path, proprios: set[str] | None = None) -> bool:
     if "*" in regra.aplica:
         return True
-    meta, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))
-    proprios = {comum.normalizar(pasta.name)} | {comum.normalizar(meta.get(c, "")) for c in ("tipo", "veiculo", "formato")}
-    return bool(proprios & set(regra.aplica))
+    return bool((proprios if proprios is not None else _proprios(pasta)) & set(regra.aplica))
 
 
 def aplicar(pasta: Path, rigoroso: bool = False) -> list[Achado]:
     """Checagem 'dominio': as regras do projeto sobre um entregável."""
     achados: list[Achado] = []
     lista, _ = regras()
+    # O briefing, os trechos de cada lugar e a pergunta "há conteúdo escrito?"
+    # são lidos uma vez por entregável, e não uma vez por regra.
+    proprios = _proprios(pasta) if any("*" not in r.aplica for r in lista) else set()
+    por_lugar: dict[str, list[Unidade]] = {}
+    escrito: list[bool] = []
     for regra in lista:
-        if regra.defeito or not _vale_para(regra, pasta):
+        if regra.defeito or not _vale_para(regra, pasta, proprios):
             continue
-        trechos = unidades(pasta, regra.onde)
-        if regra.tipo == "obrigatorio" and regra.onde in ("conteudo", "titulos", "tudo") and not comum.tem_paginas_reais(pasta):
-            continue  # o que é obrigatório no conteúdo só é cobrado quando há conteúdo escrito
+        if regra.onde not in por_lugar:
+            por_lugar[regra.onde] = unidades(pasta, regra.onde)
+        trechos = por_lugar[regra.onde]
+        if regra.tipo == "obrigatorio" and regra.onde in ("conteudo", "titulos", "tudo"):
+            if not escrito:
+                escrito.append(comum.tem_paginas_reais(pasta))
+            if not escrito[0]:
+                continue  # o que é obrigatório no conteúdo só é cobrado quando há conteúdo escrito
         for arquivo, linha, mensagem in avaliar(regra, trechos):
             achados.append(Achado(regra.nivel, "dominio", arquivo, linha, f"{regra.ident}: {mensagem}"))
     return achados

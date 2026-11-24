@@ -527,9 +527,10 @@ def cor_do_fundo(slide, largura: int, altura: int) -> str | None:
     usa a primeira cor de fundo do tema.
     """
     layout = slide.slide_layout
+    # O arquivo fica guardado junto com a cor: enquanto está na lista, outro arquivo não recebe o mesmo número.
     chave = (id(layout.part.package), str(layout.part.partname))
     if chave in _FUNDOS:
-        return _FUNDOS[chave]
+        return _FUNDOS[chave][1]
     mestre = layout.slide_master
     tema, mapa = _tema_e_mapa(layout)
     cor = _cor_da_forma_de_fundo(layout, largura, altura, tema, mapa)
@@ -550,8 +551,24 @@ def cor_do_fundo(slide, largura: int, altura: int) -> str | None:
     else:
         if cor is None:
             cor = tema.get(mapa.get("bg1", "lt1")) or None
-    _FUNDOS[chave] = cor if cor and re.fullmatch(r"[0-9A-F]{6}", cor) else None
-    return _FUNDOS[chave]
+    _FUNDOS[chave] = (layout.part.package, cor if cor and re.fullmatch(r"[0-9A-F]{6}", cor) else None)
+    return _FUNDOS[chave][1]
+
+
+def fundo_do_slide(slide, largura: int, altura: int, avisos: list[str]) -> str | None:
+    """A cor do fundo, sem deixar um modelo fora do comum derrubar a geração.
+
+    Quando a leitura do modelo falha, o arquivo sai como sairia sem ela, e
+    o aviso diz o que conferir.
+    """
+    try:
+        return cor_do_fundo(slide, largura, altura)
+    except Exception as erro:  # noqa: BLE001 - a cor do fundo é um acabamento, e o arquivo sai mesmo sem ela
+        aviso = (f"Não deu para ler a cor de fundo do modelo ({type(erro).__name__}: {erro}). O texto que o gerador acrescenta ficou com a cor do modelo: "
+                 "confira as páginas renderizadas, ou registre a cor do texto sobre o fundo em marca.md.")
+        if aviso not in avisos:
+            avisos.append(aviso)
+        return None
 
 
 def pintar(quadro, cor: str | None) -> None:
@@ -983,7 +1000,7 @@ def gerar_pptx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
         slide = prs.slides.add_slide(escolher_layout(prs, tipo, pedido, bool(textos), bool(visuais)))
         # O texto que o gerador cria fora dos campos do modelo não herda a cor do modelo. Em fundo escuro ele
         # sairia preto, e por isso ganha uma cor que contrasta. A cor registrada na marca vence a escolha.
-        fundo = cor_do_fundo(slide, largura, altura)
+        fundo = fundo_do_slide(slide, largura, altura, avisos)
         da_letra = registro.get("texto") or (TEXTO_CLARO if fundo and escuro(fundo) else None)
         if slide.shapes.title is not None:
             acertar_posicao(slide, slide.shapes.title)

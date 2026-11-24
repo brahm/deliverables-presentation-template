@@ -5,11 +5,14 @@ Instala o harness em pastas temporárias e confere o instalador, as
 skills, as checagens e os hooks. Cada checagem é provada dos dois lados:
 passa em um exemplo bom e reprova no erro que ela existe para pegar.
 
-Uso: python3 tools/testar_kit.py            roda tudo
+Uso: python3 tools/testar_kit.py            roda tudo, com até 4 grupos ao mesmo tempo
      python3 tools/testar_kit.py hooks rotina   roda só os grupos citados
+     python3 tools/testar_kit.py --serie    roda um grupo depois do outro, em um processo só
+     python3 tools/testar_kit.py --vagas 2  muda quantos grupos rodam ao mesmo tempo
 """
 from __future__ import annotations
 
+import argparse
 import ast
 import datetime
 import http.server
@@ -575,6 +578,15 @@ def testar_registros(tmp: Path) -> None:
         if codificacao != "utf-8-sig":
             confere(f"registro em {codificacao}: o comando avisa que o arquivo estava fora de UTF-8", "não está em UTF-8" in gravado.stderr, gravado.stderr)
     confere("gravação de registro não deixa arquivo temporário na pasta", not [a.name for a in reg.iterdir() if a.name.endswith(".tmp")])
+    if hasattr(os, "symlink"):
+        import comum  # noqa: PLC0415
+        try:
+            (tmp / "de-verdade.tsv").write_text("a\tb\n", encoding="utf-8")
+            os.symlink(tmp / "de-verdade.tsv", tmp / "atalho.tsv")
+            comum.gravar(tmp / "atalho.tsv", "a\tb\n1\t2\n")
+            confere("gravar por um atalho muda o arquivo de destino e mantém o atalho", (tmp / "atalho.tsv").is_symlink() and (tmp / "de-verdade.tsv").read_text(encoding="utf-8") == "a\tb\n1\t2\n")
+        except OSError:
+            print("  (esta máquina não cria atalhos: teste da gravação por atalho pulado)")
 
     binario = b"\x00\x01\x02\xff\xfe\x81 isto nao e texto"
     (reg / "reunioes.tsv").write_bytes(binario)
@@ -1033,6 +1045,8 @@ def testar_repositorio(tmp: Path) -> None:
             ("remoto público criado no mesmo comando", f"git remote add pub {base}/aberto.git && git push pub main"),
             ("endereço de envio trocado no mesmo comando", f"git remote set-url --push origin {base}/aberto.git; git push"),
             ("endereço não verificado escrito no envio", "git push http://127.0.0.1:1/time/sumido.git main"),
+            ("endereço público com o programa escrito pelo caminho", f"/usr/bin/git push {base}/aberto.git main"),
+            ("endereço público em um comando entre aspas", f'bash -c "cd . && git push {base}/aberto.git main"'),
         ):
             barrado = comando(texto)
             confere(f"antes de comando: bloqueia {nome}", barrado.returncode == 2 and "comando (1)" in barrado.stderr, barrado.stdout + barrado.stderr)
@@ -1419,6 +1433,22 @@ def testar_gerador(tmp: Path) -> None:
             return gerador.cor_do_fundo(slide, apresentacao.slide_width, apresentacao.slide_height)
 
         confere("fundo do slide: modelo sem fundo declarado usa a cor de fundo do tema", fundo_lido(Presentation()) == "FFFFFF")
+        guardados = [arquivo for arquivo, _ in gerador._FUNDOS.values()]
+        confere("fundo do slide: a cor guardada segura o arquivo de onde veio, para outro arquivo não herdar a resposta", len(guardados) == 1 and hasattr(guardados[0], "iter_parts"), str(guardados))
+        quebrado, do_tema, avisos_do_fundo = Presentation(), gerador._tema_e_mapa, []
+
+        def sem_tema(layout):
+            raise ValueError("tema fora do padrão")
+
+        gerador._tema_e_mapa = sem_tema
+        try:
+            gerador._FUNDOS.clear()
+            slide_quebrado = quebrado.slides.add_slide(quebrado.slide_layouts[1])
+            lido = [gerador.fundo_do_slide(slide_quebrado, quebrado.slide_width, quebrado.slide_height, avisos_do_fundo) for _ in range(2)]
+        finally:
+            gerador._tema_e_mapa = do_tema
+        confere("fundo do slide: modelo que o gerador não consegue ler não derruba a geração e vira um aviso só",
+                lido == [None, None] and len(avisos_do_fundo) == 1 and "tema fora do padrão" in avisos_do_fundo[0] and "marca.md" in avisos_do_fundo[0], str(lido) + str(avisos_do_fundo))
         confere("fundo do slide: lê o fundo pintado no slide mestre", fundo_lido(Presentation(str(materiais / "escuro.pptx"))) == "0B1F3A")
         pelo_tema = Presentation()
         mapa = pelo_tema.slide_master._element.find("p:clrMap", espacos)
@@ -2105,6 +2135,154 @@ def testar_bordas(tmp: Path) -> None:
         confere(f"{nome}: fixa cada ação pelo commit", all(re.fullmatch(r"[0-9a-f]{40}", versao) for versao in re.findall(r"uses: \S+@(\S+)", fluxo)), str(re.findall(r"uses: \S+", fluxo)))
     instalados = re.findall(r"pip install (.+)", (RAIZ / ".github/workflows/kit.yml").read_text(encoding="utf-8"))
     confere("kit.yml: instala os pacotes do gerador com a versão fixa", bool(instalados) and all("==" in pacote for linha in instalados for pacote in linha.split()), str(instalados))
+
+
+# --- Trabalho repetido ------------------------------------------------------
+
+
+SONDA = r"""
+import collections, json, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import comum
+leituras = collections.Counter()
+chamadas = collections.Counter()
+_ler = comum.ler
+def ler(caminho):
+    leituras[Path(caminho).as_posix()] += 1
+    return _ler(caminho)
+comum.ler = ler
+def contar(modulo, nome):
+    original = getattr(modulo, nome)
+    def contada(*a, **k):
+        chamadas[nome] += 1
+        return original(*a, **k)
+    setattr(modulo, nome, contada)
+resultado = {}
+exec(sys.argv[2])
+print(json.dumps({"leituras": leituras, "chamadas": chamadas, "resultado": resultado}))
+"""
+
+
+def testar_desempenho(tmp: Path) -> None:
+    """O trabalho que crescia com o projeto: o mesmo arquivo lido de novo a cada regra, a cada título ou a cada item."""
+    print("Trabalho repetido")
+    projeto = tmp / "desempenho"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    reg = base / "_projeto"
+    pasta = montar_exemplo(projeto)
+    sonda = tmp / "sonda.py"
+    sonda.write_text(SONDA, encoding="utf-8")
+
+    def medir(codigo: str) -> dict:
+        saida = rodar([PY, sonda, base / "_harness/scripts", codigo], projeto)
+        try:
+            return json.loads(saida.stdout.splitlines()[-1])
+        except (IndexError, ValueError):
+            return {"leituras": {}, "chamadas": {}, "resultado": {}, "erro": saida.stdout + saida.stderr}
+
+    def lidos(medida: dict, final: str) -> int:
+        return sum(n for caminho, n in medida["leituras"].items() if caminho.endswith(final))
+
+    # A gravação de um arquivo confere esse arquivo, e não relê os dados do entregável
+    (pasta / "dados").mkdir(exist_ok=True)
+    (pasta / "dados/base.csv").write_text("cliente;valor\nProjeto Girassol;10\n", encoding="utf-8")
+    (pasta / "conteudo.md").write_text(CONTEUDO.replace("14 plataformas", "14 plataformas do Projeto Girassol", 1), encoding="utf-8")
+    medida = medir(f"import checagens, validar\nresultado['achados'] = [a.formatar() for a in validar.validar_arquivo(Path({str(pasta / 'conteudo.md')!r}))]\nresultado['solto'] = checagens.SO_ARQUIVO is None")
+    achados = "\n".join(medida["resultado"].get("achados", []))
+    confere("conferir o arquivo gravado acha o termo proibido nele", "Projeto Girassol" in achados and "conteudo.md" in achados and "base.csv" not in achados, achados + medida.get("erro", ""))
+    confere("conferir o arquivo gravado não relê os dados do entregável", lidos(medida, "dados/base.csv") == 0 and lidos(medida, "diag/conteudo.md") >= 1, str(medida["leituras"]))
+    confere("depois da conferência de um arquivo, a validação volta a olhar todos", medida["resultado"].get("solto") is True)
+    (pasta / "conteudo.md").write_text(CONTEUDO, encoding="utf-8")
+    inteira = validar(projeto, "--so", "confidencialidade")
+    confere("a validação inteira continua lendo os dados do entregável", inteira.returncode == 1 and "dados/base.csv:2" in inteira.stdout, inteira.stdout + inteira.stderr)
+    do_arquivo = validar(projeto, "--arquivo", pasta / "dados/base.csv")
+    confere("a conferência de um arquivo de dados acha o que está nele", do_arquivo.returncode == 1 and "dados/base.csv:2" in do_arquivo.stdout, do_arquivo.stdout + do_arquivo.stderr)
+    (pasta / "dados/base.csv").unlink()
+
+    # A lista de rótulos é lida uma vez, e não a cada título
+    medida = medir(f"import validar\nresultado['n'] = len(validar.validar([Path({str(pasta)!r})], gerais=False))")
+    confere("a lista de rótulos é lida uma vez por execução", lidos(medida, "listas/rotulos.txt") == 1, str({c: n for c, n in medida["leituras"].items() if "rotulos" in c}) + medida.get("erro", ""))
+
+    # Regras do domínio: o entregável é lido uma vez, e o código do projeto roda uma vez
+    dominio = base / "_dominio"
+    (dominio / "dominio.md").write_text(DOMINIO, encoding="utf-8")
+    (dominio / "casos.tsv").write_text(CASOS_DO_DOMINIO, encoding="utf-8")
+    aplicar = f"import dominio\nresultado['achados'] = [a.formatar() for a in dominio.aplicar(Path({str(pasta)!r}))]"
+    (dominio / "checagens.tsv").write_text(REGRAS_DO_DOMINIO, encoding="utf-8")
+    com_quatro = medir(aplicar)
+    dobro = REGRAS_DO_DOMINIO + "".join(l.replace("D-00", "D-10", 1) + "\n" for l in REGRAS_DO_DOMINIO.splitlines()[1:])
+    (dominio / "checagens.tsv").write_text(dobro, encoding="utf-8")
+    com_oito = medir(aplicar)
+    confere("o dobro de regras do domínio não relê o entregável",
+            lidos(com_quatro, "diag/conteudo.md") >= 1 and lidos(com_oito, "diag/conteudo.md") == lidos(com_quatro, "diag/conteudo.md") and lidos(com_oito, "diag/briefing.md") == lidos(com_quatro, "diag/briefing.md"),
+            f"4 regras: {lidos(com_quatro, 'diag/conteudo.md')} e {lidos(com_quatro, 'diag/briefing.md')}; 8 regras: {lidos(com_oito, 'diag/conteudo.md')} e {lidos(com_oito, 'diag/briefing.md')}" + com_oito.get("erro", ""))
+    (pasta / "conteudo.md").write_text(CONTEUDO.replace("plataformas contratadas", "sistemas em uso"), encoding="utf-8")
+    acusado = medir(aplicar)["resultado"].get("achados", [])
+    confere("as regras do domínio continuam acusando, uma vez cada", sum("D-003" in a for a in acusado) == 1 and sum("D-103" in a for a in acusado) == 1, str(acusado))
+    (pasta / "conteudo.md").write_text(CONTEUDO, encoding="utf-8")
+    (dominio / "checagens.tsv").write_text(REGRAS_DO_DOMINIO, encoding="utf-8")
+    rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--entregavel", "outro", "--tipo", "documento"], projeto)
+    marcas = dominio / "execucoes.txt"
+    (dominio / "checagens_extra.py").write_text(
+        "from pathlib import Path\n\nwith (Path(__file__).parent / 'execucoes.txt').open('a') as f:\n    f.write('x')\n\n\n"
+        "def sem_sigla(texto):\n    return 'Escreva o nome por extenso.' if 'XPTO' in texto else None\n\n\nREGRAS = {'D-900': sem_sigla}\n", encoding="utf-8")
+    com_dois = validar(projeto, "--so", "dominio")
+    confere("validar dois entregáveis executa o código de regras do projeto uma vez", marcas.is_file() and marcas.read_text() == "x", (marcas.read_text() if marcas.is_file() else "sem execução") + com_dois.stdout[-300:] + com_dois.stderr)
+    marcas.unlink(missing_ok=True)
+    recarga = medir("import dominio\ndominio.regras()\np = dominio.PASTA / 'checagens_extra.py'\np.write_text(p.read_text() + '\\n# mudou\\n')\nresultado['ids'] = [r.ident for r in dominio.regras()[0]]")
+    confere("o código de regras do projeto é carregado de novo quando o arquivo muda", marcas.is_file() and marcas.read_text() == "xx" and "D-900" in medida_ids(recarga), (marcas.read_text() if marcas.is_file() else "sem execução") + recarga.get("erro", ""))
+    (dominio / "checagens_extra.py").write_text("REGRAS = {}\n", encoding="utf-8")
+
+    # A lista do dia: os prazos, as remarcações e as cadeias de dependência são lidos uma vez
+    hoje = dia_util(datetime.date.today(), 0) if datetime.date.today().weekday() < 5 else dia_util(datetime.date.today(), 1)
+    antes, bem_antes = dia_util(hoje, -3), dia_util(hoje, -20)
+    with (reg / "acoes.tsv").open("a", encoding="utf-8") as f:
+        for n in range(1, 7):
+            depende = f"T-90{n - 1}" if n > 1 else ""
+            f.write("\t".join([f"T-90{n}", "tarefa", f"Passo {n} da migração", "Consultora", "consultoria", str(bem_antes), str(antes), "nao", "aberta", "consultor", str(bem_antes), "", depende, ""]) + "\n")
+    with (reg / "prazos.tsv").open("a", encoding="utf-8") as f:
+        for n in (1, 2, 3):
+            f.write("\t".join([f"T-90{n}", str(bem_antes), str(bem_antes), str(antes), str(bem_antes), "consultor", "O cliente pediu"]) + "\n")
+    medida = medir(f"import datetime, afazeres, rotina\ncontar(rotina, 'itens_com_prazo')\ncontar(afazeres, 'dependentes')\nlista = afazeres.montar(datetime.date.fromisoformat('{hoje}'))\n"
+                   "resultado['destaques'] = [t for _, t in lista['destaques']]\nresultado['itens'] = len(afazeres.itens_abertos())")
+    itens = medida["resultado"].get("itens", 0)
+    confere("a lista do dia lê as remarcações uma vez, e não uma vez por item", 1 <= lidos(medida, "_projeto/prazos.tsv") <= 3, str(lidos(medida, "_projeto/prazos.tsv")) + medida.get("erro", ""))
+    confere("a lista do dia percorre a cadeia de cada item uma vez", itens >= 6 and medida["chamadas"].get("dependentes", 0) == itens and medida["chamadas"].get("itens_com_prazo", 0) <= 2, str(medida["chamadas"]) + f" para {itens} itens")
+    destaques = "\n".join(medida["resultado"].get("destaques", []))
+    confere("a lista do dia continua dizendo o que cada item trava", "T-901" in destaques and "Trava: T-902, T-903, T-904, T-905, T-906" in destaques, destaques)
+    resumo = rodar([PY, "entregaveis/_harness/scripts/rotina.py", "--hoje", hoje], projeto)
+    confere("o resumo continua dizendo quantas vezes o item foi remarcado", "T-901" in resumo.stdout and "Remarcado 1 vez(es)" in resumo.stdout, resumo.stdout + resumo.stderr)
+
+    # Segundo cérebro: conferir uma nota dá o mesmo resultado, sem passar as outras pelas checagens
+    with (reg / "evidencias.tsv").open("a", encoding="utf-8") as f:
+        f.write("E-002\tO contrato da plataforma de atendimento vence em março e a renovação custa o dobro do valor atual\t2\tContrato\t2026-10-01\tfato\talta\tdiag\n")
+    notas = base / "_cerebro/3-recursos"
+    modelo = "---\ntitulo: {t}\nresumo: Resumo de {t}.\nfontes: {f}\natualizada:\n---\n# {t}\n\n## Em resumo\n\n{r}\n\n## O que sabemos\n\n{s}\n\n## Ligações\n\n{l}\n"
+    (notas / "contratos.md").write_text(modelo.format(t="Contratos", f="E-002", r="O contrato vence em março.", s="O contrato da plataforma de atendimento vence em março e a renovação custa o dobro do valor atual (E-002). Ver também E-777.", l="- [Sumida](sumida.md)"), encoding="utf-8")
+    (notas / "plataformas.md").write_text(modelo.format(t="Plataformas", f="E-001", r="São 14 plataformas (E-001).", s="O inventário conta 14 (E-001).", l="- [Contratos](contratos.md)"), encoding="utf-8")
+    (notas / "solta.md").write_text(modelo.format(t="Solta", f="", r="", s="PREENCHER", l=""), encoding="utf-8")
+    medida = medir("import cerebro\ncontar(cerebro, '_resumo')\ntudo = [a.formatar() for a in cerebro.conferir()]\nresultado['tudo'] = tudo\nresultado['notas'] = len(cerebro.notas())\nantes = chamadas['_resumo']\n"
+                   "resultado['uma'] = {n.rel: [a.formatar() for a in cerebro.conferir(n.caminho)] for n in cerebro.notas()}\nresultado['por_nota'] = (chamadas['_resumo'] - antes) / max(len(cerebro.notas()), 1)")
+    tudo, uma = medida["resultado"].get("tudo", []), medida["resultado"].get("uma", {})
+    confere("a conferência do segundo cérebro acha a cópia, o id que não existe, a ligação quebrada e a nota solta",
+            all(any(trecho in a for a in tudo) for trecho in ("Repete o texto de E-002", "Cita E-777", "'sumida.md' não leva", "trechos por preencher", "Nenhuma outra nota aponta")), "\n".join(tudo) + medida.get("erro", ""))
+    confere("conferir uma nota só devolve o mesmo que a conferência inteira diz dela",
+            len(uma) == 3 and all(avisos == [a for a in tudo if f"_cerebro/{rel}:" in a or f"_cerebro/{rel} " in a or a.split(" ")[0].rstrip(":").endswith(rel)] for rel, avisos in uma.items()), json.dumps(uma, ensure_ascii=False)[:900])
+    confere("conferir uma nota só não passa as outras pelas checagens de conteúdo", medida["resultado"].get("por_nota") == 1, str(medida["resultado"].get("por_nota")) + str(medida["chamadas"]))
+
+    # As permissões de comando cobrem os scripts que as regras mandam rodar a cada ação
+    permitidos = "\n".join(json.loads((projeto / ".claude/settings.json").read_text(encoding="utf-8"))["permissions"]["allow"])
+    citados = set(re.findall(r"scripts/(\w+)\.py", (HARNESS / "REGRAS.md").read_text(encoding="utf-8"))) | {"cerebro", "governanca", "emitir"}
+    faltam = sorted(nome for nome in citados if f"scripts/{nome}.py" not in permitidos)
+    confere("todo script que as regras mandam rodar está na lista de comandos permitidos", not faltam, str(faltam))
+
+
+def medida_ids(medida: dict) -> list:
+    return medida["resultado"].get("ids", [])
 
 
 # --- Atas, prazos e rotina diária -----------------------------------------
@@ -3448,6 +3626,7 @@ GRUPOS = [
     (testar_pacotes, True),
     (testar_levantamento, True),
     (testar_bordas, True),
+    (testar_desempenho, True),
     (testar_rotina, True),
     (testar_governanca, True),
     (testar_emissao, True),
@@ -3457,19 +3636,72 @@ GRUPOS = [
 ]
 
 
-def main() -> int:
-    pedidos = sys.argv[1:]
-    escolhidos = [(f, usa_tmp) for f, usa_tmp in GRUPOS if not pedidos or f.__name__[len("testar_"):] in pedidos]
-    desconhecidos = set(pedidos) - {f.__name__[len("testar_"):] for f, _ in GRUPOS}
-    if desconhecidos:
-        print("Grupo desconhecido: " + ", ".join(sorted(desconhecidos)) + ". Os grupos são: " + ", ".join(f.__name__[len("testar_"):] for f, _ in GRUPOS) + ".")
-        return 2
+def _nome(funcao) -> str:
+    return funcao.__name__[len("testar_"):]
+
+
+RESULTADO = "##resultado## "
+
+
+def em_serie(escolhidos: list) -> None:
+    """Roda os grupos neste processo, um depois do outro."""
     tmp = Path(tempfile.mkdtemp(prefix="kit-"))
     try:
         for funcao, usa_tmp in escolhidos:
             funcao(tmp) if usa_tmp else funcao()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def em_paralelo(escolhidos: list, vagas: int) -> None:
+    """Roda cada grupo em um processo próprio e mostra as saídas na ordem dos grupos.
+
+    Cada processo tem a sua pasta temporária e os seus módulos, e por isso
+    um grupo não enxerga o que o outro mudou.
+    """
+    global total
+    from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
+
+    def um(nome: str) -> subprocess.CompletedProcess:
+        return subprocess.run([PY, str(Path(__file__).resolve()), "--filho", nome], capture_output=True, text=True)
+
+    nomes = [_nome(f) for f, _ in escolhidos]
+    with ThreadPoolExecutor(max_workers=vagas) as fila:
+        for nome, saida in zip(nomes, fila.map(um, nomes)):
+            linhas = saida.stdout.splitlines()
+            final = next((l for l in reversed(linhas) if l.startswith(RESULTADO)), None)
+            print("\n".join(l for l in linhas if not l.startswith(RESULTADO)), flush=True)
+            if final is None:
+                total += 1
+                falhas.append(f"o grupo {nome} caiu antes de terminar\n      {(saida.stderr or saida.stdout).strip()[-600:]}")
+                print(f"  FALHOU  o grupo {nome} caiu antes de terminar")
+                continue
+            dados = json.loads(final[len(RESULTADO):])
+            total += dados["total"]
+            falhas.extend(dados["falhas"])
+
+
+def main() -> int:
+    analisador = argparse.ArgumentParser(description="Testes do kit de entregáveis.")
+    analisador.add_argument("grupos", nargs="*", help="grupos a rodar (padrão: todos)")
+    analisador.add_argument("--serie", action="store_true", help="roda os grupos um depois do outro, em um processo só")
+    analisador.add_argument("--vagas", type=int, default=min(4, os.cpu_count() or 1), help="quantos grupos rodam ao mesmo tempo (padrão: até 4)")
+    analisador.add_argument("--filho", action="store_true", help=argparse.SUPPRESS)
+    args = analisador.parse_args()
+    pedidos = args.grupos
+    escolhidos = [(f, usa_tmp) for f, usa_tmp in GRUPOS if not pedidos or _nome(f) in pedidos]
+    desconhecidos = set(pedidos) - {_nome(f) for f, _ in GRUPOS}
+    if desconhecidos:
+        print("Grupo desconhecido: " + ", ".join(sorted(desconhecidos)) + ". Os grupos são: " + ", ".join(_nome(f) for f, _ in GRUPOS) + ".")
+        return 2
+    if args.filho:
+        em_serie(escolhidos)
+        print(RESULTADO + json.dumps({"total": total, "falhas": falhas}))
+        return 0
+    if args.serie or args.vagas < 2 or len(escolhidos) < 2:
+        em_serie(escolhidos)
+    else:
+        em_paralelo(escolhidos, args.vagas)
     print()
     if falhas:
         print(f"{len(falhas)} de {total} conferências falharam:")

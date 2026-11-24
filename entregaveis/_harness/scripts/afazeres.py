@@ -234,8 +234,10 @@ def montar(hoje: datetime.date) -> dict:
         nomes = ", ".join(f.ident for f, _, _ in fora[:5]) + ("..." if len(fora) > 5 else "")
         lista["entrada"].append(("cerebro", f"Segundo cérebro: {len(fora)} item(ns) do projeto ainda fora das notas ({nomes}). Absorva com a skill manter-cerebro"))
     itens = itens_abertos()
-    fases = {i.ident: rotina.fase_do_item(i, hoje, p) for i in rotina.itens_com_prazo()}
-    etapas = {i.ident: i.etapas for i in rotina.itens_com_prazo()}
+    com_prazo = rotina.itens_com_prazo()
+    fases = {i.ident: rotina.fase_do_item(i, hoje, p) for i in com_prazo}
+    etapas = {i.ident: i.etapas for i in com_prazo}
+    presos_de = {ident: dependentes(itens, ident) for ident in itens}  # a cadeia de cada item é percorrida uma vez
     feitas = cobrancas()
     riscos = [r for r in riscos_abertos() if exposicao(r) >= EXPOSICAO_ALTA]
     ameacas: dict[str, list[dict]] = {}
@@ -261,7 +263,7 @@ def montar(hoje: datetime.date) -> dict:
         if item.lado != "consultoria":
             dias = feitas.get(item.ident, [])
             texto += f". Última cobrança: {max(dias)}, {len(dias)} feita(s)" if dias else ". Nenhuma cobrança registrada"
-        presos = dependentes(itens, item.ident)
+        presos = presos_de[item.ident]
         if presos:
             texto += f". Trava: {', '.join(presos)}"
         if item.ident in ameacas:
@@ -270,7 +272,7 @@ def montar(hoje: datetime.date) -> dict:
 
     # Destaques, na ordem combinada. No máximo três sobem.
     def peso(item: Aberto) -> int:
-        return len(dependentes(itens, item.ident)) + max((exposicao(r) // 3 for r in ameacas.get(item.ident, [])), default=0)
+        return len(presos_de[item.ident]) + max((exposicao(r) // 3 for r in ameacas.get(item.ident, [])), default=0)
 
     def folga(item: Aberto) -> int:
         return rotina.uteis(hoje, item.prazo) - etapas.get(item.ident, 0)
@@ -281,8 +283,8 @@ def montar(hoje: datetime.date) -> dict:
         candidatos.append((item.ident, "está vencido e sem data nova"))
     for item in sorted((i for i in itens.values() if peso(i) > 0), key=lambda i: (-peso(i), i.prazo or longe)):
         motivos = []
-        if dependentes(itens, item.ident):
-            motivos.append(f"trava {len(dependentes(itens, item.ident))} item(ns)")
+        if presos_de[item.ident]:
+            motivos.append(f"trava {len(presos_de[item.ident])} item(ns)")
         if item.ident in ameacas:
             motivos.append("é ameaçado por um risco de exposição alta")
         candidatos.append((item.ident, " e ".join(motivos)))

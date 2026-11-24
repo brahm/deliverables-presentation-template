@@ -232,8 +232,16 @@ def fase_do_item(item: Item, hoje: datetime.date, p: dict) -> tuple[str, str]:
     return "", ""
 
 
+def remarcacoes_por_item() -> dict[str, list[dict]]:
+    """As remarcações de cada item, na ordem do registro. O arquivo é lido uma vez."""
+    por_item: dict[str, list[dict]] = {}
+    for l in comum.ler_tsv(comum.PROJETO / "prazos.tsv"):
+        por_item.setdefault(l.get("item", ""), []).append(l)
+    return por_item
+
+
 def remarcacoes(ident: str) -> list[dict]:
-    return [l for l in comum.ler_tsv(comum.PROJETO / "prazos.tsv") if l.get("item", "") == ident]
+    return remarcacoes_por_item().get(ident, [])
 
 
 # --- Atas e entrada ---------------------------------------------------------
@@ -607,6 +615,7 @@ def resumo(hoje: datetime.date) -> dict:
         return secoes
     mostrados = {(l.get("item", ""), l.get("fase", "")): l for l in comum.ler_tsv(comum.PROJETO / "alertas.tsv")}
     itens = itens_com_prazo()
+    remarcados = remarcacoes_por_item()
     for item in itens:
         fase, detalhe = fase_do_item(item, hoje, p)
         if not fase:
@@ -615,7 +624,7 @@ def resumo(hoje: datetime.date) -> dict:
         if fase == "parado" and anterior and anterior.get("primeiro_aviso", "") != str(hoje):
             continue  # o aviso leve é dado uma única vez
         texto = f"{item.ident} ({item.tipo}): {item.texto}" + (f". Dono: {item.dono}" if item.dono else "") + f". {detalhe[0].upper()}{detalhe[1:]}"
-        mudancas = remarcacoes(item.ident)
+        mudancas = remarcados.get(item.ident, [])
         if mudancas:
             texto += f". Remarcado {len(mudancas)} vez(es), a partir de {mudancas[0].get('data_original', '?')}"
         if fase == "vencido" and anterior and int(anterior.get("vezes", "0") or 0) >= 2 and anterior.get("ultimo_aviso", "") != str(hoje):

@@ -272,10 +272,22 @@ def destinos_do_comando(comando: str) -> dict[str, str]:
     endereço em disco não entra, porque é local.
     """
     achados: dict[str, str] = {}
+
+    def guardar(candidato: str) -> None:
+        if endereco(candidato) is not None and candidato not in achados.values():
+            achados[f"comando ({len(achados) + 1})"] = candidato
+
     for palavras in _segmentos(comando):
-        if "git" not in palavras:
+        # Um comando entre aspas, como o de `bash -c "git push ..."`, é lido por dentro.
+        for palavra in palavras:
+            if re.search(r"\s", palavra) and re.search(r"\bgit\b", palavra) and palavra != comando:
+                for candidato in destinos_do_comando(palavra).values():
+                    guardar(candidato)
+        # O programa pode vir com o caminho, como /usr/bin/git.
+        onde = next((i for i, palavra in enumerate(palavras) if re.split(r"[\\/]", palavra)[-1] in ("git", "git.exe")), None)
+        if onde is None:
             continue
-        depois = palavras[palavras.index("git") + 1:]
+        depois = palavras[onde + 1:]
         if "push" in depois:
             candidatos = depois[depois.index("push") + 1:]
             primeiro = _primeiro_argumento(candidatos)
@@ -286,8 +298,7 @@ def destinos_do_comando(comando: str) -> dict[str, str]:
         else:
             continue
         for candidato in candidatos:
-            if endereco(candidato) is not None:
-                achados.setdefault(f"comando ({len(achados) + 1})", candidato)
+            guardar(candidato)
     return achados
 
 
