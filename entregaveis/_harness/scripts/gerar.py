@@ -26,7 +26,9 @@ imagens pedem o LibreOffice (soffice), e as imagens também o pdftoppm.
 from __future__ import annotations
 
 import argparse
+import colorsys
 import csv
+import io
 import re
 import shutil
 import subprocess
@@ -44,6 +46,8 @@ ROTULO_DE_FONTE = {"pt": "Fonte", "es": "Fuente", "en": "Source"}
 ROTULO_DE_FONTES = {"pt": "Fontes", "es": "Fuentes", "en": "Sources"}
 ROTULO_DE_RASCUNHO = {"pt": "RASCUNHO", "es": "BORRADOR", "en": "DRAFT"}
 COR_DE_DESTAQUE, COR_NEUTRA = "0B5CAD", "A9B3BD"
+TEXTO_CLARO, TEXTO_ESCURO = "FFFFFF", "1F2933"
+RASCUNHO_NO_CLARO, RASCUNHO_NO_ESCURO = "A3382C", "FF9B8F"
 
 avisos: list[str] = []
 
@@ -64,7 +68,9 @@ def trechos(texto: str) -> list[tuple[str, bool, bool]]:
     texto = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", texto)
     texto = texto.replace("`", "")
     resultado = []
-    for parte in re.split(r"(\*\*[^*]+\*\*|\*[^*]+\*|(?<!\w)_[^_]+_(?!\w))", texto):
+    # O asterisco só abre um destaque quando vem colado à palavra que destaca e não está no meio de outra.
+    # Assim '2 * 3 e 4 * 5' e '2*3 e 4*5' continuam sendo contas.
+    for parte in re.split(r"(\*\*(?=\S)[^*]+(?<=\S)\*\*|(?<![\w*])\*(?=\S)[^*]+(?<=\S)\*(?![\w*])|(?<!\w)_[^_]+_(?!\w))", texto):
         if not parte:
             continue
         if parte.startswith("**"):
@@ -78,6 +84,15 @@ def trechos(texto: str) -> list[tuple[str, bool, bool]]:
 
 def plano(texto: str) -> str:
     return "".join(t for t, _, _ in trechos(texto))
+
+
+def dentro_do_projeto(caminho: Path) -> bool:
+    """Diz se o caminho, depois de resolvido, fica dentro da pasta do projeto."""
+    try:
+        caminho.resolve().relative_to(comum.RAIZ.resolve())
+        return True
+    except ValueError:
+        return False
 
 
 def ler_grafico(linhas: list[str], pasta: Path) -> dict:
@@ -97,6 +112,8 @@ def ler_grafico(linhas: list[str], pasta: Path) -> dict:
             chave, valor = linha.split(":", 1)
             spec[comum.normalizar(chave)] = valor.strip()
     if spec.get("arquivo"):
+        if not dentro_do_projeto(pasta / spec["arquivo"]):
+            raise SystemExit(f"O bloco 'grafico' cita '{spec['arquivo']}', que fica fora da pasta do projeto. Leve os dados para a pasta dados/ do entregável.")
         spec["linhas"] = ler_dados(pasta / spec["arquivo"])
     return spec
 
@@ -174,22 +191,105 @@ def ler_dados(arquivo: Path) -> list[list[str]]:
     """Linhas de um arquivo .csv ou .tsv, com o separador descoberto pelo cabeçalho."""
     if not arquivo.is_file():
         raise SystemExit(f"Arquivo de dados não encontrado: {comum.relativo(arquivo)}")
-    texto = arquivo.read_text(encoding="utf-8-sig")
+    if comum.ilegivel(arquivo):
+        raise SystemExit(f"{comum.relativo(arquivo)} não pôde ser lido como texto. Salve os dados como CSV em UTF-8.")
+    texto = comum.ler(arquivo)  # lê também o CSV que o Excel grava em cp1252 ou UTF-16, e avisa
     primeira = texto.splitlines()[0] if texto.strip() else ""
     separador = "\t" if arquivo.suffix == ".tsv" or "\t" in primeira else (";" if primeira.count(";") > primeira.count(",") else ",")
     return [linha for linha in csv.reader(texto.splitlines(), delimiter=separador) if any(c.strip() for c in linha)]
 
 
-def numero(valor: str):
-    """Converte o texto de uma célula em número, quando é um. Aceita a vírgula decimal."""
-    v = valor.strip().replace(" ", "")
-    if re.fullmatch(r"-?\d+", v):
-        return int(v)
-    if re.fullmatch(r"-?\d+\.\d+", v):
-        return float(v)
-    if re.fullmatch(r"-?\d{1,3}(\.\d{3})+(,\d+)?", v) or re.fullmatch(r"-?\d+,\d+", v):
-        return float(v.replace(".", "").replace(",", "."))
-    return valor
+# Como o número é escrito em cada idioma: o separador decimal. O de milhar é o outro.
+DECIMAL_DO_IDIOMA = {"pt": ",", "es": ",", "en": "."}
+_MOEDA = r"(?:R\$|US\$|\$|€|£)"
+_NUMERO = re.compile(rf"([-−+]?)\s*({_MOEDA})?\s*([-−+]?)(\d[\d., ]*?)\s*({_MOEDA}|%)?")
+
+
+def _partes_do_numero(valor: str) -> tuple[bool, str, str, bool] | None:
+    """(negativo, algarismos com os separadores, moeda, percentual) de um texto que tem cara de número."""
+    limpo = re.sub(r"[\u00a0\u2009\u202f]", " ", valor).strip()
+    m = _NUMERO.fullmatch(limpo)
+    if not m:
+        return None
+    sufixo = m.group(5) or ""
+    return bool(set("-−") & {m.group(1), m.group(3)}), m.group(4), m.group(2) or sufixo.replace("%", ""), sufixo == "%"
+
+
+def _pista_do_decimal(algarismos: str) -> str:
+    """',' ou '.' quando o número mostra sozinho qual é o separador decimal. Vazio quando não mostra.
+
+    '1.234,5' e '12,5' mostram. '1.234' não mostra: pode ser mil duzentos e
+    trinta e quatro ou um vírgula duzentos e trinta e quatro.
+    """
+    algarismos = algarismos.replace(" ", "")
+    if "." in algarismos and "," in algarismos:
+        return "." if algarismos.rfind(".") > algarismos.rfind(",") else ","
+    for separador, outro in ((".", ","), (",", ".")):
+        if algarismos.count(separador) > 1:
+            return outro  # um separador repetido é o de milhar
+        if algarismos.count(separador) == 1:
+            antes, depois = algarismos.split(separador)
+            if len(depois) != 3 or not re.fullmatch(r"[1-9]\d{0,2}", antes):
+                return separador  # não tem a forma de um grupo de milhar
+    return ""
+
+
+def decimal_da_coluna(valores: list[str], idioma: str) -> str:
+    """O separador decimal de uma coluna de dados.
+
+    Vale o que os próprios valores mostram: uma coluna com '12,5' usa a
+    vírgula, e então '1.234' é milhar. Quando nenhum valor mostra, ou os
+    valores se contradizem, vale o costume do idioma do entregável.
+    """
+    pistas = {_pista_do_decimal(partes[1]) for v in valores if (partes := _partes_do_numero(v))} - {""}
+    return pistas.pop() if len(pistas) == 1 else DECIMAL_DO_IDIOMA.get(idioma, ",")
+
+
+def _converter(algarismos: str, decimal: str) -> tuple[int | float, int, bool] | None:
+    """(valor, casas decimais, se veio com separador de milhar) de algarismos escritos com este separador decimal."""
+    milhar = "," if decimal == "." else "."
+    m = re.fullmatch(rf"([1-9]\d{{0,2}}(?:{re.escape(milhar)}\d{{3}})+|\d+)(?:{re.escape(decimal)}(\d+))?", algarismos)
+    if not m:
+        return None
+    inteiro, fracao = m.group(1).replace(milhar, ""), m.group(2) or ""
+    return (float(f"{inteiro}.{fracao}") if fracao else int(inteiro)), len(fracao), milhar in m.group(1)
+
+
+def ler_numero(valor: str, decimal: str = ",") -> tuple[int | float, str] | None:
+    """(número, formato de exibição) do texto de uma célula. None quando o texto não é um número.
+
+    Aceita o percentual e a moeda: '12%' é 0,12 com o formato '0%', e
+    'R$ 1.200' é 1200 com o formato de moeda. Um código com zero à
+    esquerda, como um CEP, e um número com mais de 15 algarismos não são
+    números de conta: ficam como texto, para não perder algarismo.
+    """
+    partes = _partes_do_numero(valor)
+    if partes is None:
+        return None
+    negativo, algarismos, moeda, percentual = partes
+    so_algarismos = re.sub(r"\D", "", algarismos)
+    if re.fullmatch(r"0\d+", algarismos) or len(so_algarismos) > 15:
+        return None
+    if " " in algarismos:
+        compacto = algarismos.replace(" ", "")
+        if not re.fullmatch(r"[1-9]\d{0,2}(?: \d{3})+(?:[.,]\d+)?", algarismos):
+            return None
+        resto = "," if "," in compacto else "."
+        lido = _converter(compacto, resto)
+        lido = (lido[0], lido[1], True) if lido else None
+    else:
+        lido = _converter(algarismos, decimal) or _converter(algarismos, "." if decimal == "," else ",")
+    if lido is None:
+        return None
+    numero_lido, casas, agrupado = lido
+    if negativo:
+        numero_lido = -numero_lido
+    zeros = ("." + "0" * casas) if casas else ""
+    if percentual:
+        return round(numero_lido / 100, casas + 2), f"0{zeros}%"
+    if moeda:
+        return numero_lido, f'"{moeda}" #,##0{zeros}'
+    return numero_lido, (f"#,##0{zeros}" if agrupado else "")
 
 
 # --- Marca do projeto -----------------------------------------------------
@@ -207,12 +307,15 @@ def marca() -> dict:
             if tipo and layout and comum.MARCA not in layout:
                 layouts[tipo] = layout
     cores = re.findall(r"#([0-9A-Fa-f]{6})\b", itens.get("cores de destaque em graficos", ""))
+    sobre_o_fundo = re.findall(r"#([0-9A-Fa-f]{6})\b", itens.get("cor do texto sobre o fundo", ""))
     return {
         "pptx": itens.get("modelo de apresentacao", ""),
         "docx": itens.get("modelo de documento", ""),
         "xlsx": itens.get("modelo de planilha", ""),
         "destaque": (cores[0] if cores else COR_DE_DESTAQUE).upper(),
         "neutra": (cores[1] if len(cores) > 1 else COR_NEUTRA).upper(),
+        "paleta": [c.upper() for c in cores],
+        "texto": sobre_o_fundo[0].upper() if sobre_o_fundo else "",
         "layouts": layouts,
     }
 
@@ -261,6 +364,205 @@ def por_titulo_no_arquivo(documento, titulo: str, neutro: bool = False) -> None:
     if neutro:
         for campo in ("author", "last_modified_by", "comments"):
             setattr(documento.core_properties, campo, "")
+
+
+# --- Cores e fundo do slide -----------------------------------------------
+
+_NS = {
+    "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+    "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
+    "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+}
+
+
+def _nome(no) -> str:
+    return no.tag.rsplit("}", 1)[-1] if isinstance(no.tag, str) else ""
+
+
+def em_rgb(cor: str) -> tuple[float, float, float]:
+    return tuple(int(cor[i:i + 2], 16) / 255 for i in (0, 2, 4))
+
+
+def em_hexa(rgb) -> str:
+    return "".join(f"{round(min(1.0, max(0.0, c)) * 255):02X}" for c in rgb)
+
+
+def misturar(cor: str, outra: str, quanto: float) -> str:
+    """A cor a caminho da outra: 0 é a própria cor, 1 é a outra."""
+    return em_hexa(a + (b - a) * quanto for a, b in zip(em_rgb(cor), em_rgb(outra)))
+
+
+def luminancia(cor: str) -> float:
+    """Luminância relativa, de 0 (preto) a 1 (branco), como a regra de contraste da WCAG calcula."""
+    canais = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in em_rgb(cor)]
+    return 0.2126 * canais[0] + 0.7152 * canais[1] + 0.0722 * canais[2]
+
+
+def escuro(cor: str) -> bool:
+    """Diz se o texto branco contrasta mais com esta cor do que o texto preto."""
+    return luminancia(cor) < 0.179
+
+
+def texto_sobre(cor: str) -> str:
+    return TEXTO_CLARO if escuro(cor) else TEXTO_ESCURO
+
+
+def _tema_e_mapa(layout) -> tuple[dict, dict]:
+    """As cores do tema do slide mestre e o mapa que diz qual delas é o fundo e qual é o texto."""
+    from lxml import etree
+
+    mestre = layout.slide_master
+    tema: dict[str, str] = {}
+    for relacao in mestre.part.rels.values():
+        if relacao.reltype.endswith("/theme") and not relacao.is_external:
+            esquema = etree.fromstring(relacao.target_part.blob).find(".//a:clrScheme", _NS)
+            for no in (esquema if esquema is not None else []):
+                if len(no):
+                    tema[_nome(no)] = (no[0].get("lastClr") or no[0].get("val") or "").upper()
+    mapa: dict[str, str] = {}
+    do_mestre = mestre._element.find("p:clrMap", _NS)
+    if do_mestre is not None:
+        mapa = dict(do_mestre.attrib)
+    do_layout = layout._element.find("p:clrMapOvr/a:overrideClrMapping", _NS)
+    if do_layout is not None:
+        mapa = dict(do_layout.attrib)
+    return tema, mapa
+
+
+def _cor_do_no(no, tema: dict, mapa: dict) -> str | None:
+    """A cor de um nó de cor do arquivo (srgbClr, schemeClr, sysClr ou prstClr), com os ajustes de luminosidade."""
+    tipo, valor = _nome(no), no.get("val", "")
+    if tipo == "srgbClr":
+        cor = valor
+    elif tipo == "sysClr":
+        cor = no.get("lastClr") or {"window": "FFFFFF", "windowText": "000000"}.get(valor, "")
+    elif tipo == "schemeClr":
+        cor = tema.get(mapa.get(valor, valor), "")
+    elif tipo == "prstClr":
+        cor = {"black": "000000", "white": "FFFFFF"}.get(valor, "")
+    else:
+        return None
+    if not re.fullmatch(r"[0-9A-Fa-f]{6}", cor or ""):
+        return None
+    matiz, luz, saturacao = colorsys.rgb_to_hls(*em_rgb(cor))
+    for ajuste in no:
+        try:
+            quanto = int(ajuste.get("val", "100000")) / 100000
+        except ValueError:
+            continue
+        if _nome(ajuste) in ("lumMod", "shade"):
+            luz *= quanto
+        elif _nome(ajuste) == "lumOff":
+            luz += quanto
+        elif _nome(ajuste) == "tint":
+            luz = luz * quanto + (1 - quanto)
+    return em_hexa(colorsys.hls_to_rgb(matiz, min(1.0, max(0.0, luz)), saturacao))
+
+
+def _cor_da_imagem(dados: bytes) -> str | None:
+    """A cor média de uma imagem de fundo. None quando o formato não é lido."""
+    try:
+        from PIL import Image
+
+        with Image.open(io.BytesIO(dados)) as imagem:
+            return em_hexa(c / 255 for c in imagem.convert("RGB").resize((1, 1)).getpixel((0, 0)))
+    except Exception:  # noqa: BLE001 - formato que a biblioteca não lê, como EMF
+        return None
+
+
+def _cor_do_preenchimento(pai, parte, tema: dict, mapa: dict) -> str | None:
+    """A cor de um preenchimento sólido, a média de um degradê ou a média de uma imagem. None quando não há preenchimento."""
+    if pai is None:
+        return None
+    solido = pai.find("a:solidFill", _NS)
+    if solido is not None and len(solido):
+        return _cor_do_no(solido[0], tema, mapa)
+    paradas = [c for parada in pai.iterfind("a:gradFill/a:gsLst/a:gs", _NS) if len(parada) and (c := _cor_do_no(parada[0], tema, mapa))]
+    if paradas:
+        return em_hexa(sum(em_rgb(c)[i] for c in paradas) / len(paradas) for i in range(3))
+    imagem = pai.find("a:blipFill/a:blip", _NS)
+    if imagem is None:
+        imagem = pai.find("p:blipFill/a:blip", _NS)
+    if imagem is not None and imagem.get(f"{{{_NS['r']}}}embed"):
+        try:
+            return _cor_da_imagem(parte.related_part(imagem.get(f"{{{_NS['r']}}}embed")).blob)
+        except KeyError:
+            return None
+    return None
+
+
+def _cor_da_forma_de_fundo(dono, largura: int, altura: int, tema: dict, mapa: dict) -> str | None:
+    """A cor da forma do layout ou do mestre que cobre o slide inteiro, quando há uma.
+
+    Muitos modelos fazem o fundo com uma imagem ou um retângulo sobre o
+    slide, e não com o fundo do arquivo. Vale a forma que está por cima.
+    """
+    for forma in reversed(list(dono.shapes)):
+        if forma.is_placeholder or not forma.width or not forma.height:
+            continue
+        direita = min(largura, (forma.left or 0) + forma.width)
+        baixo = min(altura, (forma.top or 0) + forma.height)
+        coberta = max(0, direita - max(0, forma.left or 0)) * max(0, baixo - max(0, forma.top or 0))
+        if coberta < 0.85 * largura * altura:
+            continue
+        elemento = forma._element
+        cor = _cor_do_preenchimento(elemento if _nome(elemento) == "pic" else elemento.find("p:spPr", _NS), dono.part, tema, mapa)
+        if cor is None and elemento.find("p:spPr/a:noFill", _NS) is None:
+            do_estilo = elemento.find("p:style/a:fillRef", _NS)
+            if do_estilo is not None and do_estilo.get("idx", "0") != "0" and len(do_estilo):
+                cor = _cor_do_no(do_estilo[0], tema, mapa)
+        if cor:
+            return cor
+    return None
+
+
+_FUNDOS: dict = {}
+
+
+def cor_do_fundo(slide, largura: int, altura: int) -> str | None:
+    """A cor que a audiência vê atrás do conteúdo do slide. None quando o modelo não permite saber.
+
+    A ordem é a do desenho: a forma de fundo do layout, a do mestre, o
+    fundo do layout e o fundo do mestre. Um modelo sem fundo declarado
+    usa a primeira cor de fundo do tema.
+    """
+    layout = slide.slide_layout
+    chave = (id(layout.part.package), str(layout.part.partname))
+    if chave in _FUNDOS:
+        return _FUNDOS[chave]
+    mestre = layout.slide_master
+    tema, mapa = _tema_e_mapa(layout)
+    cor = _cor_da_forma_de_fundo(layout, largura, altura, tema, mapa)
+    if cor is None and layout._element.get("showMasterSp", "1") not in ("0", "false"):
+        cor = _cor_da_forma_de_fundo(mestre, largura, altura, tema, mapa)
+    for dono in (layout, mestre):
+        if cor is not None:
+            break
+        fundo = dono._element.find("p:cSld/p:bg", _NS)
+        if fundo is None:
+            continue
+        cor = _cor_do_preenchimento(fundo.find("p:bgPr", _NS), dono.part, tema, mapa)
+        referencia = fundo.find("p:bgRef", _NS)
+        if cor is None and referencia is not None and len(referencia):
+            cor = _cor_do_no(referencia[0], tema, mapa)
+        if cor is None and (fundo.find("p:bgPr", _NS) is not None or referencia is not None):
+            break  # há um fundo declarado e não deu para ler a cor: não adivinha
+    else:
+        if cor is None:
+            cor = tema.get(mapa.get("bg1", "lt1")) or None
+    _FUNDOS[chave] = cor if cor and re.fullmatch(r"[0-9A-F]{6}", cor) else None
+    return _FUNDOS[chave]
+
+
+def pintar(quadro, cor: str | None) -> None:
+    """Dá a cor a todo o texto de um quadro. Sem cor, o texto fica com a do modelo."""
+    if not cor:
+        return
+    from pptx.dml.color import RGBColor
+
+    for paragrafo in quadro.paragraphs:
+        for corrida in paragrafo.runs:
+            corrida.font.color.rgb = RGBColor.from_string(cor)
 
 
 # --- PowerPoint -----------------------------------------------------------
@@ -343,20 +645,40 @@ def escrever_trechos(paragrafo, texto: str) -> None:
             corrida.font.italic = True
 
 
+def numerar(paragrafo, recuo: bool) -> None:
+    """Liga a numeração automática do parágrafo, que o PowerPoint conta sozinho a cada item."""
+    from pptx.oxml.ns import qn
+
+    propriedades = paragrafo._p.get_or_add_pPr()
+    for antigo in propriedades.xpath("./a:buNone | ./a:buChar | ./a:buAutoNum | ./a:buBlip"):
+        propriedades.remove(antigo)
+    numeracao = propriedades.makeelement(qn("a:buAutoNum"), {"type": "arabicPeriod"})
+    depois = propriedades.xpath("./a:tabLst | ./a:defRPr | ./a:extLst")
+    if depois:
+        depois[0].addprevious(numeracao)
+    else:
+        propriedades.append(numeracao)
+    if recuo:  # a caixa de texto criada pelo gerador não tem o recuo de lista do modelo
+        propriedades.set("marL", "342900")
+        propriedades.set("indent", "-342900")
+
+
 def escrever_texto(quadro, textos: list[dict], com_marcador: bool) -> None:
     """Põe parágrafos, listas e citações em um quadro de texto. 'com_marcador' vale para caixa sem marcador próprio."""
     primeiro = True
     for bloco in textos:
         if bloco["tipo"] == "lista":
-            linhas = [(nivel, ("• " if com_marcador else "") + texto) for nivel, _, texto in bloco["itens"]]
+            linhas = [(nivel, ("• " if com_marcador and not ordenada else "") + texto, ordenada) for nivel, ordenada, texto in bloco["itens"]]
         elif bloco["tipo"] == "citacao":
-            linhas = [(0, f"*{plano(bloco['texto'])}*")]
+            linhas = [(0, f"*{plano(bloco['texto'])}*", False)]
         else:
-            linhas = [(0, bloco["texto"])]
-        for nivel, texto in linhas:
+            linhas = [(0, bloco["texto"], False)]
+        for nivel, texto, ordenada in linhas:
             paragrafo = quadro.paragraphs[0] if primeiro else quadro.add_paragraph()
             primeiro = False
             paragrafo.level = nivel
+            if ordenada:
+                numerar(paragrafo, recuo=com_marcador)
             escrever_trechos(paragrafo, texto)
 
 
@@ -443,26 +765,87 @@ def ajustar_titulo(slide, numero: int) -> None:
             corrida.font.size = Pt(corpo)
 
 
-def por_tabela(slide, linhas: list[list[str]], area) -> None:
+def por_tabela(slide, linhas: list[list[str]], area, cores: dict, fundo: str | None = None, texto: str | None = None, pagina: int = 0) -> None:
+    """Põe a tabela no slide. Em fundo escuro, as células ganham cores próprias, porque o estilo padrão é claro."""
+    from pptx.dml.color import RGBColor
     from pptx.util import Pt
 
     colunas = max(len(l) for l in linhas)
     esquerda, topo, largura, altura = area
     forma = slide.shapes.add_table(len(linhas), colunas, esquerda, topo, largura, min(altura, int(altura * min(1.0, 0.12 * len(linhas) + 0.1))))
     corpo = 11 if len(linhas) > 7 or colunas > 5 else 13
+    em_fundo_escuro = bool(fundo) and escuro(fundo)
+    por_linha = max(4, int(largura / colunas / EMU_POR_PONTO / (corpo * 0.5)))
+    necessaria = 0.0
     for r, linha in enumerate(linhas):
+        celulas = [plano(linha[c]) if c < len(linha) else "" for c in range(colunas)]
+        necessaria += max(1 + len(c) // por_linha for c in celulas) * corpo * 1.2 + 7.2  # 7,2 pt são as margens da célula
+        if em_fundo_escuro:
+            do_fundo = cores["destaque"] if r == 0 else misturar(fundo, "FFFFFF", 0.16 if r % 2 else 0.08)
+            da_letra = texto_sobre(do_fundo) if r == 0 else (texto or TEXTO_CLARO)
         for c in range(colunas):
             celula = forma.table.cell(r, c)
-            celula.text = plano(linha[c]) if c < len(linha) else ""
+            celula.text = celulas[c]
+            if em_fundo_escuro:
+                celula.fill.solid()
+                celula.fill.fore_color.rgb = RGBColor.from_string(do_fundo)
             for paragrafo in celula.text_frame.paragraphs:
                 for corrida in paragrafo.runs:
                     corrida.font.size = Pt(corpo)
+                    if em_fundo_escuro:
+                        corrida.font.color.rgb = RGBColor.from_string(da_letra)
+    if necessaria * EMU_POR_PONTO > altura:
+        avisos.append(
+            f"Página {pagina}: a tabela de {len(linhas)} linhas não cabe na área do slide e passa da borda. "
+            "Divida a tabela em duas páginas, corte linhas ou leve a base para uma planilha."
+        )
 
 
-def por_grafico(slide, spec: dict, area, cores: dict) -> None:
+def series_do_grafico(spec: dict, idioma: str) -> list[tuple[str, list, str]]:
+    """(nome, valores, formato) de cada série de um bloco 'grafico'.
+
+    Uma célula vazia é um ponto sem valor. Qualquer outra coisa que não
+    seja número para a geração: um valor que some do gráfico sem aviso
+    muda o que a página diz.
+    """
+    linhas = spec.get("linhas") or []
+    onde = f" '{spec['titulo']}'" if spec.get("titulo") else ""
+    resultado = []
+    for n, nome in enumerate(linhas[0][1:], start=1):
+        brutos = [l[n].strip() if n < len(l) else "" for l in linhas[1:]]
+        decimal = decimal_da_coluna(brutos, idioma)
+        valores, formatos = [], []
+        for linha, bruto in zip(linhas[1:], brutos):
+            if not bruto:
+                valores.append(None)
+                continue
+            lido = ler_numero(bruto, decimal)
+            if lido is None:
+                raise SystemExit(
+                    f"Gráfico{onde}: o valor '{bruto}' da linha '{linha[0]}', coluna '{nome}', não é um número. "
+                    "Escreva só o número, com % ou com a moeda quando for o caso, ou deixe a célula vazia."
+                )
+            valores.append(lido[0])
+            formatos.append(lido[1])
+        if len({f.endswith("%") for f in formatos}) > 1:
+            raise SystemExit(f"Gráfico{onde}: a coluna '{nome}' mistura percentual com número sem percentual. Escreva a coluna inteira de um jeito só.")
+        resultado.append((nome, valores, max(formatos, key=len, default="")))
+    return resultado
+
+
+def cores_das_fatias(quantas: int, cores: dict) -> list[str]:
+    """Uma cor por fatia: as cores registradas na marca quando bastam, ou tons da cor de destaque, do mais forte ao mais claro."""
+    paleta = cores.get("paleta") or [cores["destaque"], cores["neutra"]]
+    if len(paleta) >= quantas:
+        return paleta[:quantas]
+    return [misturar(cores["destaque"], "FFFFFF", 0.75 * n / max(1, quantas - 1)) for n in range(quantas)]
+
+
+def por_grafico(slide, spec: dict, area, cores: dict, idioma: str = "pt", fundo: str | None = None, texto: str | None = None) -> None:
+    """Põe o gráfico no slide. 'texto' é a cor dos rótulos, do eixo e da legenda quando o fundo pede uma cor própria."""
     from pptx.chart.data import CategoryChartData
     from pptx.dml.color import RGBColor
-    from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION
+    from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION, XL_LEGEND_POSITION
     from pptx.util import Pt
 
     linhas = spec.get("linhas") or []
@@ -471,35 +854,51 @@ def por_grafico(slide, spec: dict, area, cores: dict) -> None:
     dados = CategoryChartData()
     dados.categories = [l[0] for l in linhas[1:]]
     series = linhas[0][1:]
-    for n, nome in enumerate(series, start=1):
-        valores = [numero(l[n]) if n < len(l) else None for l in linhas[1:]]
-        dados.add_series(nome, [v if isinstance(v, (int, float)) else None for v in valores])
+    for nome, valores, formato in series_do_grafico(spec, idioma):
+        dados.add_series(nome, valores, number_format=formato or "General")
     tipo = comum.normalizar(spec.get("tipo", "barras"))
     formas = {"barras": XL_CHART_TYPE.BAR_CLUSTERED, "colunas": XL_CHART_TYPE.COLUMN_CLUSTERED, "linhas": XL_CHART_TYPE.LINE_MARKERS, "pizza": XL_CHART_TYPE.PIE}
     if tipo not in formas:
         raise SystemExit(f"Tipo de gráfico '{spec.get('tipo')}' não existe. Use barras, colunas, linhas ou pizza.")
     esquerda, topo, largura, altura = area
     grafico = slide.shapes.add_chart(formas[tipo], esquerda, topo, largura, altura, dados).chart
+    da_letra = RGBColor.from_string(texto) if texto else None
     grafico.font.size = Pt(12)
+    if da_letra:
+        grafico.font.color.rgb = da_letra
     grafico.has_title = bool(spec.get("titulo"))
     if grafico.has_title:
         grafico.chart_title.text_frame.text = spec["titulo"]
+        pintar(grafico.chart_title.text_frame, texto)
     grafico.has_legend = len(series) > 1 or tipo == "pizza"
     if grafico.has_legend:
         grafico.legend.position = XL_LEGEND_POSITION.BOTTOM
         grafico.legend.include_in_layout = False
+        if da_letra:
+            grafico.legend.font.color.rgb = da_letra
     destaque, neutra = RGBColor.from_string(cores["destaque"]), RGBColor.from_string(cores["neutra"])
     alvo = comum.normalizar(spec.get("destaque", ""))
     area_do_grafico = grafico.plots[0]
     if tipo != "linhas":
         area_do_grafico.has_data_labels = True
         area_do_grafico.data_labels.font.size = Pt(11)
+        if da_letra:
+            area_do_grafico.data_labels.font.color.rgb = da_letra
+        if tipo == "pizza":
+            # O rótulo fica fora da fatia, sobre o fundo do slide, onde a cor do texto é conhecida.
+            area_do_grafico.data_labels.position = XL_LABEL_POSITION.OUTSIDE_END
     if tipo in ("barras", "colunas"):
         area_do_grafico.gap_width = 60
         grafico.value_axis.has_major_gridlines = False
         grafico.value_axis.visible = False
         if tipo == "barras":
             grafico.category_axis.reverse_order = True  # a primeira linha dos dados fica em cima
+    if tipo != "pizza" and da_letra:
+        for eixo in (grafico.category_axis, grafico.value_axis):
+            eixo.tick_labels.font.color.rgb = da_letra
+            eixo.format.line.color.rgb = da_letra
+        if grafico.value_axis.has_major_gridlines:
+            grafico.value_axis.major_gridlines.format.line.color.rgb = RGBColor.from_string(misturar(fundo or "000000", texto, 0.3))
     categorias = [comum.normalizar(l[0]) for l in linhas[1:]]
     for n, serie in enumerate(area_do_grafico.series):
         da_serie = alvo and comum.normalizar(series[n]) == alvo
@@ -507,7 +906,17 @@ def por_grafico(slide, spec: dict, area, cores: dict) -> None:
             serie.format.line.color.rgb = destaque if (da_serie or (not alvo and n == 0) or len(series) == 1) else neutra
             serie.smooth = False
             continue
-        if len(series) == 1 or tipo == "pizza":
+        if tipo == "pizza":
+            # Com destaque, a fatia citada leva a cor e o resto fica em cinza. Sem destaque, cada fatia tem a sua cor.
+            fatias = cores_das_fatias(len(categorias), cores)
+            borda = RGBColor.from_string(fundo or "FFFFFF")
+            for i, categoria in enumerate(categorias):
+                ponto = serie.points[i]
+                ponto.format.fill.solid()
+                ponto.format.fill.fore_color.rgb = (destaque if categoria == alvo else neutra) if alvo else RGBColor.from_string(fatias[i])
+                ponto.format.line.color.rgb = borda  # separa as fatias vizinhas
+                ponto.format.line.width = Pt(1.5)
+        elif len(series) == 1:
             # O destaque fica na categoria que o título cita. O resto fica em cinza.
             for i, categoria in enumerate(categorias):
                 ponto = serie.points[i]
@@ -530,6 +939,8 @@ def caminho_de_imagem(pasta: Path, relativo: str) -> Path:
     for base in (pasta, comum.RAIZ):
         candidato = (base / relativo).resolve()
         if candidato.is_file():
+            if not dentro_do_projeto(candidato):
+                raise SystemExit(f"A imagem {relativo} fica fora da pasta do projeto. Copie a imagem para a pasta do entregável e cite a cópia.")
             return candidato
     raise SystemExit(f"Imagem não encontrada: {relativo} (procurada a partir de {comum.relativo(pasta)}).")
 
@@ -548,6 +959,13 @@ def gerar_pptx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
     for item in list(lista):
         prs.part.drop_rel(item.rId)
         lista.remove(item)
+    # As seções do modelo citam as páginas que saíram. Ficando no arquivo, apontariam para slides que não existem.
+    for extensao in prs.part._element.xpath("./p:extLst/p:ext"):
+        if any(_nome(filho) == "sectionLst" for filho in extensao):
+            pai = extensao.getparent()
+            pai.remove(extensao)
+            if not len(pai):
+                pai.getparent().remove(pai)
     paginas = [p for p in comum.paginas(comum.ler(fonte)) if comum.MARCA not in p.titulo]
     if not paginas:
         raise SystemExit(f"{comum.relativo(fonte)} não tem páginas escritas.")
@@ -563,6 +981,10 @@ def gerar_pptx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
         visuais = [b for b in conteudo if b["tipo"] in ("tabela", "grafico", "imagem")]
         pedido = pagina.meta.get("layout", "") or registro["layouts"].get(tipo, "")
         slide = prs.slides.add_slide(escolher_layout(prs, tipo, pedido, bool(textos), bool(visuais)))
+        # O texto que o gerador cria fora dos campos do modelo não herda a cor do modelo. Em fundo escuro ele
+        # sairia preto, e por isso ganha uma cor que contrasta. A cor registrada na marca vence a escolha.
+        fundo = cor_do_fundo(slide, largura, altura)
+        da_letra = registro.get("texto") or (TEXTO_CLARO if fundo and escuro(fundo) else None)
         if slide.shapes.title is not None:
             acertar_posicao(slide, slide.shapes.title)
             slide.shapes.title.text_frame.text = plano(pagina.titulo)
@@ -574,6 +996,7 @@ def gerar_pptx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
             caixa.text_frame.text = plano(pagina.titulo)
             caixa.text_frame.paragraphs[0].runs[0].font.size = Pt(28)
             caixa.text_frame.paragraphs[0].runs[0].font.bold = True
+            pintar(caixa.text_frame, da_letra)
         titulo = slide.shapes.title
         corpos = sorted(
             (p for p in slide.placeholders if p.placeholder_format.type in (PH.BODY, PH.OBJECT, PH.SUBTITLE) and p != titulo),
@@ -610,6 +1033,7 @@ def gerar_pptx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
                 quadro = caixa.text_frame
                 quadro.word_wrap = True
                 escrever_texto(quadro, textos, com_marcador=True)
+                pintar(quadro, da_letra)
             if tamanho:
                 fixar_tamanho(quadro, tamanho)
             elif corpo is not None and tipo not in ("capa", "secao", "frase", "citacao", "encerramento"):
@@ -622,9 +1046,9 @@ def gerar_pptx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
             for n, bloco in enumerate(visuais):
                 parte = [area_visual[0] + n * (fatia + vao), area_visual[1], fatia, area_visual[3]]
                 if bloco["tipo"] == "tabela":
-                    por_tabela(slide, bloco["linhas"], parte)
+                    por_tabela(slide, bloco["linhas"], parte, registro, fundo, da_letra, pagina.numero)
                 elif bloco["tipo"] == "grafico":
-                    por_grafico(slide, bloco["spec"], parte, registro)
+                    por_grafico(slide, bloco["spec"], parte, registro, idioma, fundo, da_letra)
                 else:
                     por_imagem(slide, caminho_de_imagem(pasta, bloco["caminho"]), parte)
         fonte_da_pagina = linha_de_fonte(pagina.meta.get("fonte", "") + " " + pagina.corpo, idioma, provas)
@@ -633,14 +1057,19 @@ def gerar_pptx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
             caixa.text_frame.word_wrap = True
             caixa.text_frame.text = fonte_da_pagina
             caixa.text_frame.paragraphs[0].runs[0].font.size = Pt(9)
+            pintar(caixa.text_frame, da_letra)
         if rascunho:
             caixa = slide.shapes.add_textbox(int(largura * 0.8), int(altura * 0.01), int(largura * 0.19), int(altura * 0.05))
             caixa.text_frame.text = ROTULO_DE_RASCUNHO.get(idioma, "RASCUNHO")
             corrida = caixa.text_frame.paragraphs[0].runs[0]
             corrida.font.size, corrida.font.bold = Pt(11), True
-            corrida.font.color.rgb = RGBColor(0xA3, 0x38, 0x2C)
+            corrida.font.color.rgb = RGBColor.from_string(RASCUNHO_NO_ESCURO if fundo and escuro(fundo) else RASCUNHO_NO_CLARO)
         if pagina.notas.strip():
-            slide.notes_slide.notes_text_frame.text = plano(pagina.notas.strip())
+            quadro_de_notas = slide.notes_slide.notes_text_frame
+            if quadro_de_notas is None:
+                avisos.append(f"Página {pagina.numero}: o modelo não tem campo de notas, e as notas de quem apresenta ficaram fora do arquivo.")
+            else:
+                quadro_de_notas.text = plano(pagina.notas.strip())
     por_titulo_no_arquivo(prs, plano(paginas[0].titulo), neutro=not modelo)
     prs.save(str(destino))
     return len(paginas)
@@ -661,13 +1090,21 @@ def gerar_docx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
             corpo.remove(elemento)  # o texto de exemplo do modelo sai; ficam os estilos, o cabeçalho e o rodapé
     _, texto = comum.cabecalho(comum.ler(fonte))
 
+    from docx.enum.style import WD_STYLE_TYPE
+
+    def estilo_de_paragrafo(nome: str) -> bool:
+        try:
+            return doc.styles[nome].type == WD_STYLE_TYPE.PARAGRAPH
+        except KeyError:
+            return False
+
     def com_estilo(funcao, estilos: list[str]):
-        for estilo in estilos:
-            try:
-                return funcao(estilo)
-            except (KeyError, ValueError):
-                continue
-        return funcao(None)
+        # O estilo é conferido antes: a biblioteca acrescenta o parágrafo e só depois procura o estilo,
+        # e uma tentativa que falha deixaria um parágrafo a mais no documento.
+        existe = next((e for e in estilos if estilo_de_paragrafo(e)), None)
+        if estilos and existe is None:
+            avisos.append(f"O modelo de Word não tem o estilo '{estilos[0]}'. O trecho saiu com o estilo padrão: confira o título, as listas e as citações.")
+        return funcao(existe)
 
     def paragrafo(conteudo: str, estilos: list[str] | None = None, prefixo: str = ""):
         p = com_estilo(lambda e: doc.add_paragraph(style=e), estilos or [])
@@ -697,9 +1134,13 @@ def gerar_docx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
         elif tipo == "citacao":
             paragrafo(f"*{plano(bloco['texto'])}*", ["Quote", "Intense Quote"])
         elif tipo == "lista":
+            contagem: dict[int, int] = {}
             for nivel, ordenada, item in bloco["itens"]:
                 base = "List Number" if ordenada else "List Bullet"
-                paragrafo(item, [base if nivel == 0 else f"{base} {nivel + 1}", base], prefixo="• ")
+                contagem = {n: c for n, c in contagem.items() if n <= nivel}
+                contagem[nivel] = contagem.get(nivel, 0) + 1
+                # Sem o estilo de lista no modelo, o marcador ou o número vai escrito no texto.
+                paragrafo(item, [base if nivel == 0 else f"{base} {nivel + 1}", base], prefixo=f"{contagem[nivel]}. " if ordenada else "• ")
         elif tipo in ("tabela", "grafico"):
             linhas = bloco["linhas"] if tipo == "tabela" else bloco["spec"].get("linhas", [])
             if tipo == "grafico":
@@ -714,10 +1155,9 @@ def gerar_docx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
                 tabela.style = "Table Grid"
             except (KeyError, ValueError):
                 pass
-            for r, linha in enumerate(linhas):
-                for c in range(colunas):
-                    celula = tabela.cell(r, c)
-                    celula.text = ""
+            # tabela.cell(r, c) refaz a grade a cada chamada. Em tabela grande, percorrer as linhas uma vez é muito mais rápido.
+            for r, (linha, da_tabela) in enumerate(zip(linhas, tabela.rows)):
+                for c, celula in enumerate(da_tabela.cells):
                     corrida = celula.paragraphs[0].add_run(plano(linha[c]) if c < len(linha) else "")
                     corrida.bold = True if r == 0 else None
             doc.add_paragraph()
@@ -761,6 +1201,7 @@ def gerar_xlsx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
     exigir("xlsx")
     from openpyxl import Workbook, load_workbook
     from openpyxl.chart import BarChart, LineChart, PieChart, Reference
+    from openpyxl.chart.series import DataPoint
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
 
@@ -773,6 +1214,24 @@ def gerar_xlsx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
     _, texto = comum.cabecalho(comum.ler(fonte))
     mapa = comum.secoes(texto)
     negrito, cabecalho_cinza = Font(bold=True), PatternFill("solid", start_color="E3E7EB")
+
+    def por_texto(celula, valor: str):
+        """Grava o texto como texto. Um texto que começa por '=' não vira fórmula."""
+        valor = str(valor or "").strip()
+        celula.value = valor or None
+        if valor:
+            celula.data_type = "s"
+        return celula
+
+    def por_valor(celula, valor: str, decimal: str) -> None:
+        """Número entra como número, no formato em que foi escrito. O resto entra como texto."""
+        lido = ler_numero(valor, decimal)
+        if lido is None:
+            por_texto(celula, valor)
+            return
+        celula.value = lido[0]
+        if lido[1]:
+            celula.number_format = lido[1]
 
     def por_cabecalho(aba, linha: int, colunas: int) -> None:
         for c in range(1, colunas + 1):
@@ -787,17 +1246,17 @@ def gerar_xlsx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
 
     def por_tabela_md(aba, linhas: list[dict], colunas: list[str], inicio: int) -> int:
         for c, nome in enumerate(colunas, start=1):
-            aba.cell(row=inicio, column=c, value=nome)
+            por_texto(aba.cell(row=inicio, column=c), nome)
         por_cabecalho(aba, inicio, len(colunas))
         for r, linha in enumerate(linhas, start=inicio + 1):
             for c, nome in enumerate(colunas, start=1):
-                aba.cell(row=r, column=c, value=plano(linha.get(comum.normalizar(nome), "")))
+                por_texto(aba.cell(row=r, column=c), plano(linha.get(comum.normalizar(nome), "")))
         return inicio + len(linhas) + 1
 
     # Aba de leitura: o que a planilha responde, e de onde vêm os dados.
     leitura = livro.create_sheet(nome_de_aba({"pt": "Leitura", "es": "Lectura", "en": "Read me"}.get(idioma, "Leitura"), usados), 0)
     meta, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))
-    leitura["A1"] = meta.get("titulo") or pasta.name
+    por_texto(leitura["A1"], meta.get("titulo") or pasta.name)
     leitura["A1"].font = Font(bold=True, size=14)
     linha = 2
     if rascunho:
@@ -807,7 +1266,7 @@ def gerar_xlsx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
     perguntas = comum.achar_secao(mapa, "perguntas que a planilha responde") or ""
     for bloco in blocos(perguntas, pasta):
         for item in ([i[2] for i in bloco["itens"]] if bloco["tipo"] == "lista" else [bloco.get("texto", "")]):
-            leitura.cell(row=linha, column=1, value=plano(item)).alignment = Alignment(wrap_text=True, vertical="top")
+            por_texto(leitura.cell(row=linha, column=1), plano(item)).alignment = Alignment(wrap_text=True, vertical="top")
             linha += 1
     abas_previstas = [l for l in comum.tabela(comum.achar_secao(mapa, "abas") or "") if l.get("aba") and comum.MARCA not in l.get("aba", "")]
     provas = evidencias()
@@ -841,9 +1300,17 @@ def gerar_xlsx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
     for nome, arquivo in ordem:
         linhas = ler_dados(arquivo)
         aba = livro.create_sheet(nome_de_aba(nome, usados))
+        largura_dos_dados = max((len(l) for l in linhas), default=0)
+        colunas_dos_dados = [[l[c] for l in linhas[1:] if c < len(l)] for c in range(largura_dos_dados)]
+        decimais = [decimal_da_coluna(valores, idioma) for valores in colunas_dos_dados]
+        # Uma coluna com um código de zero à esquerda, como CEP ou centro de custo, é de códigos: fica toda como texto.
+        de_codigos = [any(re.fullmatch(r"0\d+", v.strip()) for v in valores) for valores in colunas_dos_dados]
         for r, valores in enumerate(linhas, start=1):
             for c, valor in enumerate(valores, start=1):
-                aba.cell(row=r, column=c, value=valor.strip() if r == 1 else numero(valor))
+                if r == 1 or de_codigos[c - 1]:
+                    por_texto(aba.cell(row=r, column=c), valor)
+                else:
+                    por_valor(aba.cell(row=r, column=c), valor, decimais[c - 1])
         if linhas:
             por_cabecalho(aba, 1, len(linhas[0]))
             aba.freeze_panes = "A2"
@@ -883,10 +1350,34 @@ def gerar_xlsx(pasta: Path, fonte: Path, modelo: Path | None, destino: Path, idi
                 grafico.type = "bar"
             grafico.title = spec.get("titulo") or None
             ultima = len(linhas)
-            for nome in [v.strip() for v in spec.get("valores", "").split(",") if v.strip()]:
+            nomes_das_series = [v.strip() for v in spec.get("valores", "").split(",") if v.strip()]
+            for nome in nomes_das_series:
                 c = coluna(nome)
                 grafico.add_data(Reference(aba, min_col=c, min_row=1, max_row=ultima), titles_from_data=True)
-            grafico.set_categories(Reference(aba, min_col=coluna(spec.get("categorias", linhas[0][0])), min_row=2, max_row=ultima))
+            coluna_das_categorias = coluna(spec.get("categorias", linhas[0][0]))
+            grafico.set_categories(Reference(aba, min_col=coluna_das_categorias, min_row=2, max_row=ultima))
+            # As cores seguem a marca, como no PowerPoint: o destaque na série ou na categoria citada, o resto em cinza.
+            alvo_do_destaque = comum.normalizar(spec.get("destaque", ""))
+            categorias = [comum.normalizar(l[coluna_das_categorias - 1]) if coluna_das_categorias - 1 < len(l) else "" for l in linhas[1:]]
+            for s, serie in enumerate(grafico.series):
+                da_serie = alvo_do_destaque and comum.normalizar(nomes_das_series[s]) == alvo_do_destaque
+                cor = registro["destaque"] if (da_serie or (not alvo_do_destaque and s == 0) or len(nomes_das_series) == 1) else registro["neutra"]
+                if tipo == "linhas":
+                    serie.graphicalProperties.line.solidFill = cor
+                    serie.smooth = False
+                    continue
+                serie.graphicalProperties.solidFill = cor
+                if tipo == "pizza" or (len(nomes_das_series) == 1 and alvo_do_destaque in categorias):
+                    fatias = cores_das_fatias(len(categorias), registro)
+                    for i, categoria in enumerate(categorias):
+                        ponto = DataPoint(idx=i)
+                        if alvo_do_destaque:
+                            ponto.graphicalProperties.solidFill = registro["destaque"] if categoria == alvo_do_destaque else registro["neutra"]
+                        else:
+                            ponto.graphicalProperties.solidFill = fatias[i]
+                        if tipo == "pizza":
+                            ponto.graphicalProperties.line.solidFill = "FFFFFF"
+                        serie.dPt.append(ponto)
             grafico.width, grafico.height = 22, 11
             painel.add_chart(grafico, f"A{1 + n * 24}")
     if not livro.sheetnames:
@@ -904,7 +1395,7 @@ def converter_para_pdf(arquivo: Path) -> Path | None:
         avisos.append("O PDF não foi gerado: o LibreOffice (soffice) não está instalado. Exporte o PDF pelo aplicativo.")
         return None
     with tempfile.TemporaryDirectory() as perfil:
-        comando = [programa, f"-env:UserInstallation=file://{perfil}", "--headless", "--convert-to", "pdf", "--outdir", str(arquivo.parent), str(arquivo)]
+        comando = [programa, f"-env:UserInstallation={Path(perfil).resolve().as_uri()}", "--headless", "--convert-to", "pdf", "--outdir", str(arquivo.parent), str(arquivo)]
         try:
             saida = subprocess.run(comando, capture_output=True, text=True, timeout=240)
         except (OSError, subprocess.SubprocessError) as erro:
@@ -926,8 +1417,15 @@ def gerar_imagens(pdf: Path) -> Path | None:
     pasta.mkdir(exist_ok=True)
     for antiga in pasta.glob(f"{pdf.stem}-*.png"):
         antiga.unlink()
-    subprocess.run([programa, "-png", "-r", "60", str(pdf), str(pasta / pdf.stem)], capture_output=True, timeout=240)
-    return pasta if any(pasta.glob(f"{pdf.stem}-*.png")) else None
+    try:
+        subprocess.run([programa, "-png", "-r", "60", str(pdf), str(pasta / pdf.stem)], capture_output=True, timeout=240)
+    except (OSError, subprocess.SubprocessError) as erro:
+        avisos.append(f"As imagens de conferência não foram geradas: {erro}. Abra o PDF e olhe página por página.")
+        return None
+    if not any(pasta.glob(f"{pdf.stem}-*.png")):
+        avisos.append("As imagens de conferência não foram geradas: o pdftoppm não devolveu nenhuma página. Abra o PDF e olhe página por página.")
+        return None
+    return pasta
 
 
 def listar_layouts(arquivo: str | None) -> int:
@@ -970,6 +1468,10 @@ def main() -> int:
     if not args.id:
         analisador.error("diga o entregável: gerar.py ID")
     pasta = comum.BASE / args.id
+    if pasta.parent != comum.BASE or args.id.startswith((".", "_")):
+        raise SystemExit(f"'{args.id}' não é o nome de um entregável. Use o nome da pasta, sem barras.")
+    if args.idioma and not re.fullmatch(r"[A-Za-z]{2}(?:-[A-Za-z]{2})?", args.idioma):
+        raise SystemExit(f"'{args.idioma}' não é um código de idioma. Use es, en ou pt-BR.")
     if not (pasta / "briefing.md").is_file():
         raise SystemExit(f"Não existe o entregável '{args.id}'.")
     meta, _ = comum.cabecalho(comum.ler(pasta / "briefing.md"))

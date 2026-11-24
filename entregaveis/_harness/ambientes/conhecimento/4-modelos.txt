@@ -315,6 +315,7 @@ origem no registro de intake.
 | Fontes | | |
 | Cores principais | | |
 | Cores de destaque em gráficos | | |
+| Cor do texto sobre o fundo | | |
 | Uso do logotipo | | |
 | Rodapé e marcação obrigatória | | |
 | Tom de voz | | |

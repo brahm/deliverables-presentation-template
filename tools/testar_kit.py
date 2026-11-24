@@ -27,6 +27,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[1]
 HARNESS = RAIZ / "entregaveis" / "_harness"
 PY = sys.executable
+sys.path.insert(0, str(HARNESS / "scripts"))  # para os testes que chamam uma função do harness direto
 
 falhas: list[str] = []
 total = 0
@@ -192,6 +193,23 @@ def testar_instalador(tmp: Path) -> None:
     confere("nenhuma instrução aponta para o nome antigo da pasta", not sobras, ", ".join(sobras[:8]))
     estado = rodar([PY, "consultoria/_harness/scripts/estado.py"], outra)
     confere("o estado roda com outro nome de pasta", estado.returncode == 0 and "não foi iniciado" in estado.stdout, estado.stdout + estado.stderr)
+    # As mensagens que mandam rodar um script dizem o caminho que existe neste projeto.
+    scripts_de_fora = sorted((outra / "consultoria/_harness").rglob("*.py"))
+    fixos = [str(a.relative_to(outra)) for a in scripts_de_fora if re.search(r"[\"'` ]entregaveis/_", "\n".join(l for l in a.read_text(encoding="utf-8").splitlines() if not l.lstrip().startswith(("#", "empacotar.py", "As notas"))))]
+    confere("nenhum script escreve o nome padrão da pasta em uma mensagem", not fixos, ", ".join(fixos))
+    rodar(["git", "init", "-q"], outra) if shutil.which("git") else None
+    rodar(["git", "remote", "add", "origin", "http://127.0.0.1:1/time/sumido.git"], outra) if shutil.which("git") else None
+    situacao = rodar([PY, "consultoria/_harness/scripts/repositorio.py"], outra)
+    if shutil.which("git"):
+        confere("com outro nome de pasta, a mensagem da trava manda rodar o script que existe", "python3 consultoria/_harness/scripts/repositorio.py --confirmar" in situacao.stdout and "entregaveis/" not in situacao.stdout, situacao.stdout + situacao.stderr)
+    ambiente = rodar([PY, "-c", "import sys; sys.path.insert(0, 'consultoria/_harness/scripts'); import ambiente; print(ambiente.no_projeto('ambientes', 'LEIA-ME.md'))"], outra)
+    confere("com outro nome de pasta, a conferência do ambiente cita a pasta certa", ambiente.stdout.strip() == "consultoria/_harness/ambientes/LEIA-ME.md", ambiente.stdout + ambiente.stderr)
+    brief_de_fora = outra / "consultoria/_projeto/brief.md"
+    brief_de_fora.write_text(brief_de_fora.read_text(encoding="utf-8").replace("iniciado: nao", "iniciado: sim"), encoding="utf-8")
+    ata = rodar([PY, "consultoria/_harness/hooks/mensagem.py"], outra, json.dumps({"cwd": str(outra), "prompt": "segue a ata da reunião"}))
+    confere("com outro nome de pasta, o aviso de ata cita a pasta certa", "consultoria/_atas/" in ata.stdout and "entregaveis/" not in ata.stdout, ata.stdout + ata.stderr)
+    em_dia = rodar([PY, "consultoria/_harness/scripts/empacotar.py", "--conferir"], outra)
+    confere("com outro nome de pasta, os arquivos de conhecimento continuam em dia", em_dia.returncode == 0, em_dia.stdout + em_dia.stderr)
 
 
 # --- Checagens ------------------------------------------------------------
@@ -1281,6 +1299,182 @@ def testar_gerador(tmp: Path) -> None:
                 len(campos) == 2 and campos[1].top >= campos[0].top + campos[0].height, str([(f.top, f.height) for f in campos]))
         (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
 
+        # Números do gráfico: milhar, percentual e moeda, lidos pelo costume do idioma
+        import gerar as gerador  # noqa: PLC0415
+
+        def formatos(grafico) -> list[str]:
+            return ["".join(s._element.xpath("./c:val/c:numRef/c:numCache/c:formatCode/text()")) for s in grafico.plots[0].series]
+
+        def o_grafico(arquivo: str, pagina: int = 1):
+            return [f.chart for f in Presentation(str(saida / arquivo)).slides[pagina].shapes if getattr(f, "has_chart", False)][0]
+
+        tabela_do_grafico = "Função | Plataformas\nE-mail | 2\nDados | 1\nMídia | 1\n"
+        com_numeros = CONTEUDO_COM_VISUAIS.replace(tabela_do_grafico, "Função | Visitas | Conversão | Custo\nE-mail | 1.234 | 12% | R$ 1.200\nDados | 12.500 | 8,5% | R$ 300\nMídia | 900 | | R$ 45,50\n")
+        (pasta / "conteudo.md").write_text(com_numeros, encoding="utf-8")
+        feito = gerar("diag")
+        series = o_grafico("diag.pptx").plots[0].series if feito.returncode == 0 else []
+        confere("gráfico em português: o ponto é separador de milhar", feito.returncode == 0 and list(series[0].values) == [1234, 12500, 900], feito.stdout + feito.stderr)
+        confere("gráfico: o percentual entra como número, e a célula vazia fica sem ponto", len(series) == 3 and list(series[1].values) == [0.12, 0.085, None], str([list(s.values) for s in series]))
+        confere("gráfico: a moeda entra como número", len(series) == 3 and list(series[2].values) == [1200, 300, 45.5])
+        confere("gráfico: o rótulo sai no formato em que o número foi escrito", feito.returncode == 0 and formatos(o_grafico("diag.pptx")) == ["#,##0", "0.0%", '"R$" #,##0.00'], str(formatos(o_grafico("diag.pptx")) if feito.returncode == 0 else ""))
+        (pasta / "conteudo.en.md").write_text(com_numeros, encoding="utf-8")
+        em_ingles = gerar("diag", "--idioma", "en", "--rascunho")
+        confere("gráfico em inglês: o ponto é separador decimal", em_ingles.returncode == 0 and list(o_grafico("diag-en-rascunho.pptx").plots[0].series[0].values) == [1.234, 12.5, 900], em_ingles.stdout + em_ingles.stderr)
+        (pasta / "conteudo.en.md").unlink()
+        antes = (saida / "diag.pptx").read_bytes()
+        (pasta / "conteudo.md").write_text(com_numeros.replace("| 12.500 |", "| doze mil |"), encoding="utf-8")
+        recusado = gerar("diag")
+        confere("gráfico: valor que não é número para a geração e diz a linha e a coluna",
+                recusado.returncode != 0 and "doze mil" in recusado.stderr and "linha 'Dados'" in recusado.stderr and "coluna 'Visitas'" in recusado.stderr and (saida / "diag.pptx").read_bytes() == antes, recusado.stdout + recusado.stderr)
+        (pasta / "conteudo.md").write_text(com_numeros.replace("| 8,5% |", "| 8,5 |"), encoding="utf-8")
+        recusado = gerar("diag")
+        confere("gráfico: coluna que mistura percentual e número para a geração", recusado.returncode != 0 and "mistura percentual" in recusado.stderr, recusado.stdout + recusado.stderr)
+        lidos = {texto: gerador.ler_numero(texto, ",") for texto in ("1.234", "12,5", "0.500", "1.234.567", "1 234,5", "-3", "−3,5", "12 %", "US$ 1,200.50", "01310", "12345678901234567", "2026-10-01", "10 20", "1.2.3", "abc", "")}
+        confere("leitura de número: milhar, decimal, sinal, percentual e moeda", [lidos[k] and lidos[k][0] for k in ("1.234", "12,5", "0.500", "1.234.567", "1 234,5", "-3", "−3,5", "12 %", "US$ 1,200.50")] == [1234, 12.5, 0.5, 1234567, 1234.5, -3, -3.5, 0.12, 1200.5], str(lidos))
+        confere("leitura de número: código com zero à esquerda, número longo, data e texto não são números", all(lidos[k] is None for k in ("01310", "12345678901234567", "2026-10-01", "10 20", "1.2.3", "abc", "")), str(lidos))
+        confere("leitura de número: a coluna mostra o separador decimal quando um valor não deixa dúvida",
+                gerador.decimal_da_coluna(["1.234", "12.5"], "pt") == "." and gerador.decimal_da_coluna(["1.234", "2.500"], "pt") == "," and gerador.decimal_da_coluna(["1.234", "2.500"], "en") == "." and gerador.decimal_da_coluna(["1,5", "1.5"], "pt") == ",")
+
+        # Gráfico de pizza: uma cor por fatia, ou o destaque na fatia citada
+        pizza = CONTEUDO_COM_VISUAIS.replace("tipo: barras\ndestaque: E-mail\n", "tipo: pizza\n")
+        (pasta / "conteudo.md").write_text(pizza, encoding="utf-8")
+        gerar("diag")
+        fatias = [ponto.format.fill.fore_color.rgb for ponto in (o_grafico("diag.pptx").plots[0].series[0].points[i] for i in range(3))]
+        confere("pizza sem destaque: cada fatia tem a sua cor, a partir da cor de destaque", len(set(fatias)) == 3 and fatias[0] == RGBColor.from_string("0B5CAD"), str(fatias))
+        (pasta / "conteudo.md").write_text(pizza.replace("tipo: pizza\n", "tipo: pizza\ndestaque: Dados\n"), encoding="utf-8")
+        gerar("diag")
+        fatias = [ponto.format.fill.fore_color.rgb for ponto in (o_grafico("diag.pptx").plots[0].series[0].points[i] for i in range(3))]
+        confere("pizza com destaque: a fatia citada leva a cor e o resto fica em cinza", fatias == [RGBColor.from_string("A9B3BD"), RGBColor.from_string("0B5CAD"), RGBColor.from_string("A9B3BD")], str(fatias))
+
+        # Lista numerada, asterisco solto e tabela que não cabe
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("- A plataforma A cobre **campanhas** e jornadas.\n- A plataforma B cobre só campanhas.", "1. A plataforma A cobre **campanhas** e jornadas.\n2. A plataforma B cobre só campanhas."), encoding="utf-8")
+        gerar("diag")
+        marcadores = [bool(par._p.xpath("./a:pPr/a:buAutoNum")) for f in Presentation(str(saida / "diag.pptx")).slides[1].placeholders for par in f.text_frame.paragraphs if "plataforma" in par.text.lower() and "cobre" in par.text]
+        confere("lista numerada continua numerada no slide", marcadores == [True, True], str(marcadores))
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+        gerar("diag")
+        marcadores = [bool(par._p.xpath("./a:pPr/a:buAutoNum")) for f in Presentation(str(saida / "diag.pptx")).slides[1].placeholders for par in f.text_frame.paragraphs]
+        confere("lista de marcadores não ganha numeração", not any(marcadores), str(marcadores))
+        confere("asterisco de conta não vira itálico", gerador.trechos("2 * 3 e 4 * 5") == [("2 * 3 e 4 * 5", False, False)] and gerador.trechos("2*3 e 4*5") == [("2*3 e 4*5", False, False)], str(gerador.trechos("2*3 e 4*5")))
+        confere("asterisco colado à palavra continua marcando itálico e negrito", gerador.trechos("um *destaque* e **forte**") == [("um ", False, False), ("destaque", False, True), (" e ", False, False), ("forte", True, False)], str(gerador.trechos("um *destaque* e **forte**")))
+        longa = "| Quem | Faz o quê | Até quando |\n| --- | --- | --- |\n" + "".join(f"| Área {n} | Entrega a parte {n} do plano de migração | Mês {n} |\n" for n in range(1, 31))
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("| Quem | Faz o quê | Até quando |\n| --- | --- | --- |\n| Diretoria | Aprova o desligamento | Dezembro |\n| Operações | Migra as jornadas | Fevereiro |\n", longa), encoding="utf-8")
+        estourada = gerar("diag", "--rascunho")
+        confere("tabela que passa da borda do slide gera aviso com a página", estourada.returncode == 0 and "Página 3: a tabela de 31 linhas não cabe" in estourada.stdout, estourada.stdout + estourada.stderr)
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+        confere("tabela que cabe não gera aviso", "não cabe na área" not in gerar("diag").stdout)
+
+        # Fundo escuro: o texto que o gerador cria ganha cor que contrasta
+        from lxml import etree
+
+        espacos = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main", "p": "http://schemas.openxmlformats.org/presentationml/2006/main"}
+
+        def modelo_com_fundo(cor: str, arquivo: Path) -> None:
+            """Um modelo com o fundo pintado no slide mestre e o tema de cores sem mudança, como muitos modelos de cliente."""
+            base_do_modelo = Presentation()
+            quadro = base_do_modelo.slide_master._element.find("p:cSld", espacos)
+            for antigo in quadro.findall("p:bg", espacos):
+                quadro.remove(antigo)
+            quadro.insert(0, etree.fromstring(f'<p:bg xmlns:p="{espacos["p"]}" xmlns:a="{espacos["a"]}"><p:bgPr><a:solidFill><a:srgbClr val="{cor}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>'))
+            base_do_modelo.save(str(arquivo))
+
+        def cor_de(corrida_ou_fonte):
+            fonte = getattr(corrida_ou_fonte, "font", corrida_ou_fonte)
+            return fonte.color.rgb if fonte.color is not None and fonte.color.type is not None else None
+
+        def cores_do_slide(arquivo: str) -> dict:
+            apresentacao = Presentation(str(saida / arquivo))
+            com_grafico, com_tabela = apresentacao.slides[1], apresentacao.slides[2]
+            grafico = [f.chart for f in com_grafico.shapes if getattr(f, "has_chart", False)][0]
+            fonte_da_pagina = [f for f in com_grafico.shapes if f.has_text_frame and f.text_frame.text.startswith("Fonte:")][0]
+            tabela = [f.table for f in com_tabela.shapes if getattr(f, "has_table", False)][0]
+            return {
+                "grafico": cor_de(grafico.font), "rotulos": cor_de(grafico.plots[0].data_labels.font), "eixo": cor_de(grafico.category_axis.tick_labels.font),
+                "fonte": cor_de(fonte_da_pagina.text_frame.paragraphs[0].runs[0]),
+                "celula": cor_de(tabela.cell(1, 0).text_frame.paragraphs[0].runs[0]),
+                "fundo_da_celula": tabela.cell(1, 0)._tc.xpath("./a:tcPr/a:solidFill/a:srgbClr/@val"),
+                "cabecalho": tabela.cell(0, 0)._tc.xpath("./a:tcPr/a:solidFill/a:srgbClr/@val"),
+            }
+
+        branco = RGBColor.from_string("FFFFFF")
+        modelo_com_fundo("0B1F3A", materiais / "escuro.pptx")
+        no_escuro = gerar("diag", "--modelo", str(materiais / "escuro.pptx"))
+        cores = cores_do_slide("diag.pptx") if no_escuro.returncode == 0 else {}
+        confere("fundo escuro: os rótulos, o eixo e o texto do gráfico saem claros", [cores.get(k) for k in ("grafico", "rotulos", "eixo")] == [branco] * 3, no_escuro.stdout + no_escuro.stderr + str(cores))
+        confere("fundo escuro: a linha de fonte sai clara", cores.get("fonte") == branco, str(cores))
+        confere("fundo escuro: a tabela ganha células escuras com letra clara e cabeçalho na cor de destaque",
+                cores.get("celula") == branco and cores.get("cabecalho") == ["0B5CAD"] and bool(cores.get("fundo_da_celula")) and gerador.escuro(cores["fundo_da_celula"][0]), str(cores))
+        modelo_com_fundo("F4F1EA", materiais / "claro.pptx")
+        no_claro = gerar("diag", "--modelo", str(materiais / "claro.pptx"))
+        cores = cores_do_slide("diag.pptx") if no_claro.returncode == 0 else {"x": 1}
+        confere("fundo claro: o gerador não mexe na cor do texto nem na tabela", not any(cores.values()), no_claro.stdout + no_claro.stderr + str(cores))
+        marca.write_text(marca_em_branco.replace("| Cor do texto sobre o fundo | | |", "| Cor do texto sobre o fundo | #FFEE00 | M-001 |"), encoding="utf-8")
+        gerar("diag", "--modelo", str(materiais / "claro.pptx"))
+        confere("a cor do texto registrada na marca vence a escolha automática", cores_do_slide("diag.pptx")["fonte"] == RGBColor.from_string("FFEE00") and "Cor do texto sobre o fundo" in marca_em_branco)
+        marca.write_text(marca_em_branco, encoding="utf-8")
+
+        def fundo_lido(apresentacao) -> str | None:
+            gerador._FUNDOS.clear()
+            slide = apresentacao.slides.add_slide(apresentacao.slide_layouts[1])
+            return gerador.cor_do_fundo(slide, apresentacao.slide_width, apresentacao.slide_height)
+
+        confere("fundo do slide: modelo sem fundo declarado usa a cor de fundo do tema", fundo_lido(Presentation()) == "FFFFFF")
+        confere("fundo do slide: lê o fundo pintado no slide mestre", fundo_lido(Presentation(str(materiais / "escuro.pptx"))) == "0B1F3A")
+        pelo_tema = Presentation()
+        mapa = pelo_tema.slide_master._element.find("p:clrMap", espacos)
+        mapa.set("bg1", "dk1")
+        mapa.set("tx1", "lt1")
+        confere("fundo do slide: lê o tema que troca a cor de fundo pela de texto", fundo_lido(pelo_tema) == "000000")
+        com_forma = Presentation()
+        from pptx.enum.shapes import MSO_SHAPE  # noqa: PLC0415
+
+        # A biblioteca só desenha formas em slide. A forma é feita em um slide e levada para o mestre.
+        retangulo = com_forma.slides.add_slide(com_forma.slide_layouts[6]).shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, com_forma.slide_width, com_forma.slide_height)
+        retangulo.fill.solid()
+        retangulo.fill.fore_color.rgb = RGBColor.from_string("14213D")
+        com_forma.slide_master.shapes._spTree.append(retangulo._element)
+        confere("fundo do slide: lê o retângulo que cobre o slide no mestre", fundo_lido(com_forma) == "14213D")
+        try:
+            from PIL import Image  # noqa: PLC0415
+
+            Image.new("RGB", (64, 36), "#101820").save(str(tmp / "fundo.png"))
+            com_imagem = Presentation()
+            layout_com_imagem = com_imagem.slide_layouts[1]
+            _, relacao = layout_com_imagem.part.get_or_add_image_part(str(tmp / "fundo.png"))
+            layout_com_imagem.shapes._spTree.append(etree.fromstring(
+                f'<p:pic xmlns:p="{espacos["p"]}" xmlns:a="{espacos["a"]}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                '<p:nvPicPr><p:cNvPr id="99" name="Fundo"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>'
+                f'<p:blipFill><a:blip r:embed="{relacao}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>'
+                f'<p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="{com_imagem.slide_width}" cy="{com_imagem.slide_height}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>'))
+            confere("fundo do slide: lê a cor média da imagem que cobre o layout", fundo_lido(com_imagem) == "101820")
+        except ImportError:
+            print("  (Pillow não está instalado: teste da imagem de fundo pulado)")
+        confere("contraste: texto claro sobre cor escura e texto escuro sobre cor clara", gerador.texto_sobre("0B1F3A") == "FFFFFF" and gerador.texto_sobre("F4F1EA") != "FFFFFF")
+
+        # Seções do modelo: saem com as páginas de exemplo
+        com_secoes = Presentation()
+        com_secoes.slides.add_slide(com_secoes.slide_layouts[1]).shapes.title.text_frame.text = "EXEMPLO DO MODELO"
+        com_secoes.part._element.append(etree.fromstring(
+            f'<p:extLst xmlns:p="{espacos["p"]}"><p:ext uri="{{521415D9-36F7-43E2-AB2F-B90AF26B5E84}}">'
+            '<p14:sectionLst xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main"><p14:section name="Abertura" id="{6D1C4D0B-2A5E-4E0B-9F0A-3B1C2D4E5F60}">'
+            '<p14:sldIdLst><p14:sldId id="256"/></p14:sldIdLst></p14:section></p14:sectionLst></p:ext></p:extLst>'))
+        com_secoes.save(str(materiais / "secoes.pptx"))
+        gerar("diag", "--modelo", str(materiais / "secoes.pptx"))
+        with zipfile.ZipFile(saida / "diag.pptx") as gerado:
+            confere("as seções do modelo saem com as páginas de exemplo", "sectionLst" not in gerado.read("ppt/presentation.xml").decode("utf-8") and len(Presentation(str(saida / "diag.pptx")).slides) == 3)
+
+        # Caminhos: nada de fora da pasta do projeto entra no arquivo
+        (tmp / "fora.png").write_bytes((tmp / "fundo.png").read_bytes() if (tmp / "fundo.png").is_file() else b"x")
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("```grafico", "![de fora](../../../fora.png)\n\n```grafico", 1), encoding="utf-8")
+        de_fora = gerar("diag", "--rascunho")
+        confere("imagem de fora da pasta do projeto é recusada", de_fora.returncode != 0 and "fora da pasta do projeto" in de_fora.stderr, de_fora.stdout + de_fora.stderr)
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("dados:\n" + tabela_do_grafico, "arquivo: ../../../fora.csv\n"), encoding="utf-8")
+        (tmp / "fora.csv").write_text("Função;Plataformas\nE-mail;2\n", encoding="utf-8")
+        de_fora = gerar("diag", "--rascunho")
+        confere("arquivo de dados de fora da pasta do projeto é recusado", de_fora.returncode != 0 and "fora da pasta do projeto" in de_fora.stderr, de_fora.stdout + de_fora.stderr)
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+        confere("nome de entregável com caminho é recusado", gerar("../diag").returncode != 0 and gerar("diag", "--idioma", "../x").returncode != 0)
+
         # Outro idioma
         (pasta / "conteudo.es.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
         versao = gerar("diag", "--idioma", "es", "--rascunho")
@@ -1289,6 +1483,16 @@ def testar_gerador(tmp: Path) -> None:
 
         pdf = gerar("diag", "--pdf")
         confere("--pdf gera o PDF, ou diz por que não gerou", pdf.returncode == 0 and ((saida / "diag.pdf").is_file() or "PDF não foi gerado" in pdf.stdout), pdf.stdout + pdf.stderr)
+        if os.name == "posix":
+            # Um soffice de mentira, para ver o comando que o gerador monta.
+            falso = tmp / "bin-falso"
+            falso.mkdir()
+            (falso / "soffice").write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$(dirname "$0")/argumentos.txt"\n', encoding="utf-8")
+            (falso / "soffice").chmod(0o755)
+            subprocess.run([PY, "entregaveis/_harness/scripts/gerar.py", "diag", "--pdf"], cwd=projeto, capture_output=True, text=True, timeout=120, env={**os.environ, "PATH": f"{falso}{os.pathsep}{os.environ.get('PATH', '')}"})
+            argumentos = (falso / "argumentos.txt").read_text(encoding="utf-8").splitlines() if (falso / "argumentos.txt").is_file() else []
+            perfil = next((a for a in argumentos if a.startswith("-env:UserInstallation=")), "")
+            confere("o perfil do LibreOffice vai como endereço de arquivo bem formado", re.fullmatch(r"-env:UserInstallation=file:///[^\\]+", perfil) is not None, str(argumentos))
 
     if not tem_pacote("docx"):
         print("  (python-docx não está instalado: testes de Word pulados)")
@@ -1310,6 +1514,20 @@ def testar_gerador(tmp: Path) -> None:
         confere("listas e tabela chegam ao documento", ("List Bullet", "A plataforma B cobre só campanhas.") in estilos and ("List Number", "Operações migra as jornadas.") in estilos and len(doc.tables) == 1 and doc.tables[0].cell(1, 1).text == "2")
         confere("as evidências citadas formam a seção de fontes", ("Heading 1", "Fontes") in estilos and any(texto.startswith("E-001: Inventário de contratos") for _, texto in estilos))
         marca.write_text(marca_em_branco, encoding="utf-8")
+
+        # Modelo sem os estilos que o gerador procura: nada sai duplicado nem vazio
+        pobre = Document()
+        for nome in ("Title", "List Bullet", "List Number", "Quote"):
+            pobre.styles[nome].delete()
+        pobre.save(str(materiais / "pobre.docx"))
+        (pasta / "documento.md").write_text(DOCUMENTO + "\n> Uma frase citada.\n", encoding="utf-8")
+        feito = gerar("diag", "--formato", "docx", "--rascunho", "--modelo", str(materiais / "pobre.docx"))
+        paragrafos = [par.text for par in Document(str(saida / "diag-rascunho.docx")).paragraphs] if feito.returncode == 0 else []
+        confere("Word sem o estilo de título: o título sai uma vez só", paragrafos.count("Diagnóstico de martech") == 1, feito.stdout + feito.stderr + str(paragrafos))
+        vazios_seguidos = any(not a.strip() and not b.strip() for a, b in zip(paragrafos, paragrafos[1:]))
+        confere("Word sem os estilos de lista e de citação: não sobram parágrafos vazios", bool(paragrafos) and not vazios_seguidos and paragrafos.count("") <= 1, str(paragrafos))
+        confere("Word sem estilo de lista: o marcador e o número vão escritos no texto", "• A plataforma B cobre só campanhas." in paragrafos and "1. A diretoria aprova o desligamento." in paragrafos and "2. Operações migra as jornadas." in paragrafos, str(paragrafos))
+        confere("Word sem o estilo: o gerador avisa qual estilo falta", "não tem o estilo 'List Bullet'" in feito.stdout, feito.stdout)
         (pasta / "documento.md").unlink()
 
     if not tem_pacote("openpyxl"):
@@ -1332,6 +1550,27 @@ def testar_gerador(tmp: Path) -> None:
         (pasta / "planilha.md").write_text(PLANILHA.replace("valores: Custo anual", "valores: Custo mensal"), encoding="utf-8")
         errado = gerar("diag", "--formato", "xlsx")
         confere("gráfico que cita coluna inexistente é erro", errado.returncode != 0 and "Custo mensal" in errado.stdout + errado.stderr)
+
+        # Dados salvos pelo Excel, códigos, texto com sinal de igual e números com milhar
+        (pasta / "planilha.md").write_text(PLANILHA.replace("Soma das parcelas", "=Soma das parcelas").replace("tipo: colunas\n", "tipo: pizza\n"), encoding="utf-8")
+        linhas_de_dados = "Plataforma;Função;Custo anual;Usuários;CEP;Observação;Participação;Preço\nA;E-mail;1.234;14;01310;= 12% do total;12%;R$ 1.200,50\nB;Automação;12.500;6;04538;=SUM(A1:A9);8,5%;R$ 300\nC;Dados;300.000;22;20040;ação;3%;R$ 45,00\n"
+        for codificacao in ("cp1252", "utf-16", "utf-8-sig"):
+            (pasta / "dados/inventario.csv").write_bytes(linhas_de_dados.encode(codificacao))
+            feito = gerar("diag", "--formato", "xlsx", "--rascunho")
+            dados = load_workbook(str(saida / "diag-rascunho.xlsx"))["Inventário"] if feito.returncode == 0 else None
+            confere(f"Excel: lê o CSV salvo em {codificacao}, com os acentos", dados is not None and dados["B3"].value == "Automação" and dados["F4"].value == "ação", feito.stdout + feito.stderr)
+        livro = load_workbook(str(saida / "diag-rascunho.xlsx"))
+        dados = livro["Inventário"]
+        confere("Excel em português: o ponto é separador de milhar", [dados[f"C{n}"].value for n in (2, 3, 4)] == [1234, 12500, 300000])
+        confere("Excel: texto que começa por sinal de igual entra como texto, e não como fórmula", [(dados[f"F{n}"].value, dados[f"F{n}"].data_type) for n in (2, 3)] == [("= 12% do total", "s"), ("=SUM(A1:A9)", "s")] and livro["Dicionário"]["E2"].data_type == "s")
+        confere("Excel: coluna de códigos com zero à esquerda fica toda como texto", [dados[f"E{n}"].value for n in (2, 3, 4)] == ["01310", "04538", "20040"])
+        confere("Excel: percentual e moeda entram como número, com o formato", [(dados[f"G{n}"].value, dados[f"G{n}"].number_format) for n in (2, 3)] == [(0.12, "0%"), (0.085, "0.0%")] and (dados["H2"].value, dados["H2"].number_format) == (1200.5, '"R$" #,##0.00'))
+        with zipfile.ZipFile(saida / "diag-rascunho.xlsx") as gerado:
+            desenho = "".join(gerado.read(n).decode("utf-8") for n in gerado.namelist() if "charts/chart" in n)
+        confere("Excel: o gráfico usa a cor de destaque da marca, e a pizza tem uma cor por fatia", 'val="0B5CAD"' in desenho and desenho.count("dPt>") >= 6, desenho[:300])
+        (pasta / "dados/inventario.csv").write_bytes(b"\x00\x01\x02\xff\xfe\x81;isto nao e texto")
+        ilegivel = gerar("diag", "--formato", "xlsx", "--rascunho")
+        confere("Excel: arquivo de dados que não é texto para a geração com mensagem, sem rastro de erro", ilegivel.returncode != 0 and "não pôde ser lido" in ilegivel.stdout + ilegivel.stderr and "Traceback" not in ilegivel.stderr, ilegivel.stdout + ilegivel.stderr)
 
 
 def testar_fases(tmp: Path) -> None:

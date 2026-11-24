@@ -49,7 +49,7 @@ AVISO_DE_DISPENSA = (
 ATA = re.compile(r"\b(?:atas?|transcri[çc](?:[ãa]o|[õo]es)|actas?|meeting (?:notes|minutes)|minutes of)\b", flags=re.IGNORECASE)
 AVISO_DE_ATA = (
     "Harness de entregáveis: se a mensagem traz uma ata ou conta o que houve em uma reunião, aplique a skill processar-ata. "
-    "As atas ficam em entregaveis/_atas/, fora do git."
+    f"As atas ficam em {comum.relativo(comum.BASE / '_atas')}/, fora do git."
 )
 # Sinais de que o cliente respondeu, ou foi cobrado, sobre algo que o projeto esperava.
 FOLLOW_UP = re.compile(

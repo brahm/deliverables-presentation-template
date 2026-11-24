@@ -13,12 +13,22 @@ Este arquivo roda em versões antigas do Python, para conseguir dizer que
 a versão é antiga. Só usa a biblioteca padrão.
 """
 import importlib.util
+import os
 import platform
 import shutil
 import subprocess
 import sys
 
 MINIMO = (3, 9)
+HARNESS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def no_projeto(*partes):
+    """O caminho de um arquivo do harness a partir da raiz do projeto, com o nome que a pasta tem aqui."""
+    raiz = os.path.dirname(os.path.dirname(HARNESS))
+    return os.path.relpath(os.path.join(HARNESS, *partes), raiz).replace(os.sep, "/")
+
+
 PACOTES = [("pptx", "python-pptx", "gerar PowerPoint"), ("docx", "python-docx", "gerar Word"), ("openpyxl", "openpyxl", "gerar Excel")]
 
 # Como instalar cada programa, por sistema. O agente roda o comando com o sim do consultor, ou repassa o passo a passo.
@@ -103,7 +113,7 @@ def relatorio(itens):
     else:
         linhas.append("\nO essencial está pronto. O que falta só é pedido na hora de gerar o arquivo daquele formato.")
     linhas.append("O agente pode rodar estes comandos com o seu sim, ou você roda um a um no terminal.")
-    linhas.append("Se nada pode ser instalado nesta máquina, o método vale sem instalação: veja entregaveis/_harness/ambientes/LEIA-ME.md.")
+    linhas.append("Se nada pode ser instalado nesta máquina, o método vale sem instalação: veja %s." % no_projeto("ambientes", "LEIA-ME.md"))
     return "\n".join(linhas)
 
 
@@ -138,7 +148,7 @@ def instalar():
         "\nO pip recusou a instalação nesta máquina. O caminho seguro é um ambiente próprio do projeto:\n"
         "  python3 -m venv .venv\n"
         "  .venv/bin/python -m pip install " + " ".join(faltam) + "      (no Windows: .venv\\Scripts\\python)\n"
-        "Depois gere os arquivos com esse Python: .venv/bin/python entregaveis/_harness/scripts/gerar.py ID"
+        "Depois gere os arquivos com esse Python: .venv/bin/python %s ID" % no_projeto("scripts", "gerar.py")
     )
     return 1
 
