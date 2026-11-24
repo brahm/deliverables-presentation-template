@@ -1,6 +1,6 @@
 # Modelos
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.13.1. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do harness de entregáveis, versão 0.13.2. Gerado por empacotar.py: não edite à mão.
 
 Cada modelo é a forma de uma seção do registro do projeto ou de uma parte de um entregável. PREENCHER marca o que ainda precisa ser escrito.
 
@@ -573,7 +573,7 @@ id	pedido	solicitante	pedido_em	impacto_prazo	impacto_esforco	impacto_escopo	est
 ~~~text
 # A referência aprovada de prazo e esforço. Quem grava é o governanca.py --linha-de-base. Nenhuma linha é apagada.
 # Cada versão é uma fotografia dos prazos dos entregáveis, dos marcos e das ações com base: sim. A mudança aprovada gera uma versão nova.
-# tipo: entregavel, marco ou acao. data_base: AAAA-MM-DD. esforco_base: em horas ou dias, quando o consultor informa.
+# tipo: entregavel, marco ou acao. data_base: AAAA-MM-DD. esforco_base: a estimativa do plano, em horas ou dias, quando o consultor informa. Não é comparada com horas trabalhadas.
 versao	item	tipo	descricao	data_base	esforco_base	aprovada_em	aprovada_por	motivo
 ~~~
 
@@ -610,15 +610,6 @@ satisfacao	marco	Como o cliente avaliou este marco? Uma nota e uma frase bastam.
 beneficio	marco	O benefício esperado deste marco já apareceu?		
 materiais	marco	Algum material de governança deixou de ser lido?		Sim: a skill definir-governanca tira o material ou desce o nível
 nivel	semanal	Os sinais do projeto pedem um nível de governança acima do atual. Sobe o nível?		Só aparece quando os sinais passam do nível atual. Troque a frequência para nunca se o nível fica como está
-horas	nunca	Horas trabalhadas		O consultor lança em esforco.tsv quando quiser. Nenhuma pergunta e nenhum aviso
-~~~
-
-### esforco.tsv
-
-~~~text
-# Esforço lançado, quando o consultor informa por conta própria. O harness não pergunta por horas e não avisa quando falta lançamento.
-# data: AAAA-MM-DD. horas: número, com ponto ou vírgula.
-data	pessoa	frente	entregavel	horas	observacao
 ~~~
 
 ### controles.tsv
@@ -795,7 +786,7 @@ checagem	espera	texto
 # fontes: os registros de _projeto/ de onde o material sai. Nada é digitado duas vezes.
 codigo	material	nivel	momento	cadencia	destinatario	substitui	traz	fontes
 abertura	Página de abertura e plano	enxuto	inicio	uma vez, no início	patrocinador		Objetivo, escopo e fora de escopo, entregáveis e marcos, quem decide e quem aprova, critérios de aceite, cadência combinada e premissas. Serve também de material de kickoff	brief.md, papeis.tsv, premissas.tsv, ritos.tsv, linha-de-base.tsv
-status-semanal	Status semanal de uma página	enxuto	rotina	toda semana, no dia do status	gerente do cliente		Semáforo com o motivo, feito e a fazer, marcos, até três riscos ou issues, decisões pedidas, pendências do cliente com as cobranças feitas, datas deslocadas e desvio de esforço quando houver. É também a pauta da reunião	acoes.tsv, riscos.tsv, issues.tsv, prazos.tsv, cobrancas.tsv, linha-de-base.tsv, diario.md
+status-semanal	Status semanal de uma página	enxuto	rotina	toda semana, no dia do status	gerente do cliente		Semáforo com o motivo, feito e a fazer, marcos, até três riscos ou issues, decisões pedidas, pendências do cliente com as cobranças feitas e datas deslocadas. É também a pauta da reunião	acoes.tsv, riscos.tsv, issues.tsv, prazos.tsv, cobrancas.tsv, linha-de-base.tsv, diario.md
 nota-de-reuniao	Nota de decisões e ações	enxuto	rotina	depois de cada reunião que decide algo	participantes		Decisões e ações com dono e prazo, em cerca de cinco linhas, por mensagem	reunioes.tsv, decisoes.md, acoes.tsv
 pedidos-ao-cliente	Lista de pedidos ao cliente	enxuto	controle	no início, e as atualizações seguem no status	gerente do cliente		Item, finalidade, dono no cliente e prazo	registro.tsv do intake, dependencias.tsv, acoes.tsv
 aceite	Confirmação de aceite	enxuto	entregaveis	a cada entregável	aprovador		Entregável, versão, ressalvas, quem aceitou e quando. Uma mensagem basta. Leva o aviso de faturamento quando o pagamento é por marco	versoes.tsv, papeis.tsv
@@ -819,7 +810,7 @@ ciclo-de-aprovacao	Ciclo de aprovação com prazos	padrao	entregaveis	no planeja
 registros-abertos	Riscos, issues e decisões abertos ao cliente	padrao	controle	a cada status	gestores dos dois lados		Os três registros em versão para o cliente, sem as notas internas	riscos.tsv, issues.tsv, decisoes.md
 aviso-de-faturamento	Aviso de pronto para faturar	padrao	controle	por marco de pagamento	gestor e financeiro		Marco, condição, evidência de aceite e situação	versoes.tsv, acoes.tsv
 aditivos	Registro de aditivos	padrao	controle	quando uma mudança é aprovada	gestores e jurídico		Mudança, efeito em escopo, prazo e preço, e o documento	mudancas.tsv, linha-de-base.tsv
-relatorio-de-encerramento	Relatório de encerramento	padrao	encerramento	uma vez, no fim	patrocinador e direção	encerramento	Resultado contra objetivos, escopo realizado, prazo e esforço reais contra a linha de base, mudanças e pendências	linha-de-base.tsv, versoes.tsv, mudancas.tsv, adiados.tsv, esforco.tsv
+relatorio-de-encerramento	Relatório de encerramento	padrao	encerramento	uma vez, no fim	patrocinador e direção	encerramento	Resultado contra objetivos, escopo realizado, prazo real contra a linha de base, mudanças e pendências	linha-de-base.tsv, versoes.tsv, mudancas.tsv, adiados.tsv
 aceite-final	Aceite final do projeto	padrao	encerramento	depois da apresentação final	patrocinador		Entregáveis aceitos, ressalvas, pendências e o destino de cada uma	versoes.tsv, adiados.tsv
 transferencia	Transferência de conhecimento e transição	padrao	encerramento	na reta final	time do cliente		Materiais, responsáveis, orientações, sessões de repasse e riscos que ficam	versoes.tsv, riscos.tsv, papeis.tsv
 licoes-aprendidas	Relatório de lições aprendidas	padrao	encerramento	no fim	consultoria e, em parte, cliente		Acertos, dificuldades, causas e recomendações	licoes.md, diario.md
@@ -833,7 +824,7 @@ nota-ao-patrocinador	Nota semanal ao patrocinador	completo	rotina	semanal	patroc
 painel	Painel executivo de uma página	completo	rotina	mensal ou sob pedido	patrocinador		Semáforo, três fatos, três riscos e a próxima decisão	linha-de-base.tsv, riscos.tsv, acoes.tsv
 relatorio-de-fase	Relatório de fase ou de marco	completo	rotina	ao fim de cada fase	patrocinador e gestores		Entregue contra planejado, desvios, riscos, lições e plano da próxima fase	fases.md, linha-de-base.tsv, versoes.tsv, licoes.md
 matriz-de-riscos	Matriz de riscos	completo	rotina	a cada status executivo	comitê		Riscos posicionados por probabilidade e impacto, com os cinco principais em destaque	riscos.tsv
-revisao-interna	Revisão interna do engajamento	completo	rotina	mensal	direção da consultoria		Saúde da entrega, satisfação, riscos, equipe e oportunidades	linha-de-base.tsv, riscos.tsv, esforco.tsv, perguntas.tsv
+revisao-interna	Revisão interna do engajamento	completo	rotina	mensal	direção da consultoria		Saúde da entrega, satisfação, riscos, equipe e oportunidades	linha-de-base.tsv, riscos.tsv, perguntas.tsv
 revisao-independente	Revisão independente de entregável de alto risco	completo	entregaveis	antes do envio	direção		Escopo da revisão, revisor que não participou do trabalho e achados	versoes.tsv, papeis.tsv
 ensaio	Ensaio de apresentação	completo	entregaveis	antes de apresentar	apresentadores		Roteiro, papéis, perguntas previstas e tempo	briefing.md do entregável, papeis.tsv
 beneficios	Plano e registro de realização de benefícios	completo	controle	nos marcos, com medições depois do projeto	patrocinador e dono do benefício		Benefício, indicador, linha de base, meta, dono, data de medição e realizado	premissas.tsv, perguntas.tsv, evidencias.tsv

@@ -133,7 +133,7 @@ def formatos_e_visual() -> str:
 
 # Os registros de governança, nos modelos e no pacote de um projeto.
 DE_GOVERNANCA = ("governanca.tsv", "papeis.tsv", "premissas.tsv", "issues.tsv", "dependencias.tsv", "mudancas.tsv", "linha-de-base.tsv", "versoes.tsv",
-                 "cobrancas.tsv", "perguntas.tsv", "esforco.tsv", "controles.tsv", "insumos.tsv")
+                 "cobrancas.tsv", "perguntas.tsv", "controles.tsv", "insumos.tsv")
 
 
 def modelos() -> str:

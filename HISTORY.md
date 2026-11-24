@@ -3,6 +3,19 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.13.2
+
+- O harness deixa de ter registro de horas. Saem o modelo
+  `esforco.tsv`, a seção de esforço do status semanal e do status
+  executivo e a pergunta de horas de `perguntas.tsv`. O catálogo de
+  materiais não cita mais esforço realizado.
+- A estimativa de esforço do plano continua na linha de base e no
+  impacto de uma mudança, só como base de plano e de preço.
+
+O que o projeto precisa fazer: atualize com `--atualizar`. Se o projeto
+tem `_projeto/esforco.tsv`, o harness não o lê mais, e o consultor decide
+se o guarda ou apaga.
+
 ## 0.13.1
 
 Correções da revisão de código. Nenhum comando mudou de nome.

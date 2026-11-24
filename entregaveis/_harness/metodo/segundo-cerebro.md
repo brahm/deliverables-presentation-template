@@ -46,7 +46,7 @@ nota diz o que o dado significa, liga um dado ao outro e cita o id.
 | Uma lição | `licoes.md` | A lição, quando serve além da guarda que ela criou |
 | Um material recebido | o registro do intake | Um resumo do que o material traz e de onde ele está |
 | O brief, a audiência, o domínio, o briefing, a storyline aprovada e o fechamento | os próprios arquivos | Quem é o cliente, quem decide, o que cada entregável quis provocar e o que aconteceu |
-| Uma tarefa, uma mudança de data, uma cobrança, um aviso, uma versão, a linha de base, as horas | os registros de cada um | Nada. São movimentos do projeto, e a busca acha todos eles no registro |
+| Uma tarefa, uma mudança de data, uma cobrança, um aviso, uma versão, a linha de base | os registros de cada um | Nada. São movimentos do projeto, e a busca acha todos eles no registro |
 
 A decisão e a mudança de data são o caso que mais confunde. O histórico
 delas é uma lista em ordem de tempo, e o lugar de uma lista assim é o

@@ -215,23 +215,6 @@ def pendencias_do_cliente(hoje: datetime.date) -> list[str]:
     return saida
 
 
-def esforco() -> list[str]:
-    def numero(texto: str) -> float:
-        try:
-            return float((texto or "").replace(",", "."))
-        except ValueError:
-            return 0.0
-
-    lancado = sum(numero(l.get("horas", "")) for l in comum.ler_tsv(comum.PROJETO / "esforco.tsv"))
-    if not lancado:
-        return []
-    _, base = governanca.ultima_base()
-    previsto = sum(numero(l.get("esforco_base", "")) for l in base)
-    if not previsto:
-        return [f"Esforço lançado: {lancado:g} hora(s). A linha de base não traz esforço para comparar."]
-    return [f"Esforço lançado: {lancado:g} hora(s), de {previsto:g} na linha de base ({lancado / previsto:.0%})."]
-
-
 def secao(titulo: str, linhas: list[str], vazio: str = "", marcador: str = "- ") -> list[str]:
     """Uma seção do material. Sem linhas e sem texto para o vazio, a seção não sai."""
     if not linhas and not vazio:
@@ -260,7 +243,6 @@ def status_semanal(hoje: datetime.date, cor: str, motivo: str) -> list[str]:
     texto += secao("Decisões pedidas", decisoes_pedidas(), "Nenhuma decisão pendente.")
     texto += secao("Pendências do cliente", pendencias_do_cliente(hoje), "Nada depende do cliente hoje.")
     texto += secao("Datas deslocadas", [linha.lstrip("- ").strip() for linha in rotina.datas_deslocadas()])
-    texto += secao("Esforço", esforco())
     return texto
 
 
@@ -277,7 +259,7 @@ def status_executivo(hoje: datetime.date, cor: str, motivo: str) -> list[str]:
     pedidas = decisoes_pedidas()
     texto += secao("5. O que precisa ser decidido", [f"{linha}. Opções e recomendação: {comum.MARCA}" for linha in pedidas], "Nenhuma decisão pendente.")
     decididas = [f"{l.get('id', '?')} ({l.get('estado', '')} em {l.get('decidido_em', '') or '?'}): {l.get('pedido', '')}. Impacto: {impacto(l)}" for l in mudancas("aprovada", "rejeitada")]
-    texto += secao("Mudanças e esforço", decididas + esforco())
+    texto += secao("Mudanças", decididas)
     return texto
 
 
