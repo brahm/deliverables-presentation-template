@@ -119,7 +119,6 @@ que o consultor diz. O consultor corrige no resumo do dia.
 | `linha-de-base.tsv` | As datas combinadas, por versão, com o motivo e quem aprovou |
 | `versoes.tsv` | Cada versão enviada de um entregável, com o que mudou, quem recebeu e o aceite |
 | `cobrancas.tsv` | Cada follow-up feito com o cliente e a resposta |
-| `esforco.tsv` | As horas, quando o consultor quer registrar. Não gera pergunta nem aviso |
 | `controles.tsv` | A resposta do projeto a cada controle de governança que os pacotes ativos trazem: cumprido com a evidência, pendente ou não se aplica |
 | `insumos.tsv` | As informações que os pacotes ativos pedem ao consultor, com o que já foi recebido, de quem e onde ficou |
 | `emitidos.tsv` | Cada material montado pelo `emitir.py`, com a data e o arquivo. Os rascunhos ficam em `emitidos/` |

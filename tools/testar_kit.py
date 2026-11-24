@@ -2560,7 +2560,7 @@ def testar_governanca(tmp: Path) -> None:
     instalar(projeto)
     base = projeto / "entregaveis"
     reg = base / "_projeto"
-    novos = ("premissas.tsv", "issues.tsv", "dependencias.tsv", "mudancas.tsv", "papeis.tsv", "linha-de-base.tsv", "versoes.tsv", "esforco.tsv", "cobrancas.tsv", "perguntas.tsv", "governanca.tsv")
+    novos = ("premissas.tsv", "issues.tsv", "dependencias.tsv", "mudancas.tsv", "papeis.tsv", "linha-de-base.tsv", "versoes.tsv", "cobrancas.tsv", "perguntas.tsv", "governanca.tsv")
     confere("a instalação cria os registros de governança", all((reg / n).is_file() for n in novos), str([n for n in novos if not (reg / n).is_file()]))
     montar_exemplo(projeto)
 
@@ -2938,7 +2938,7 @@ def testar_emissao(tmp: Path) -> None:
     # O status de um projeto sem nada aberto.
     vazio = em("status-semanal")
     confere("status sem nada aberto: verde, com o aviso de que falta a linha de base", vazio.returncode == 0 and cor() == "verde" and "ainda não tem linha de base, e por isso o desvio de prazo não foi medido" in vazio.stdout and "Diagnóstico de martech, Varejista Exemplo" in vazio.stdout, vazio.stdout + vazio.stderr)
-    confere("status: seção sem dado diz que não há, e seção opcional não sai", "Nenhuma decisão pendente." in secao(vazio.stdout, "Decisões pedidas") and "## Datas deslocadas" not in vazio.stdout and "## Esforço" not in vazio.stdout)
+    confere("status: seção sem dado diz que não há, e seção opcional não sai", "Nenhuma decisão pendente." in secao(vazio.stdout, "Decisões pedidas") and "## Datas deslocadas" not in vazio.stdout )
     confere("status: o rascunho diz quem envia e não é gravado sem --gravar", "Quem revisa e envia é o consultor" in vazio.stdout and not (reg / "emitidos").exists())
 
     # O semáforo, com os dois lados de cada regra.
@@ -3011,8 +3011,9 @@ def testar_emissao(tmp: Path) -> None:
     acao("T-007", "decisao", "Decisão ainda em proposta", "Diretora de marketing", "cliente", 0, 8, estado_="proposta")
     pedidas = secao(status(), "Decisões pedidas")
     confere("status: a decisão pedida aparece com quem decide e até quando", f"T-006: Escolher entre renovar ou trocar a plataforma de e-mail. Quem decide: Diretora de marketing. Até: {d(8)}" in pedidas and "T-007" not in pedidas, pedidas)
-    acrescentar(reg / "esforco.tsv", d0, "Consultora", "", "diag", "12,5", "")
-    confere("status: o esforço só aparece quando há lançamento", "Esforço lançado: 12.5 hora(s)" in secao(status(), "Esforço"), status())
+    (reg / "esforco.tsv").write_text("data\tpessoa\tfrente\tentregavel\thoras\tobservacao\n" + f"{d0}\tConsultora\t\tdiag\t12,5\t\n", encoding="utf-8")
+    confere("status: horas não entram, nem com um registro antigo de esforço no projeto", "Esforço" not in status() and "hora(s)" not in status() and "Esforço" not in em("status-executivo").stdout and not (HARNESS / "modelos/projeto/esforco.tsv").exists(), status())
+    (reg / "esforco.tsv").unlink()
 
     # O status executivo e a pauta.
     acrescentar(reg / "reunioes.tsv", "A-001", d0, "Reunião de acompanhamento", "", "Consultora", "anotação", "", "", "realizada", "2 ações", d0)
@@ -3115,7 +3116,7 @@ def testar_emissao(tmp: Path) -> None:
     confere("com a mudança aprovada, a linha de base nova é gravada", gov("--linha-de-base", "--motivo", "MU-001", "--aprovada-por", "Diretora de marketing", hoje=d(1)).returncode == 0 and "\n2\t" in base_tsv.read_text(encoding="utf-8") and "\tMU-001\n" in base_tsv.read_text(encoding="utf-8"))
     decidida = em("mudanca", "MU-001", hoje=d(2)).stdout
     confere("solicitação decidida mostra a decisão e a linha de base de referência", f"Aprovada em {d(1)}. Diretora de marketing" in secao(decidida, "Decisão") and "( ) Aprovada" not in decidida and "Referência: linha de base versão 2." in decidida, decidida)
-    confere("status executivo: a mudança decidida entra em mudanças e esforço", "MU-001 (aprovada em " + str(d(1)) in secao(em("status-executivo", hoje=d(2)).stdout, "Mudanças e esforço"))
+    confere("status executivo: a mudança decidida entra em mudanças", "MU-001 (aprovada em " + str(d(1)) in secao(em("status-executivo", hoje=d(2)).stdout, "Mudanças"))
     gov("--mudanca", "Refazer o inventário por país", "--solicitante", "Diretor de tecnologia")
     confere("rejeitar pede o motivo", gov("--decidir", "MU-002", "--decisao", "rejeitada", "--quem", "Diretora de marketing").returncode == 2 and "\tproposta\t" in linha_de(mud, "MU-002"))
     rejeitada = gov("--decidir", "MU-002", "--decisao", "rejeitada", "--quem", "Diretora de marketing", "--motivo", "Fora do contrato", hoje=d(2))

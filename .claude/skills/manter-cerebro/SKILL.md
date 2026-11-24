@@ -53,8 +53,8 @@ precisa pedir: a atualização faz parte de cada ação do projeto.
 
 ## O que não entra
 
-10. Tarefa, mudança de data, cobrança, aviso, versão, linha de base e
-    horas ficam só nos registros. O histórico das decisões também: a
+10. Tarefa, mudança de data, cobrança, aviso, versão e linha de base
+    ficam só nos registros. O histórico das decisões também: a
     nota cita o id da decisão e diz o que ela muda.
 11. Nome de outro cliente, credencial e dado que
     `entregaveis/_projeto/regras-de-material.md` proíbe não entram em

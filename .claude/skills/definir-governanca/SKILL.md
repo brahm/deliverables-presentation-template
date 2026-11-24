@@ -76,8 +76,9 @@ comando é `python3 entregaveis/_harness/scripts/governanca.py`.
     Com o pacote de proposta ativo, a sugestão é o nível proposta, que
     não emite material: grave `--nivel proposta` e siga a skill do
     pacote. Vendida a proposta, defina o nível da fase nova.
-13. O esforço fica em `_projeto/esforco.tsv` quando o consultor informa.
-    Não pergunte por horas e não avise que falta lançamento.
+13. O harness não registra horas trabalhadas. Não pergunte por elas e
+    não crie registro para elas. A estimativa de esforço do plano fica
+    na linha de base e serve só ao plano e ao preço.
 
 Relate com `relatar-ao-consultor`: o nível, a lista de materiais e o que
 ficou assumido.

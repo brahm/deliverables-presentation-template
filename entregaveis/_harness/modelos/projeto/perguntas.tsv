@@ -12,4 +12,3 @@ satisfacao	marco	Como o cliente avaliou este marco? Uma nota e uma frase bastam.
 beneficio	marco	O benefício esperado deste marco já apareceu?		
 materiais	marco	Algum material de governança deixou de ser lido?		Sim: a skill definir-governanca tira o material ou desce o nível
 nivel	semanal	Os sinais do projeto pedem um nível de governança acima do atual. Sobe o nível?		Só aparece quando os sinais passam do nível atual. Troque a frequência para nunca se o nível fica como está
-horas	nunca	Horas trabalhadas		O consultor lança em esforco.tsv quando quiser. Nenhuma pergunta e nenhum aviso
