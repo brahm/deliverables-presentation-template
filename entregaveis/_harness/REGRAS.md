@@ -117,7 +117,9 @@ que você abre quando a tarefa pede.
     dos registros e o envio enquanto o remoto for público ou não tiver
     sido verificado. Confira com
     `python3 entregaveis/_harness/scripts/repositorio.py` e não contorne
-    a trava.
+    a trava. Ela ouve os comandos de terminal: antes de enviar por outra
+    ferramenta, como um conector de GitHub, confira o destino com o
+    mesmo script.
 14. Trabalhe enxuto. Abra uma página do método quando a tarefa tocar
     nela, leia do material recebido só o que a página pede e rode em
     paralelo o que for independente.

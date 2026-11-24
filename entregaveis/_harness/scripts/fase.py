@@ -118,7 +118,7 @@ def brief_da_fase(texto: str, numero: int, tipo: str) -> str:
 def passagem(numero: int, data: str, origem: str, abertos: list[tuple[str, str]]) -> str:
     texto = comum.ler(comum.MODELOS / "fase" / "passagem.md")
     for chave, valor in (("da_fase", numero), ("para_a_fase", numero + 1), ("data", data), ("origem", limpo(origem))):
-        texto = re.sub(rf"^{chave}:.*$", f"{chave}: {valor}", texto, count=1, flags=re.MULTILINE)
+        texto = comum.trocar_campo(texto, chave, valor)
     linhas = "".join(f"| {nome} | {etapa} | {comum.MARCA} |\n" for nome, etapa in abertos) or "| nenhum | | |\n"
     return texto.replace("| --- | --- | --- |\n\n## O que a fase nova", "| --- | --- | --- |\n" + linhas + "\n## O que a fase nova", 1)
 

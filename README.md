@@ -199,8 +199,15 @@ em [ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md).
 ## Testar o kit
 
 ```sh
-python3 tools/testar_kit.py
+python3 tools/testar_kit.py                # tudo, com até quatro grupos ao mesmo tempo
+python3 tools/testar_kit.py gerador hooks  # só os grupos citados
+python3 tools/testar_kit.py --serie        # um grupo depois do outro
 ```
+
+Toda mudança que acrescenta algo ao harness passa, antes do pull
+request, por uma revisão do código novo atrás de bugs, de problemas de
+segurança e de otimizações. Cada problema corrigido ganha um caso em
+`tools/testar_kit.py`.
 
 ## Licença
 

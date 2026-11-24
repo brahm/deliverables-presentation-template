@@ -94,7 +94,7 @@ def procedimentos(do_projeto: bool) -> str:
     nota = (
         "Estes procedimentos foram escritos para um agente que lê e grava arquivos e roda comandos. Neste ambiente, "
         "onde o texto manda rodar um script, faça a conferência à mão pelas regras de 2-metodo-e-texto. Onde manda "
-        "gravar em um arquivo de `entregaveis/_projeto/` ou na pasta de um entregável, atualize a seção correspondente "
+        f"gravar em um arquivo de `{comum.BASE.name}/_projeto/` ou na pasta de um entregável, atualize a seção correspondente "
         "do registro do projeto. As skills citadas pelo nome são os procedimentos deste arquivo."
     )
     return topo("Procedimentos", nota) + "\n" + "\n".join(procedimento(a) for a in skills(do_projeto))
@@ -292,7 +292,7 @@ def main() -> int:
     analisador = argparse.ArgumentParser(description="Monta o pacote para Claude desktop, ChatGPT desktop e Microsoft Copilot.")
     analisador.add_argument("--conferir", action="store_true", help="diz se os arquivos de conhecimento do kit estão em dia")
     analisador.add_argument("--projeto", action="store_true", help="monta o pacote deste projeto, com os registros e o domínio")
-    analisador.add_argument("--saida", default="", help="a pasta do pacote do projeto (padrão: entregaveis/_ambiente)")
+    analisador.add_argument("--saida", default="", help=f"a pasta do pacote do projeto (padrão: {comum.BASE.name}/_ambiente)")
     args = analisador.parse_args()
 
     tamanho = len(comum.ler(INSTRUCOES))

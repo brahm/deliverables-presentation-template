@@ -3,6 +3,63 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.13.1
+
+Correções da revisão de código. Nenhum comando mudou de nome.
+
+- Registros. Um registro salvo pelo Excel ou pelo Bloco de Notas em
+  cp1252 ou em UTF-16 é lido, com um aviso, e volta em UTF-8 na
+  gravação seguinte. Antes ele era lido como vazio e a gravação apagava
+  as linhas. Um registro que não é texto ou está sem a linha de colunas
+  para o comando, sem gravar. A gravação troca o arquivo inteiro de uma
+  vez. Um campo a mais em uma linha é ignorado e não desloca as colunas.
+- Travas com defeito. Quando a trava de gravação ou a de comando não
+  consegue conferir o passo, ela barra e diz o defeito. Antes liberava
+  em silêncio. Os outros hooks avisam o agente e deixam seguir.
+- Repositório. A conferência segue os redirecionamentos até a resposta
+  final, e só 401, 403 e 404 valem como privado. O endereço de envio de
+  cada remoto e o endereço escrito no próprio comando são conferidos. A
+  criação de repositório interno e a troca de visibilidade pela API são
+  barradas. O usuário e o token de um endereço não aparecem nas
+  mensagens nem em `_projeto/repositorio.tsv`.
+- Números no gerador. O separador decimal vem da própria coluna e,
+  quando ela não mostra, do idioma do entregável. Percentual e moeda
+  viram número com formato. Um valor que não é número para a geração do
+  gráfico e diz a linha e a coluna. Na planilha, texto que começa com
+  `=` fica como texto, e código com zero à esquerda não perde o zero.
+- Fundo escuro. O gerador lê a cor de fundo do modelo e dá cor clara ao
+  texto que ele acrescenta: rótulos, eixos e legenda do gráfico, linha
+  de fonte, caixas de texto e tabela. A linha `Cor do texto sobre o
+  fundo`, nova em `_projeto/marca.md`, vence a escolha automática.
+- Gráficos. A pizza sem destaque ganha uma cor por fatia, e os gráficos
+  da planilha usam as cores da marca.
+- Gerador, o resto. Lista numerada sai numerada. Asterisco solto não
+  vira itálico. Tabela que não cabe no slide gera aviso. Modelo de Word
+  sem um estilo não duplica o título. As seções do modelo de PowerPoint
+  saem junto com os slides de exemplo. Imagem e arquivo de dados de
+  fora da pasta do projeto são recusados.
+- Pasta com outro nome. As mensagens dos scripts dizem o caminho real
+  quando o harness foi instalado com `--pasta`.
+- Cabeçalhos. Título com barra invertida ou quebra de linha entra como
+  foi escrito. O carimbo da revisão mantém os comentários e os outros
+  campos. Remarcar um entregável sem a linha `prazo:` cria o campo.
+- Workflows. `permissions: contents: read`, ações fixadas pelo commit e
+  pacotes do gerador com versão fixa.
+- Desempenho. A gravação de um arquivo confere esse arquivo e não relê
+  os dados do entregável. As regras do domínio leem o entregável uma vez
+  e executam `checagens_extra.py` uma vez por execução. A lista do dia
+  lê os prazos e percorre as dependências uma vez. `cerebro.py`,
+  `governanca.py` e `emitir.py` entram na lista de comandos permitidos,
+  e o agente deixa de pedir permissão a cada absorção.
+- `tools/testar_kit.py` roda até quatro grupos ao mesmo tempo. `--serie`
+  roda um depois do outro, e o nome de um grupo roda só ele.
+
+O que o projeto precisa fazer: atualize com `--atualizar`. Para usar a
+cor do texto sobre fundo escuro, acrescente em `_projeto/marca.md` a
+linha `| Cor do texto sobre o fundo | | |`. Sem ela, vale a escolha
+automática. Se `_projeto/repositorio.tsv` guarda um endereço com
+usuário ou token, apague esse trecho da linha e troque o token.
+
 ## 0.13.0
 
 - Pacote `proposta` refeito. Uma proposta não é um projeto, e o pacote

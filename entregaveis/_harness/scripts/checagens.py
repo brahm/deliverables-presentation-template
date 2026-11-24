@@ -34,6 +34,16 @@ MARCAS_ESQUECIDAS = re.compile(
 SIGLAS_COMUNS = {"OK", "PDF", "PPT", "PPTX", "DOCX", "XLSX", "CSV", "TSV", "URL", "II", "III", "IV", "VI", "VII"}
 
 
+# Quando o hook de gravação pede os achados de um arquivo só, as checagens
+# que percorrem os arquivos um a um leem apenas ele. Sem isso, cada gravação
+# relê a pasta inteira do entregável, com os dados.
+SO_ARQUIVO: Path | None = None
+
+
+def _fora_do_pedido(arquivo: Path) -> bool:
+    return SO_ARQUIVO is not None and arquivo.resolve() != SO_ARQUIVO
+
+
 def _limites(veiculo: str) -> dict:
     limites = dict(LIMITES.get(veiculo, LIMITES["leitura"]))
     for linha in comum.ler_tsv(comum.PROJETO / "limites.tsv"):
@@ -123,9 +133,15 @@ def briefing(pasta: Path, rigoroso: bool = False) -> list[Achado]:
 # --- Storyline ------------------------------------------------------------
 
 
+@lru_cache(maxsize=None)
+def _rotulos() -> frozenset:
+    """A lista de rótulos de assunto, lida uma vez por execução."""
+    return frozenset(comum.normalizar(l) for l in comum.ler(comum.LISTAS / "rotulos.txt").splitlines() if l.strip() and not l.startswith("#"))
+
+
 def _rotulo(titulo: str) -> bool:
     """Diz se o título é um rótulo de assunto, e não uma frase com mensagem."""
-    rotulos = {comum.normalizar(l) for l in comum.ler(comum.LISTAS / "rotulos.txt").splitlines() if l.strip() and not l.startswith("#")}
+    rotulos = _rotulos()
     normal = comum.normalizar(titulo)
     if normal in rotulos:
         return True
@@ -346,7 +362,7 @@ def texto_do_entregavel(pasta: Path, rigoroso: bool = False) -> list[Achado]:
     achados: list[Achado] = []
     meta = _meta(pasta)
     for arquivo in comum.arquivos_de_conteudo(pasta) + [pasta / "storyline.md"]:
-        if arquivo.is_file():
+        if arquivo.is_file() and not _fora_do_pedido(arquivo):
             achados.extend(texto(arquivo, comum.idiomas_do_arquivo(arquivo, meta), _recursos_por_linha(arquivo)))
     return achados
 
@@ -437,7 +453,7 @@ def confidencialidade(pasta: Path, rigoroso: bool = False) -> list[Achado]:
     ]
     segredos = _padroes("segredos.tsv")
     for arquivo in sorted(pasta.rglob("*")):
-        if not arquivo.is_file() or arquivo.suffix.lower() not in {".md", ".txt", ".csv", ".tsv", ".json", ".html"}:
+        if not arquivo.is_file() or arquivo.suffix.lower() not in {".md", ".txt", ".csv", ".tsv", ".json", ".html"} or _fora_do_pedido(arquivo):
             continue
         nome = comum.relativo(arquivo)
         for n, linha in enumerate(comum.ler(arquivo).splitlines(), start=1):
@@ -452,6 +468,8 @@ def confidencialidade(pasta: Path, rigoroso: bool = False) -> list[Achado]:
     marcacao = brief.get("marcacao_obrigatoria", "").strip()
     if marcacao and MARCA not in marcacao and _rigoroso(pasta, rigoroso):
         for arquivo in comum.arquivos_de_conteudo(pasta):
+            if _fora_do_pedido(arquivo):
+                continue
             inicio = "\n".join(comum.ler(arquivo).splitlines()[:40])
             if marcacao.lower() not in inicio.lower():
                 achados.append(Achado("erro", "confidencialidade", comum.relativo(arquivo), 0, f"Falta a marcação '{marcacao}' na capa ou no início do documento."))
@@ -671,6 +689,8 @@ def interativo(pasta: Path, rigoroso: bool = False) -> list[Achado]:
     if not comum.storyline_aprovada(pasta):
         achados.append(Achado("erro", "interativo", comum.relativo(pasta / "storyline.md"), 0, "Há HTML interativo e a storyline não foi aprovada pelo consultor (aprovada: sim)."))
     for arquivo in arquivos:
+        if _fora_do_pedido(arquivo):
+            continue
         nome = comum.relativo(arquivo)
         html = comum.ler(arquivo)
 

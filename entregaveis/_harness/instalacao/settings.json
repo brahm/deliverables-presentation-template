@@ -20,7 +20,13 @@
       "Bash(python3 entregaveis/_harness/scripts/rotina.py *)",
       "Bash(python3 entregaveis/_harness/scripts/ambiente.py)",
       "Bash(python3 entregaveis/_harness/scripts/dominio.py)",
-      "Bash(python3 entregaveis/_harness/scripts/dominio.py *)"
+      "Bash(python3 entregaveis/_harness/scripts/dominio.py *)",
+      "Bash(python3 entregaveis/_harness/scripts/cerebro.py)",
+      "Bash(python3 entregaveis/_harness/scripts/cerebro.py *)",
+      "Bash(python3 entregaveis/_harness/scripts/governanca.py)",
+      "Bash(python3 entregaveis/_harness/scripts/governanca.py *)",
+      "Bash(python3 entregaveis/_harness/scripts/emitir.py)",
+      "Bash(python3 entregaveis/_harness/scripts/emitir.py *)"
     ]
   },
   "hooks": {

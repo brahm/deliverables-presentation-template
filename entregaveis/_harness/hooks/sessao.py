@@ -8,8 +8,9 @@ import estado
 
 def principal() -> int:
     print("\n".join(estado.linhas_de_estado()))
+    _base.limpar_sessoes()
     return 0
 
 
 if __name__ == "__main__":
-    _base.protegido(principal)
+    _base.protegido(principal, ao_falhar="contexto")

@@ -5,10 +5,14 @@ Instala o harness em pastas temporárias e confere o instalador, as
 skills, as checagens e os hooks. Cada checagem é provada dos dois lados:
 passa em um exemplo bom e reprova no erro que ela existe para pegar.
 
-Uso: python3 tools/testar_kit.py
+Uso: python3 tools/testar_kit.py            roda tudo, com até 4 grupos ao mesmo tempo
+     python3 tools/testar_kit.py hooks rotina   roda só os grupos citados
+     python3 tools/testar_kit.py --serie    roda um grupo depois do outro, em um processo só
+     python3 tools/testar_kit.py --vagas 2  muda quantos grupos rodam ao mesmo tempo
 """
 from __future__ import annotations
 
+import argparse
 import ast
 import datetime
 import http.server
@@ -26,6 +30,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[1]
 HARNESS = RAIZ / "entregaveis" / "_harness"
 PY = sys.executable
+sys.path.insert(0, str(HARNESS / "scripts"))  # para os testes que chamam uma função do harness direto
 
 falhas: list[str] = []
 total = 0
@@ -191,6 +196,23 @@ def testar_instalador(tmp: Path) -> None:
     confere("nenhuma instrução aponta para o nome antigo da pasta", not sobras, ", ".join(sobras[:8]))
     estado = rodar([PY, "consultoria/_harness/scripts/estado.py"], outra)
     confere("o estado roda com outro nome de pasta", estado.returncode == 0 and "não foi iniciado" in estado.stdout, estado.stdout + estado.stderr)
+    # As mensagens que mandam rodar um script dizem o caminho que existe neste projeto.
+    scripts_de_fora = sorted((outra / "consultoria/_harness").rglob("*.py"))
+    fixos = [str(a.relative_to(outra)) for a in scripts_de_fora if re.search(r"[\"'` ]entregaveis/_", "\n".join(l for l in a.read_text(encoding="utf-8").splitlines() if not l.lstrip().startswith(("#", "empacotar.py", "As notas"))))]
+    confere("nenhum script escreve o nome padrão da pasta em uma mensagem", not fixos, ", ".join(fixos))
+    rodar(["git", "init", "-q"], outra) if shutil.which("git") else None
+    rodar(["git", "remote", "add", "origin", "http://127.0.0.1:1/time/sumido.git"], outra) if shutil.which("git") else None
+    situacao = rodar([PY, "consultoria/_harness/scripts/repositorio.py"], outra)
+    if shutil.which("git"):
+        confere("com outro nome de pasta, a mensagem da trava manda rodar o script que existe", "python3 consultoria/_harness/scripts/repositorio.py --confirmar" in situacao.stdout and "entregaveis/" not in situacao.stdout, situacao.stdout + situacao.stderr)
+    ambiente = rodar([PY, "-c", "import sys; sys.path.insert(0, 'consultoria/_harness/scripts'); import ambiente; print(ambiente.no_projeto('ambientes', 'LEIA-ME.md'))"], outra)
+    confere("com outro nome de pasta, a conferência do ambiente cita a pasta certa", ambiente.stdout.strip() == "consultoria/_harness/ambientes/LEIA-ME.md", ambiente.stdout + ambiente.stderr)
+    brief_de_fora = outra / "consultoria/_projeto/brief.md"
+    brief_de_fora.write_text(brief_de_fora.read_text(encoding="utf-8").replace("iniciado: nao", "iniciado: sim"), encoding="utf-8")
+    ata = rodar([PY, "consultoria/_harness/hooks/mensagem.py"], outra, json.dumps({"cwd": str(outra), "prompt": "segue a ata da reunião"}))
+    confere("com outro nome de pasta, o aviso de ata cita a pasta certa", "consultoria/_atas/" in ata.stdout and "entregaveis/" not in ata.stdout, ata.stdout + ata.stderr)
+    em_dia = rodar([PY, "consultoria/_harness/scripts/empacotar.py", "--conferir"], outra)
+    confere("com outro nome de pasta, os arquivos de conhecimento continuam em dia", em_dia.returncode == 0, em_dia.stdout + em_dia.stderr)
 
 
 # --- Checagens ------------------------------------------------------------
@@ -517,6 +539,112 @@ def testar_hooks(tmp: Path) -> None:
     confere("fim do turno: volta a cobrar quando o conteúdo muda depois da revisão", hook("fim_do_turno.py", {"session_id": "s3"}).returncode == 2)
 
 
+# --- Registros salvos fora do padrão e hooks com defeito ------------------
+
+
+def testar_registros(tmp: Path) -> None:
+    """Um registro salvo pelo Excel não é apagado, e uma trava com defeito não libera."""
+    print("Registros fora do padrão e hooks com defeito")
+    projeto = tmp / "registros"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+    reg = projeto / "entregaveis/_projeto"
+    scripts = projeto / "entregaveis/_harness/scripts"
+    hooks = projeto / "entregaveis/_harness/hooks"
+    modelo = (reg / "reunioes.tsv").read_text(encoding="utf-8")
+    linha = "R-001\t2026-11-10\tReunião de abertura\t\tJoão, Conceição\tanotação\t\t\trealizada\t\t\n"
+
+    def rotina(*args) -> subprocess.CompletedProcess:
+        return rodar([PY, scripts / "rotina.py", *args], projeto)
+
+    def sem_ata(dia: str) -> subprocess.CompletedProcess:
+        return rotina("--sem-ata", dia, "--rito", "semanal", "--motivo", "não ocorreu")
+
+    def hook(nome: str, dados: dict) -> subprocess.CompletedProcess:
+        return rodar([PY, hooks / nome], projeto, json.dumps({"cwd": str(projeto), **dados}))
+
+    for codificacao in ("cp1252", "utf-16", "utf-8-sig"):
+        (reg / "reunioes.tsv").write_bytes((modelo + linha).encode(codificacao))
+        gravado = sem_ata("2026-11-17")
+        depois = (reg / "reunioes.tsv").read_bytes()
+        try:
+            texto = depois.decode("utf-8")
+        except UnicodeDecodeError:
+            texto = ""
+        confere(f"registro em {codificacao}: o comando grava sem perder as linhas que existiam",
+                gravado.returncode == 0 and "João, Conceição" in texto and "sem ata" in texto and texto.count("\n") == modelo.count("\n") + 2, gravado.stdout + gravado.stderr + texto)
+        confere(f"registro em {codificacao}: o arquivo volta em UTF-8 e sem marca de ordem de bytes", bool(texto) and not texto.startswith("\ufeff"))
+        if codificacao != "utf-8-sig":
+            confere(f"registro em {codificacao}: o comando avisa que o arquivo estava fora de UTF-8", "não está em UTF-8" in gravado.stderr, gravado.stderr)
+    confere("gravação de registro não deixa arquivo temporário na pasta", not [a.name for a in reg.iterdir() if a.name.endswith(".tmp")])
+    if hasattr(os, "symlink"):
+        import comum  # noqa: PLC0415
+        try:
+            (tmp / "de-verdade.tsv").write_text("a\tb\n", encoding="utf-8")
+            os.symlink(tmp / "de-verdade.tsv", tmp / "atalho.tsv")
+            comum.gravar(tmp / "atalho.tsv", "a\tb\n1\t2\n")
+            confere("gravar por um atalho muda o arquivo de destino e mantém o atalho", (tmp / "atalho.tsv").is_symlink() and (tmp / "de-verdade.tsv").read_text(encoding="utf-8") == "a\tb\n1\t2\n")
+        except OSError:
+            print("  (esta máquina não cria atalhos: teste da gravação por atalho pulado)")
+
+    binario = b"\x00\x01\x02\xff\xfe\x81 isto nao e texto"
+    (reg / "reunioes.tsv").write_bytes(binario)
+    recusado = sem_ata("2026-11-18")
+    confere("registro que não é texto: o comando para, diz o motivo e não grava", recusado.returncode != 0 and "não pôde ser lido" in recusado.stderr and (reg / "reunioes.tsv").read_bytes() == binario, recusado.stdout + recusado.stderr)
+    (reg / "reunioes.tsv").write_text("# só comentário, sem a linha de colunas\n", encoding="utf-8")
+    recusado = sem_ata("2026-11-18")
+    confere("registro sem a linha de colunas: o comando para e não grava", recusado.returncode != 0 and "linha de colunas" in recusado.stderr and "sem ata" not in (reg / "reunioes.tsv").read_text(encoding="utf-8"), recusado.stdout + recusado.stderr)
+    (reg / "reunioes.tsv").write_text(modelo.replace("\n", "\r\n") + linha, encoding="utf-8", newline="")
+    confere("registro com fim de linha do Windows é lido como os outros", sem_ata("2026-11-19").returncode == 0 and "João" in (reg / "reunioes.tsv").read_text(encoding="utf-8"))
+    (reg / "reunioes.tsv").write_text(modelo, encoding="utf-8")
+
+    # Uma tabulação a mais em uma linha não derruba quem lê o registro.
+    pasta = montar_exemplo(projeto)
+    with (reg / "evidencias.tsv").open("a", encoding="utf-8") as f:
+        f.write("E-002\tLançamentos atrasados\t3\tRelatório de lançamentos\t2026-10-01\tfato\talta\tdiag\tcampo a mais\toutro\n")
+    com_tab = validar(projeto)
+    confere("linha de registro com campo a mais: a validação roda e não mostra rastro de erro", com_tab.returncode == 0 and "Traceback" not in com_tab.stderr, com_tab.stdout + com_tab.stderr)
+    sys.path.insert(0, str(HARNESS / "scripts"))
+    import comum  # noqa: PLC0415
+
+    linhas = comum.ler_tsv(reg / "evidencias.tsv")
+    confere("linha de registro com campo a mais: os campos do cabeçalho são lidos e o excedente é ignorado",
+            linhas[-1].get("id") == "E-002" and all(isinstance(k, str) and isinstance(v, str) for l in linhas for k, v in l.items()), str(linhas[-1]))
+    (reg / "curto.tsv").write_text("id\tnome\tdata\nX-1\tsó dois campos\n", encoding="utf-8")
+    confere("linha de registro com campo a menos: o que falta vem vazio", comum.ler_tsv(reg / "curto.tsv") == [{"id": "X-1", "nome": "só dois campos", "data": ""}])
+    (reg / "curto.tsv").unlink()
+
+    # Um hook com defeito: as travas barram, os outros avisam.
+    gravacao = {"session_id": "r1", "tool_name": "Write", "tool_input": {"file_path": "entregaveis/diag/conteudo.md"}}
+    envio = {"tool_name": "Bash", "tool_input": {"command": "git push origin main"}}
+    confere("hooks sãos: a gravação e o envio passam em projeto sem remoto", hook("antes_de_gravar.py", gravacao).returncode == 0 and hook("antes_de_comando.py", envio).returncode == 0)
+    original = (scripts / "repositorio.py").read_text(encoding="utf-8")
+    (scripts / "repositorio.py").write_text(original.replace("def aceita(geral: str) -> bool:\n", "def aceita(geral: str) -> bool:\n    raise RuntimeError('defeito plantado')\n"), encoding="utf-8")
+    barrado = hook("antes_de_comando.py", envio)
+    confere("trava de comando com defeito: barra o envio e diz o defeito", barrado.returncode == 2 and "defeito plantado" in barrado.stderr and "não conseguiu conferir" in barrado.stderr, barrado.stdout + barrado.stderr)
+    barrado = hook("antes_de_gravar.py", gravacao)
+    confere("trava de gravação com defeito: barra a gravação no projeto e diz o defeito", barrado.returncode == 2 and "defeito plantado" in barrado.stderr, barrado.stdout + barrado.stderr)
+    fora = hook("antes_de_gravar.py", {"tool_name": "Write", "tool_input": {"file_path": "src/app.py"}})
+    confere("trava de gravação com defeito: arquivo de fora do projeto continua livre", fora.returncode == 0, fora.stderr)
+    confere("trava de comando com defeito: comando que não envia continua livre", hook("antes_de_comando.py", {"tool_input": {"command": "git status"}}).returncode == 0)
+    (scripts / "repositorio.py").write_text(original, encoding="utf-8")
+
+    original = (scripts / "validar.py").read_text(encoding="utf-8")
+    (scripts / "validar.py").write_text(original.replace("def validar_arquivo(", "def validar_arquivo(*_a, **_k):\n    raise RuntimeError('defeito plantado')\n\n\ndef _validar_arquivo_original(", 1), encoding="utf-8")
+    avisado = hook("depois_de_gravar.py", gravacao)
+    confere("hook de depois da gravação com defeito: devolve o defeito ao agente", avisado.returncode == 2 and "defeito plantado" in avisado.stderr and "não rodaram" in avisado.stderr, avisado.stdout + avisado.stderr)
+    (scripts / "validar.py").write_text(original, encoding="utf-8")
+
+    original = (scripts / "estado.py").read_text(encoding="utf-8")
+    (scripts / "estado.py").write_text(original + "\n\ndef linhas_de_estado(*_a, **_k):\n    raise RuntimeError('defeito plantado')\n\n\ndef proximo_passo(*_a, **_k):\n    raise RuntimeError('defeito plantado')\n", encoding="utf-8")
+    for nome, dados in (("sessao.py", {"hook_event_name": "SessionStart"}), ("mensagem.py", {"prompt": "siga"})):
+        avisado = hook(nome, dados)
+        confere(f"{nome} com defeito: não barra e põe o aviso no contexto", avisado.returncode == 0 and "defeito plantado" in avisado.stdout, avisado.stdout + avisado.stderr)
+    (scripts / "estado.py").write_text(original, encoding="utf-8")
+    del pasta
+
+
 def preencher_interativo(html: str) -> str:
     """Troca as marcas e os exemplos de um modelo de HTML interativo por conteúdo de projeto."""
     html = re.sub(
@@ -786,6 +914,24 @@ class _ServidorDeGit(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html")
             self.end_headers()
             self.wfile.write(b"<html>entre</html>")
+        elif self.path.startswith("/antigo/aberto.git/info/refs"):
+            # Um repositório público renomeado: o servidor manda para o endereço novo.
+            self.send_response(301)
+            self.send_header("Location", "/time/aberto.git/info/refs?service=git-upload-pack")
+            self.end_headers()
+        elif self.path.startswith("/antigo/fechado.git/info/refs"):
+            self.send_response(302)
+            self.send_header("Location", "/time/fechado.git/info/refs?service=git-upload-pack")
+            self.end_headers()
+        elif self.path.startswith("/antigo/entrada.git/info/refs"):
+            # Um servidor que manda quem não se identificou para a página de entrada.
+            self.send_response(302)
+            self.send_header("Location", "/time/pagina.git/info/refs")
+            self.end_headers()
+        elif self.path.startswith("/antigo/volta.git/info/refs"):
+            self.send_response(302)
+            self.send_header("Location", "/antigo/volta.git/info/refs")
+            self.end_headers()
         else:
             self.send_response(401)
             self.end_headers()
@@ -875,6 +1021,70 @@ def testar_repositorio(tmp: Path) -> None:
         confere("depois da confirmação, o remoto não verificado é aceito", situacao().returncode == 0 and gravar("entregaveis/_projeto/brief.md").returncode == 0 and comando("git push").returncode == 0)
         remoto(f"{base}/aberto.git")
         confere("a confirmação de um remoto não vale para outro", situacao().returncode == 1)
+
+        # Redirecionamento: vale a resposta do fim do caminho.
+        antigo = base.replace("/time", "/antigo")
+        remoto(f"{antigo}/aberto.git")
+        seguido = situacao()
+        confere("remoto público que redireciona continua público", seguido.returncode == 1 and "PÚBLICO" in seguido.stdout, seguido.stdout + seguido.stderr)
+        confere("antes de gravar e antes de comando: bloqueiam o remoto público que redireciona", gravar("entregaveis/_projeto/brief.md").returncode == 2 and comando("git push").returncode == 2)
+        remoto(f"{antigo}/fechado.git")
+        confere("remoto privado que redireciona continua privado", situacao().returncode == 0 and comando("git push").returncode == 0)
+        for nome, url in (("redirecionamento para a página de entrada", f"{antigo}/entrada.git"), ("redirecionamento em círculo", f"{antigo}/volta.git")):
+            remoto(url)
+            duvida = situacao()
+            confere(f"{nome}: fica como não verificado", duvida.returncode == 1 and "não verificado" in duvida.stdout, duvida.stdout + duvida.stderr)
+
+        # O destino escrito no próprio comando é conferido como um remoto.
+        remoto(None)
+        confere("antes de comando: sem remoto, o envio sem destino passa", comando("git push").returncode == 0)
+        for nome, texto in (
+            ("endereço público escrito no envio", f"git push {base}/aberto.git main"),
+            ("endereço público depois de opções", f"git -C . push -o ci.skip --force {base}/aberto.git main"),
+            ("endereço público em --repo", f"git push --repo={base}/aberto.git"),
+            ("remoto público criado no mesmo comando", f"git remote add pub {base}/aberto.git && git push pub main"),
+            ("endereço de envio trocado no mesmo comando", f"git remote set-url --push origin {base}/aberto.git; git push"),
+            ("endereço não verificado escrito no envio", "git push http://127.0.0.1:1/time/sumido.git main"),
+            ("endereço público com o programa escrito pelo caminho", f"/usr/bin/git push {base}/aberto.git main"),
+            ("endereço público em um comando entre aspas", f'bash -c "cd . && git push {base}/aberto.git main"'),
+        ):
+            barrado = comando(texto)
+            confere(f"antes de comando: bloqueia {nome}", barrado.returncode == 2 and "comando (1)" in barrado.stderr, barrado.stdout + barrado.stderr)
+        confere("antes de comando: deixa enviar a um endereço privado escrito no comando", comando(f"git push {base}/fechado.git main").returncode == 0)
+        confere("antes de comando: deixa enviar a um repositório em disco", comando("git push /srv/git/projeto.git main").returncode == 0)
+        confere("antes de comando: endereço em mensagem de commit não é destino", comando(f'git commit -m "veja {base}/aberto.git" && git push').returncode == 0)
+        remoto(f"{base}/fechado.git")
+        rodar(["git", "config", "remote.origin.pushurl", f"{base}/aberto.git"], projeto)
+        desviado = situacao()
+        confere("o endereço de envio do remoto (pushurl) é conferido", desviado.returncode == 1 and "origin (envio)" in desviado.stdout and "PÚBLICO" in desviado.stdout, desviado.stdout + desviado.stderr)
+        confere("antes de comando: bloqueia o envio quando o pushurl é público", comando("git push origin main").returncode == 2)
+        rodar(["git", "config", "--unset", "remote.origin.pushurl"], projeto)
+        barrados = [c for c in (
+            "gh repo create cliente-x --internal --source . --push",
+            "gh repo edit --visibility internal",
+            "gh repo edit --visibility=public",
+            "gh api -X PATCH repos/time/cliente-x -f private=false",
+            "gh api -X PATCH repos/time/cliente-x -f visibility=public",
+        ) if comando(c).returncode != 2]
+        confere("antes de comando: bloqueia tornar o repositório interno ou público por qualquer caminho", not barrados, str(barrados))
+        interno = comando("gh repo create cliente-x --internal --source .")
+        confere("antes de comando: diz que o repositório interno é lido por toda a organização", "toda a organização" in interno.stderr, interno.stderr)
+        confere("antes de comando: deixa mudar o repositório para privado", comando("gh api -X PATCH repos/time/cliente-x -f private=true").returncode == 0 and comando("gh repo edit --visibility private").returncode == 0)
+
+        # Credencial no endereço do remoto: não aparece nas mensagens nem no registro.
+        servidor_e_caminho = base.split("://", 1)[1]
+        registro.unlink()
+        remoto(f"http://consultor:segredo-123@{servidor_e_caminho}/pagina.git")
+        mostrado = situacao()
+        barrado = gravar("entregaveis/_projeto/brief.md")
+        confirmada = rodar([PY, script, "--confirmar", "é privado"], projeto)
+        tudo = mostrado.stdout + mostrado.stderr + barrado.stderr + confirmada.stdout + confirmada.stderr + registro.read_text(encoding="utf-8")
+        confere("credencial do endereço do remoto não aparece nas mensagens nem no registro", "segredo-123" not in tudo and "consultor:" not in tudo and f"http://{servidor_e_caminho}/pagina.git" in registro.read_text(encoding="utf-8"), tudo)
+        confere("a confirmação vale para o mesmo remoto com ou sem credencial", situacao().returncode == 0)
+        remoto(f"http://{servidor_e_caminho}/pagina.git")
+        confere("a confirmação vale para o mesmo remoto escrito sem credencial", situacao().returncode == 0)
+        guardado = (projeto / "entregaveis/_harness/.estado/repositorio.json").read_text(encoding="utf-8")
+        confere("credencial do endereço não fica na memória da verificação", "segredo-123" not in guardado, guardado)
 
         codigo = (
             "import sys; sys.path.insert(0, 'entregaveis/_harness/scripts'); import repositorio as r; "
@@ -1103,6 +1313,198 @@ def testar_gerador(tmp: Path) -> None:
                 len(campos) == 2 and campos[1].top >= campos[0].top + campos[0].height, str([(f.top, f.height) for f in campos]))
         (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
 
+        # Números do gráfico: milhar, percentual e moeda, lidos pelo costume do idioma
+        import gerar as gerador  # noqa: PLC0415
+
+        def formatos(grafico) -> list[str]:
+            return ["".join(s._element.xpath("./c:val/c:numRef/c:numCache/c:formatCode/text()")) for s in grafico.plots[0].series]
+
+        def o_grafico(arquivo: str, pagina: int = 1):
+            return [f.chart for f in Presentation(str(saida / arquivo)).slides[pagina].shapes if getattr(f, "has_chart", False)][0]
+
+        tabela_do_grafico = "Função | Plataformas\nE-mail | 2\nDados | 1\nMídia | 1\n"
+        com_numeros = CONTEUDO_COM_VISUAIS.replace(tabela_do_grafico, "Função | Visitas | Conversão | Custo\nE-mail | 1.234 | 12% | R$ 1.200\nDados | 12.500 | 8,5% | R$ 300\nMídia | 900 | | R$ 45,50\n")
+        (pasta / "conteudo.md").write_text(com_numeros, encoding="utf-8")
+        feito = gerar("diag")
+        series = o_grafico("diag.pptx").plots[0].series if feito.returncode == 0 else []
+        confere("gráfico em português: o ponto é separador de milhar", feito.returncode == 0 and list(series[0].values) == [1234, 12500, 900], feito.stdout + feito.stderr)
+        confere("gráfico: o percentual entra como número, e a célula vazia fica sem ponto", len(series) == 3 and list(series[1].values) == [0.12, 0.085, None], str([list(s.values) for s in series]))
+        confere("gráfico: a moeda entra como número", len(series) == 3 and list(series[2].values) == [1200, 300, 45.5])
+        confere("gráfico: o rótulo sai no formato em que o número foi escrito", feito.returncode == 0 and formatos(o_grafico("diag.pptx")) == ["#,##0", "0.0%", '"R$" #,##0.00'], str(formatos(o_grafico("diag.pptx")) if feito.returncode == 0 else ""))
+        (pasta / "conteudo.en.md").write_text(com_numeros, encoding="utf-8")
+        em_ingles = gerar("diag", "--idioma", "en", "--rascunho")
+        confere("gráfico em inglês: o ponto é separador decimal", em_ingles.returncode == 0 and list(o_grafico("diag-en-rascunho.pptx").plots[0].series[0].values) == [1.234, 12.5, 900], em_ingles.stdout + em_ingles.stderr)
+        (pasta / "conteudo.en.md").unlink()
+        antes = (saida / "diag.pptx").read_bytes()
+        (pasta / "conteudo.md").write_text(com_numeros.replace("| 12.500 |", "| doze mil |"), encoding="utf-8")
+        recusado = gerar("diag")
+        confere("gráfico: valor que não é número para a geração e diz a linha e a coluna",
+                recusado.returncode != 0 and "doze mil" in recusado.stderr and "linha 'Dados'" in recusado.stderr and "coluna 'Visitas'" in recusado.stderr and (saida / "diag.pptx").read_bytes() == antes, recusado.stdout + recusado.stderr)
+        (pasta / "conteudo.md").write_text(com_numeros.replace("| 8,5% |", "| 8,5 |"), encoding="utf-8")
+        recusado = gerar("diag")
+        confere("gráfico: coluna que mistura percentual e número para a geração", recusado.returncode != 0 and "mistura percentual" in recusado.stderr, recusado.stdout + recusado.stderr)
+        lidos = {texto: gerador.ler_numero(texto, ",") for texto in ("1.234", "12,5", "0.500", "1.234.567", "1 234,5", "-3", "−3,5", "12 %", "US$ 1,200.50", "01310", "12345678901234567", "2026-10-01", "10 20", "1.2.3", "abc", "")}
+        confere("leitura de número: milhar, decimal, sinal, percentual e moeda", [lidos[k] and lidos[k][0] for k in ("1.234", "12,5", "0.500", "1.234.567", "1 234,5", "-3", "−3,5", "12 %", "US$ 1,200.50")] == [1234, 12.5, 0.5, 1234567, 1234.5, -3, -3.5, 0.12, 1200.5], str(lidos))
+        confere("leitura de número: código com zero à esquerda, número longo, data e texto não são números", all(lidos[k] is None for k in ("01310", "12345678901234567", "2026-10-01", "10 20", "1.2.3", "abc", "")), str(lidos))
+        confere("leitura de número: a coluna mostra o separador decimal quando um valor não deixa dúvida",
+                gerador.decimal_da_coluna(["1.234", "12.5"], "pt") == "." and gerador.decimal_da_coluna(["1.234", "2.500"], "pt") == "," and gerador.decimal_da_coluna(["1.234", "2.500"], "en") == "." and gerador.decimal_da_coluna(["1,5", "1.5"], "pt") == ",")
+
+        # Gráfico de pizza: uma cor por fatia, ou o destaque na fatia citada
+        pizza = CONTEUDO_COM_VISUAIS.replace("tipo: barras\ndestaque: E-mail\n", "tipo: pizza\n")
+        (pasta / "conteudo.md").write_text(pizza, encoding="utf-8")
+        gerar("diag")
+        fatias = [ponto.format.fill.fore_color.rgb for ponto in (o_grafico("diag.pptx").plots[0].series[0].points[i] for i in range(3))]
+        confere("pizza sem destaque: cada fatia tem a sua cor, a partir da cor de destaque", len(set(fatias)) == 3 and fatias[0] == RGBColor.from_string("0B5CAD"), str(fatias))
+        (pasta / "conteudo.md").write_text(pizza.replace("tipo: pizza\n", "tipo: pizza\ndestaque: Dados\n"), encoding="utf-8")
+        gerar("diag")
+        fatias = [ponto.format.fill.fore_color.rgb for ponto in (o_grafico("diag.pptx").plots[0].series[0].points[i] for i in range(3))]
+        confere("pizza com destaque: a fatia citada leva a cor e o resto fica em cinza", fatias == [RGBColor.from_string("A9B3BD"), RGBColor.from_string("0B5CAD"), RGBColor.from_string("A9B3BD")], str(fatias))
+
+        # Lista numerada, asterisco solto e tabela que não cabe
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("- A plataforma A cobre **campanhas** e jornadas.\n- A plataforma B cobre só campanhas.", "1. A plataforma A cobre **campanhas** e jornadas.\n2. A plataforma B cobre só campanhas."), encoding="utf-8")
+        gerar("diag")
+        marcadores = [bool(par._p.xpath("./a:pPr/a:buAutoNum")) for f in Presentation(str(saida / "diag.pptx")).slides[1].placeholders for par in f.text_frame.paragraphs if "plataforma" in par.text.lower() and "cobre" in par.text]
+        confere("lista numerada continua numerada no slide", marcadores == [True, True], str(marcadores))
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+        gerar("diag")
+        marcadores = [bool(par._p.xpath("./a:pPr/a:buAutoNum")) for f in Presentation(str(saida / "diag.pptx")).slides[1].placeholders for par in f.text_frame.paragraphs]
+        confere("lista de marcadores não ganha numeração", not any(marcadores), str(marcadores))
+        confere("asterisco de conta não vira itálico", gerador.trechos("2 * 3 e 4 * 5") == [("2 * 3 e 4 * 5", False, False)] and gerador.trechos("2*3 e 4*5") == [("2*3 e 4*5", False, False)], str(gerador.trechos("2*3 e 4*5")))
+        confere("asterisco colado à palavra continua marcando itálico e negrito", gerador.trechos("um *destaque* e **forte**") == [("um ", False, False), ("destaque", False, True), (" e ", False, False), ("forte", True, False)], str(gerador.trechos("um *destaque* e **forte**")))
+        longa = "| Quem | Faz o quê | Até quando |\n| --- | --- | --- |\n" + "".join(f"| Área {n} | Entrega a parte {n} do plano de migração | Mês {n} |\n" for n in range(1, 31))
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("| Quem | Faz o quê | Até quando |\n| --- | --- | --- |\n| Diretoria | Aprova o desligamento | Dezembro |\n| Operações | Migra as jornadas | Fevereiro |\n", longa), encoding="utf-8")
+        estourada = gerar("diag", "--rascunho")
+        confere("tabela que passa da borda do slide gera aviso com a página", estourada.returncode == 0 and "Página 3: a tabela de 31 linhas não cabe" in estourada.stdout, estourada.stdout + estourada.stderr)
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+        confere("tabela que cabe não gera aviso", "não cabe na área" not in gerar("diag").stdout)
+
+        # Fundo escuro: o texto que o gerador cria ganha cor que contrasta
+        from lxml import etree
+
+        espacos = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main", "p": "http://schemas.openxmlformats.org/presentationml/2006/main"}
+
+        def modelo_com_fundo(cor: str, arquivo: Path) -> None:
+            """Um modelo com o fundo pintado no slide mestre e o tema de cores sem mudança, como muitos modelos de cliente."""
+            base_do_modelo = Presentation()
+            quadro = base_do_modelo.slide_master._element.find("p:cSld", espacos)
+            for antigo in quadro.findall("p:bg", espacos):
+                quadro.remove(antigo)
+            quadro.insert(0, etree.fromstring(f'<p:bg xmlns:p="{espacos["p"]}" xmlns:a="{espacos["a"]}"><p:bgPr><a:solidFill><a:srgbClr val="{cor}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>'))
+            base_do_modelo.save(str(arquivo))
+
+        def cor_de(corrida_ou_fonte):
+            fonte = getattr(corrida_ou_fonte, "font", corrida_ou_fonte)
+            return fonte.color.rgb if fonte.color is not None and fonte.color.type is not None else None
+
+        def cores_do_slide(arquivo: str) -> dict:
+            apresentacao = Presentation(str(saida / arquivo))
+            com_grafico, com_tabela = apresentacao.slides[1], apresentacao.slides[2]
+            grafico = [f.chart for f in com_grafico.shapes if getattr(f, "has_chart", False)][0]
+            fonte_da_pagina = [f for f in com_grafico.shapes if f.has_text_frame and f.text_frame.text.startswith("Fonte:")][0]
+            tabela = [f.table for f in com_tabela.shapes if getattr(f, "has_table", False)][0]
+            return {
+                "grafico": cor_de(grafico.font), "rotulos": cor_de(grafico.plots[0].data_labels.font), "eixo": cor_de(grafico.category_axis.tick_labels.font),
+                "fonte": cor_de(fonte_da_pagina.text_frame.paragraphs[0].runs[0]),
+                "celula": cor_de(tabela.cell(1, 0).text_frame.paragraphs[0].runs[0]),
+                "fundo_da_celula": tabela.cell(1, 0)._tc.xpath("./a:tcPr/a:solidFill/a:srgbClr/@val"),
+                "cabecalho": tabela.cell(0, 0)._tc.xpath("./a:tcPr/a:solidFill/a:srgbClr/@val"),
+            }
+
+        branco = RGBColor.from_string("FFFFFF")
+        modelo_com_fundo("0B1F3A", materiais / "escuro.pptx")
+        no_escuro = gerar("diag", "--modelo", str(materiais / "escuro.pptx"))
+        cores = cores_do_slide("diag.pptx") if no_escuro.returncode == 0 else {}
+        confere("fundo escuro: os rótulos, o eixo e o texto do gráfico saem claros", [cores.get(k) for k in ("grafico", "rotulos", "eixo")] == [branco] * 3, no_escuro.stdout + no_escuro.stderr + str(cores))
+        confere("fundo escuro: a linha de fonte sai clara", cores.get("fonte") == branco, str(cores))
+        confere("fundo escuro: a tabela ganha células escuras com letra clara e cabeçalho na cor de destaque",
+                cores.get("celula") == branco and cores.get("cabecalho") == ["0B5CAD"] and bool(cores.get("fundo_da_celula")) and gerador.escuro(cores["fundo_da_celula"][0]), str(cores))
+        modelo_com_fundo("F4F1EA", materiais / "claro.pptx")
+        no_claro = gerar("diag", "--modelo", str(materiais / "claro.pptx"))
+        cores = cores_do_slide("diag.pptx") if no_claro.returncode == 0 else {"x": 1}
+        confere("fundo claro: o gerador não mexe na cor do texto nem na tabela", not any(cores.values()), no_claro.stdout + no_claro.stderr + str(cores))
+        marca.write_text(marca_em_branco.replace("| Cor do texto sobre o fundo | | |", "| Cor do texto sobre o fundo | #FFEE00 | M-001 |"), encoding="utf-8")
+        gerar("diag", "--modelo", str(materiais / "claro.pptx"))
+        confere("a cor do texto registrada na marca vence a escolha automática", cores_do_slide("diag.pptx")["fonte"] == RGBColor.from_string("FFEE00") and "Cor do texto sobre o fundo" in marca_em_branco)
+        marca.write_text(marca_em_branco, encoding="utf-8")
+
+        def fundo_lido(apresentacao) -> str | None:
+            gerador._FUNDOS.clear()
+            slide = apresentacao.slides.add_slide(apresentacao.slide_layouts[1])
+            return gerador.cor_do_fundo(slide, apresentacao.slide_width, apresentacao.slide_height)
+
+        confere("fundo do slide: modelo sem fundo declarado usa a cor de fundo do tema", fundo_lido(Presentation()) == "FFFFFF")
+        guardados = [arquivo for arquivo, _ in gerador._FUNDOS.values()]
+        confere("fundo do slide: a cor guardada segura o arquivo de onde veio, para outro arquivo não herdar a resposta", len(guardados) == 1 and hasattr(guardados[0], "iter_parts"), str(guardados))
+        quebrado, do_tema, avisos_do_fundo = Presentation(), gerador._tema_e_mapa, []
+
+        def sem_tema(layout):
+            raise ValueError("tema fora do padrão")
+
+        gerador._tema_e_mapa = sem_tema
+        try:
+            gerador._FUNDOS.clear()
+            slide_quebrado = quebrado.slides.add_slide(quebrado.slide_layouts[1])
+            lido = [gerador.fundo_do_slide(slide_quebrado, quebrado.slide_width, quebrado.slide_height, avisos_do_fundo) for _ in range(2)]
+        finally:
+            gerador._tema_e_mapa = do_tema
+        confere("fundo do slide: modelo que o gerador não consegue ler não derruba a geração e vira um aviso só",
+                lido == [None, None] and len(avisos_do_fundo) == 1 and "tema fora do padrão" in avisos_do_fundo[0] and "marca.md" in avisos_do_fundo[0], str(lido) + str(avisos_do_fundo))
+        confere("fundo do slide: lê o fundo pintado no slide mestre", fundo_lido(Presentation(str(materiais / "escuro.pptx"))) == "0B1F3A")
+        pelo_tema = Presentation()
+        mapa = pelo_tema.slide_master._element.find("p:clrMap", espacos)
+        mapa.set("bg1", "dk1")
+        mapa.set("tx1", "lt1")
+        confere("fundo do slide: lê o tema que troca a cor de fundo pela de texto", fundo_lido(pelo_tema) == "000000")
+        com_forma = Presentation()
+        from pptx.enum.shapes import MSO_SHAPE  # noqa: PLC0415
+
+        # A biblioteca só desenha formas em slide. A forma é feita em um slide e levada para o mestre.
+        retangulo = com_forma.slides.add_slide(com_forma.slide_layouts[6]).shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, com_forma.slide_width, com_forma.slide_height)
+        retangulo.fill.solid()
+        retangulo.fill.fore_color.rgb = RGBColor.from_string("14213D")
+        com_forma.slide_master.shapes._spTree.append(retangulo._element)
+        confere("fundo do slide: lê o retângulo que cobre o slide no mestre", fundo_lido(com_forma) == "14213D")
+        try:
+            from PIL import Image  # noqa: PLC0415
+
+            Image.new("RGB", (64, 36), "#101820").save(str(tmp / "fundo.png"))
+            com_imagem = Presentation()
+            layout_com_imagem = com_imagem.slide_layouts[1]
+            _, relacao = layout_com_imagem.part.get_or_add_image_part(str(tmp / "fundo.png"))
+            layout_com_imagem.shapes._spTree.append(etree.fromstring(
+                f'<p:pic xmlns:p="{espacos["p"]}" xmlns:a="{espacos["a"]}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                '<p:nvPicPr><p:cNvPr id="99" name="Fundo"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>'
+                f'<p:blipFill><a:blip r:embed="{relacao}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>'
+                f'<p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="{com_imagem.slide_width}" cy="{com_imagem.slide_height}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>'))
+            confere("fundo do slide: lê a cor média da imagem que cobre o layout", fundo_lido(com_imagem) == "101820")
+        except ImportError:
+            print("  (Pillow não está instalado: teste da imagem de fundo pulado)")
+        confere("contraste: texto claro sobre cor escura e texto escuro sobre cor clara", gerador.texto_sobre("0B1F3A") == "FFFFFF" and gerador.texto_sobre("F4F1EA") != "FFFFFF")
+
+        # Seções do modelo: saem com as páginas de exemplo
+        com_secoes = Presentation()
+        com_secoes.slides.add_slide(com_secoes.slide_layouts[1]).shapes.title.text_frame.text = "EXEMPLO DO MODELO"
+        com_secoes.part._element.append(etree.fromstring(
+            f'<p:extLst xmlns:p="{espacos["p"]}"><p:ext uri="{{521415D9-36F7-43E2-AB2F-B90AF26B5E84}}">'
+            '<p14:sectionLst xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main"><p14:section name="Abertura" id="{6D1C4D0B-2A5E-4E0B-9F0A-3B1C2D4E5F60}">'
+            '<p14:sldIdLst><p14:sldId id="256"/></p14:sldIdLst></p14:section></p14:sectionLst></p:ext></p:extLst>'))
+        com_secoes.save(str(materiais / "secoes.pptx"))
+        gerar("diag", "--modelo", str(materiais / "secoes.pptx"))
+        with zipfile.ZipFile(saida / "diag.pptx") as gerado:
+            confere("as seções do modelo saem com as páginas de exemplo", "sectionLst" not in gerado.read("ppt/presentation.xml").decode("utf-8") and len(Presentation(str(saida / "diag.pptx")).slides) == 3)
+
+        # Caminhos: nada de fora da pasta do projeto entra no arquivo
+        (tmp / "fora.png").write_bytes((tmp / "fundo.png").read_bytes() if (tmp / "fundo.png").is_file() else b"x")
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("```grafico", "![de fora](../../../fora.png)\n\n```grafico", 1), encoding="utf-8")
+        de_fora = gerar("diag", "--rascunho")
+        confere("imagem de fora da pasta do projeto é recusada", de_fora.returncode != 0 and "fora da pasta do projeto" in de_fora.stderr, de_fora.stdout + de_fora.stderr)
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS.replace("dados:\n" + tabela_do_grafico, "arquivo: ../../../fora.csv\n"), encoding="utf-8")
+        (tmp / "fora.csv").write_text("Função;Plataformas\nE-mail;2\n", encoding="utf-8")
+        de_fora = gerar("diag", "--rascunho")
+        confere("arquivo de dados de fora da pasta do projeto é recusado", de_fora.returncode != 0 and "fora da pasta do projeto" in de_fora.stderr, de_fora.stdout + de_fora.stderr)
+        (pasta / "conteudo.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
+        confere("nome de entregável com caminho é recusado", gerar("../diag").returncode != 0 and gerar("diag", "--idioma", "../x").returncode != 0)
+
         # Outro idioma
         (pasta / "conteudo.es.md").write_text(CONTEUDO_COM_VISUAIS, encoding="utf-8")
         versao = gerar("diag", "--idioma", "es", "--rascunho")
@@ -1111,6 +1513,16 @@ def testar_gerador(tmp: Path) -> None:
 
         pdf = gerar("diag", "--pdf")
         confere("--pdf gera o PDF, ou diz por que não gerou", pdf.returncode == 0 and ((saida / "diag.pdf").is_file() or "PDF não foi gerado" in pdf.stdout), pdf.stdout + pdf.stderr)
+        if os.name == "posix":
+            # Um soffice de mentira, para ver o comando que o gerador monta.
+            falso = tmp / "bin-falso"
+            falso.mkdir()
+            (falso / "soffice").write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$(dirname "$0")/argumentos.txt"\n', encoding="utf-8")
+            (falso / "soffice").chmod(0o755)
+            subprocess.run([PY, "entregaveis/_harness/scripts/gerar.py", "diag", "--pdf"], cwd=projeto, capture_output=True, text=True, timeout=120, env={**os.environ, "PATH": f"{falso}{os.pathsep}{os.environ.get('PATH', '')}"})
+            argumentos = (falso / "argumentos.txt").read_text(encoding="utf-8").splitlines() if (falso / "argumentos.txt").is_file() else []
+            perfil = next((a for a in argumentos if a.startswith("-env:UserInstallation=")), "")
+            confere("o perfil do LibreOffice vai como endereço de arquivo bem formado", re.fullmatch(r"-env:UserInstallation=file:///[^\\]+", perfil) is not None, str(argumentos))
 
     if not tem_pacote("docx"):
         print("  (python-docx não está instalado: testes de Word pulados)")
@@ -1132,6 +1544,20 @@ def testar_gerador(tmp: Path) -> None:
         confere("listas e tabela chegam ao documento", ("List Bullet", "A plataforma B cobre só campanhas.") in estilos and ("List Number", "Operações migra as jornadas.") in estilos and len(doc.tables) == 1 and doc.tables[0].cell(1, 1).text == "2")
         confere("as evidências citadas formam a seção de fontes", ("Heading 1", "Fontes") in estilos and any(texto.startswith("E-001: Inventário de contratos") for _, texto in estilos))
         marca.write_text(marca_em_branco, encoding="utf-8")
+
+        # Modelo sem os estilos que o gerador procura: nada sai duplicado nem vazio
+        pobre = Document()
+        for nome in ("Title", "List Bullet", "List Number", "Quote"):
+            pobre.styles[nome].delete()
+        pobre.save(str(materiais / "pobre.docx"))
+        (pasta / "documento.md").write_text(DOCUMENTO + "\n> Uma frase citada.\n", encoding="utf-8")
+        feito = gerar("diag", "--formato", "docx", "--rascunho", "--modelo", str(materiais / "pobre.docx"))
+        paragrafos = [par.text for par in Document(str(saida / "diag-rascunho.docx")).paragraphs] if feito.returncode == 0 else []
+        confere("Word sem o estilo de título: o título sai uma vez só", paragrafos.count("Diagnóstico de martech") == 1, feito.stdout + feito.stderr + str(paragrafos))
+        vazios_seguidos = any(not a.strip() and not b.strip() for a, b in zip(paragrafos, paragrafos[1:]))
+        confere("Word sem os estilos de lista e de citação: não sobram parágrafos vazios", bool(paragrafos) and not vazios_seguidos and paragrafos.count("") <= 1, str(paragrafos))
+        confere("Word sem estilo de lista: o marcador e o número vão escritos no texto", "• A plataforma B cobre só campanhas." in paragrafos and "1. A diretoria aprova o desligamento." in paragrafos and "2. Operações migra as jornadas." in paragrafos, str(paragrafos))
+        confere("Word sem o estilo: o gerador avisa qual estilo falta", "não tem o estilo 'List Bullet'" in feito.stdout, feito.stdout)
         (pasta / "documento.md").unlink()
 
     if not tem_pacote("openpyxl"):
@@ -1154,6 +1580,27 @@ def testar_gerador(tmp: Path) -> None:
         (pasta / "planilha.md").write_text(PLANILHA.replace("valores: Custo anual", "valores: Custo mensal"), encoding="utf-8")
         errado = gerar("diag", "--formato", "xlsx")
         confere("gráfico que cita coluna inexistente é erro", errado.returncode != 0 and "Custo mensal" in errado.stdout + errado.stderr)
+
+        # Dados salvos pelo Excel, códigos, texto com sinal de igual e números com milhar
+        (pasta / "planilha.md").write_text(PLANILHA.replace("Soma das parcelas", "=Soma das parcelas").replace("tipo: colunas\n", "tipo: pizza\n"), encoding="utf-8")
+        linhas_de_dados = "Plataforma;Função;Custo anual;Usuários;CEP;Observação;Participação;Preço\nA;E-mail;1.234;14;01310;= 12% do total;12%;R$ 1.200,50\nB;Automação;12.500;6;04538;=SUM(A1:A9);8,5%;R$ 300\nC;Dados;300.000;22;20040;ação;3%;R$ 45,00\n"
+        for codificacao in ("cp1252", "utf-16", "utf-8-sig"):
+            (pasta / "dados/inventario.csv").write_bytes(linhas_de_dados.encode(codificacao))
+            feito = gerar("diag", "--formato", "xlsx", "--rascunho")
+            dados = load_workbook(str(saida / "diag-rascunho.xlsx"))["Inventário"] if feito.returncode == 0 else None
+            confere(f"Excel: lê o CSV salvo em {codificacao}, com os acentos", dados is not None and dados["B3"].value == "Automação" and dados["F4"].value == "ação", feito.stdout + feito.stderr)
+        livro = load_workbook(str(saida / "diag-rascunho.xlsx"))
+        dados = livro["Inventário"]
+        confere("Excel em português: o ponto é separador de milhar", [dados[f"C{n}"].value for n in (2, 3, 4)] == [1234, 12500, 300000])
+        confere("Excel: texto que começa por sinal de igual entra como texto, e não como fórmula", [(dados[f"F{n}"].value, dados[f"F{n}"].data_type) for n in (2, 3)] == [("= 12% do total", "s"), ("=SUM(A1:A9)", "s")] and livro["Dicionário"]["E2"].data_type == "s")
+        confere("Excel: coluna de códigos com zero à esquerda fica toda como texto", [dados[f"E{n}"].value for n in (2, 3, 4)] == ["01310", "04538", "20040"])
+        confere("Excel: percentual e moeda entram como número, com o formato", [(dados[f"G{n}"].value, dados[f"G{n}"].number_format) for n in (2, 3)] == [(0.12, "0%"), (0.085, "0.0%")] and (dados["H2"].value, dados["H2"].number_format) == (1200.5, '"R$" #,##0.00'))
+        with zipfile.ZipFile(saida / "diag-rascunho.xlsx") as gerado:
+            desenho = "".join(gerado.read(n).decode("utf-8") for n in gerado.namelist() if "charts/chart" in n)
+        confere("Excel: o gráfico usa a cor de destaque da marca, e a pizza tem uma cor por fatia", 'val="0B5CAD"' in desenho and desenho.count("dPt>") >= 6, desenho[:300])
+        (pasta / "dados/inventario.csv").write_bytes(b"\x00\x01\x02\xff\xfe\x81;isto nao e texto")
+        ilegivel = gerar("diag", "--formato", "xlsx", "--rascunho")
+        confere("Excel: arquivo de dados que não é texto para a geração com mensagem, sem rastro de erro", ilegivel.returncode != 0 and "não pôde ser lido" in ilegivel.stdout + ilegivel.stderr and "Traceback" not in ilegivel.stderr, ilegivel.stdout + ilegivel.stderr)
 
 
 def testar_fases(tmp: Path) -> None:
@@ -1616,6 +2063,226 @@ def testar_levantamento(tmp: Path) -> None:
     instalar(projeto)
     saida = rodar([PY, "entregaveis/_harness/scripts/levantar.py"], projeto)
     confere("levantar.py lista o que o projeto já tem", saida.returncode == 0 and "proposta.docx" in saida.stdout and "AGENTS.md" in saida.stdout, saida.stdout + saida.stderr)
+
+
+# --- Casos de borda ---------------------------------------------------------
+
+
+def testar_bordas(tmp: Path) -> None:
+    """Entradas incomuns que derrubavam um script ou perdiam um dado em silêncio."""
+    print("Casos de borda")
+    projeto = tmp / "bordas"
+    (projeto / "docs").mkdir(parents=True)
+    (projeto / ".git").mkdir()
+    (projeto / "docs/proposta.docx").write_text("x", encoding="utf-8")
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    scripts = base / "_harness/scripts"
+    pasta = montar_exemplo(projeto)
+    import comum  # noqa: PLC0415
+
+    # Valor com barra invertida ou quebra de linha no cabeçalho de um arquivo
+    criado = rodar([PY, scripts / "preparar.py", "--entregavel", "custos", "--titulo", "Custos \\d e \\1 Receita", "--tipo", "documento"], projeto)
+    briefing = (base / "custos/briefing.md").read_text(encoding="utf-8") if (base / "custos/briefing.md").is_file() else ""
+    confere("título com barra invertida entra no briefing como foi escrito", criado.returncode == 0 and "titulo: Custos \\d e \\1 Receita\n" in briefing, criado.stdout + criado.stderr + briefing[:200])
+    criado = rodar([PY, scripts / "preparar.py", "--entregavel", "duas-linhas", "--titulo", "Plano\nestado: entregue", "--tipo", "documento"], projeto)
+    meta, _ = comum.cabecalho((base / "duas-linhas/briefing.md").read_text(encoding="utf-8")) if (base / "duas-linhas/briefing.md").is_file() else ({}, "")
+    confere("título com quebra de linha não cria outro campo no cabeçalho", criado.returncode == 0 and meta.get("titulo") == "Plano estado: entregue" and meta.get("estado") != "entregue", criado.stdout + criado.stderr + str(meta))
+    texto = "---\nid: x\nprazo: 2026-01-01\n# comentário do cabeçalho\n---\n# Corpo\n\nprazo: este é do corpo\n"
+    confere("troca de campo: muda o do cabeçalho e não toca no corpo", comum.trocar_campo(texto, "prazo", "2026-02-02") == texto.replace("prazo: 2026-01-01", "prazo: 2026-02-02"))
+    confere("troca de campo: campo que não existe só é criado quando pedido, e no cabeçalho",
+            comum.trocar_campo(texto, "dono", "Ana") == texto and comum.trocar_campo(texto, "dono", "Ana", acrescentar=True) == texto.replace("# comentário do cabeçalho\n---", "# comentário do cabeçalho\ndono: Ana\n---"))
+
+    # Remarcar o prazo de um entregável cujo briefing não tem a linha do prazo
+    do_briefing = pasta / "briefing.md"
+    do_briefing.write_text("".join(l for l in do_briefing.read_text(encoding="utf-8").splitlines(keepends=True) if not l.startswith("prazo:")), encoding="utf-8")
+    remarcado = rodar([PY, scripts / "rotina.py", "--remarcar", "diag", "2027-03-15", "--motivo", "o cliente pediu mais uma semana"], projeto)
+    meta, _ = comum.cabecalho(do_briefing.read_text(encoding="utf-8"))
+    confere("remarcar entregável sem a linha do prazo grava o prazo novo", remarcado.returncode == 0 and meta.get("prazo") == "2027-03-15", remarcado.stdout + remarcado.stderr + str(meta))
+
+    # Atalho quebrado na pasta do projeto
+    if hasattr(os, "symlink"):
+        try:
+            os.symlink(projeto / "docs/sumiu.pptx", projeto / "docs/atalho.pptx")
+            levantado = rodar([PY, scripts / "levantar.py"], projeto)
+            confere("levantamento não cai com atalho quebrado na pasta", levantado.returncode == 0 and "proposta.docx" in levantado.stdout and "Traceback" not in levantado.stderr, levantado.stdout + levantado.stderr)
+        except OSError:
+            print("  (esta máquina não cria atalhos: teste do atalho quebrado pulado)")
+
+    # O carimbo da revisão mantém o resto do cabeçalho
+    (pasta / "revisao.md").write_text(REVISAO.replace("---\n", "---\n# anotação de quem revisou\nrevisor: Ana\n", 1), encoding="utf-8")
+    carimbo = validar(projeto, "--carimbar", "diag")
+    revisao = (pasta / "revisao.md").read_text(encoding="utf-8")
+    meta, _ = comum.cabecalho(revisao)
+    confere("o carimbo da revisão mantém os comentários e os outros campos do cabeçalho", carimbo.returncode == 0 and "# anotação de quem revisou\n" in revisao and meta.get("revisor") == "Ana" and len(meta.get("conteudo_revisado", "")) == 16, carimbo.stdout + carimbo.stderr + revisao[:300])
+    confere("carimbar recusa nome de entregável com caminho", validar(projeto, "--carimbar", "../diag").returncode == 2)
+
+    # Arquivos de sessão antigos saem no início de uma sessão
+    estado = base / "_harness/.estado"
+    estado.mkdir(exist_ok=True)
+    for nome in ("antiga.json", "repositorio.json", "nova.json"):
+        (estado / nome).write_text("{}", encoding="utf-8")
+    velho = datetime.datetime.now().timestamp() - 40 * 86400
+    os.utime(estado / "antiga.json", (velho, velho))
+    os.utime(estado / "repositorio.json", (velho, velho))
+    rodar([PY, base / "_harness/hooks/sessao.py"], projeto, json.dumps({"cwd": str(projeto), "hook_event_name": "SessionStart"}))
+    confere("início de sessão apaga o arquivo de sessão antigo e mantém o resto", sorted(a.name for a in estado.glob("*.json")) == ["nova.json", "repositorio.json"], str(sorted(a.name for a in estado.iterdir())))
+
+    # Os workflows só leem o repositório e fixam o que usam
+    for nome in (".github/workflows/entregaveis.yml", ".github/workflows/kit.yml", "entregaveis/_harness/instalacao/entregaveis.yml"):
+        fluxo = (RAIZ / nome).read_text(encoding="utf-8")
+        confere(f"{nome}: declara permissão só de leitura", re.search(r"^permissions:\n  contents: read$", fluxo, flags=re.MULTILINE) is not None)
+        confere(f"{nome}: fixa cada ação pelo commit", all(re.fullmatch(r"[0-9a-f]{40}", versao) for versao in re.findall(r"uses: \S+@(\S+)", fluxo)), str(re.findall(r"uses: \S+", fluxo)))
+    instalados = re.findall(r"pip install (.+)", (RAIZ / ".github/workflows/kit.yml").read_text(encoding="utf-8"))
+    confere("kit.yml: instala os pacotes do gerador com a versão fixa", bool(instalados) and all("==" in pacote for linha in instalados for pacote in linha.split()), str(instalados))
+
+
+# --- Trabalho repetido ------------------------------------------------------
+
+
+SONDA = r"""
+import collections, json, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import comum
+leituras = collections.Counter()
+chamadas = collections.Counter()
+_ler = comum.ler
+def ler(caminho):
+    leituras[Path(caminho).as_posix()] += 1
+    return _ler(caminho)
+comum.ler = ler
+def contar(modulo, nome):
+    original = getattr(modulo, nome)
+    def contada(*a, **k):
+        chamadas[nome] += 1
+        return original(*a, **k)
+    setattr(modulo, nome, contada)
+resultado = {}
+exec(sys.argv[2])
+print(json.dumps({"leituras": leituras, "chamadas": chamadas, "resultado": resultado}))
+"""
+
+
+def testar_desempenho(tmp: Path) -> None:
+    """O trabalho que crescia com o projeto: o mesmo arquivo lido de novo a cada regra, a cada título ou a cada item."""
+    print("Trabalho repetido")
+    projeto = tmp / "desempenho"
+    projeto.mkdir()
+    (projeto / ".git").mkdir()
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    reg = base / "_projeto"
+    pasta = montar_exemplo(projeto)
+    sonda = tmp / "sonda.py"
+    sonda.write_text(SONDA, encoding="utf-8")
+
+    def medir(codigo: str) -> dict:
+        saida = rodar([PY, sonda, base / "_harness/scripts", codigo], projeto)
+        try:
+            return json.loads(saida.stdout.splitlines()[-1])
+        except (IndexError, ValueError):
+            return {"leituras": {}, "chamadas": {}, "resultado": {}, "erro": saida.stdout + saida.stderr}
+
+    def lidos(medida: dict, final: str) -> int:
+        return sum(n for caminho, n in medida["leituras"].items() if caminho.endswith(final))
+
+    # A gravação de um arquivo confere esse arquivo, e não relê os dados do entregável
+    (pasta / "dados").mkdir(exist_ok=True)
+    (pasta / "dados/base.csv").write_text("cliente;valor\nProjeto Girassol;10\n", encoding="utf-8")
+    (pasta / "conteudo.md").write_text(CONTEUDO.replace("14 plataformas", "14 plataformas do Projeto Girassol", 1), encoding="utf-8")
+    medida = medir(f"import checagens, validar\nresultado['achados'] = [a.formatar() for a in validar.validar_arquivo(Path({str(pasta / 'conteudo.md')!r}))]\nresultado['solto'] = checagens.SO_ARQUIVO is None")
+    achados = "\n".join(medida["resultado"].get("achados", []))
+    confere("conferir o arquivo gravado acha o termo proibido nele", "Projeto Girassol" in achados and "conteudo.md" in achados and "base.csv" not in achados, achados + medida.get("erro", ""))
+    confere("conferir o arquivo gravado não relê os dados do entregável", lidos(medida, "dados/base.csv") == 0 and lidos(medida, "diag/conteudo.md") >= 1, str(medida["leituras"]))
+    confere("depois da conferência de um arquivo, a validação volta a olhar todos", medida["resultado"].get("solto") is True)
+    (pasta / "conteudo.md").write_text(CONTEUDO, encoding="utf-8")
+    inteira = validar(projeto, "--so", "confidencialidade")
+    confere("a validação inteira continua lendo os dados do entregável", inteira.returncode == 1 and "dados/base.csv:2" in inteira.stdout, inteira.stdout + inteira.stderr)
+    do_arquivo = validar(projeto, "--arquivo", pasta / "dados/base.csv")
+    confere("a conferência de um arquivo de dados acha o que está nele", do_arquivo.returncode == 1 and "dados/base.csv:2" in do_arquivo.stdout, do_arquivo.stdout + do_arquivo.stderr)
+    (pasta / "dados/base.csv").unlink()
+
+    # A lista de rótulos é lida uma vez, e não a cada título
+    medida = medir(f"import validar\nresultado['n'] = len(validar.validar([Path({str(pasta)!r})], gerais=False))")
+    confere("a lista de rótulos é lida uma vez por execução", lidos(medida, "listas/rotulos.txt") == 1, str({c: n for c, n in medida["leituras"].items() if "rotulos" in c}) + medida.get("erro", ""))
+
+    # Regras do domínio: o entregável é lido uma vez, e o código do projeto roda uma vez
+    dominio = base / "_dominio"
+    (dominio / "dominio.md").write_text(DOMINIO, encoding="utf-8")
+    (dominio / "casos.tsv").write_text(CASOS_DO_DOMINIO, encoding="utf-8")
+    aplicar = f"import dominio\nresultado['achados'] = [a.formatar() for a in dominio.aplicar(Path({str(pasta)!r}))]"
+    (dominio / "checagens.tsv").write_text(REGRAS_DO_DOMINIO, encoding="utf-8")
+    com_quatro = medir(aplicar)
+    dobro = REGRAS_DO_DOMINIO + "".join(l.replace("D-00", "D-10", 1) + "\n" for l in REGRAS_DO_DOMINIO.splitlines()[1:])
+    (dominio / "checagens.tsv").write_text(dobro, encoding="utf-8")
+    com_oito = medir(aplicar)
+    confere("o dobro de regras do domínio não relê o entregável",
+            lidos(com_quatro, "diag/conteudo.md") >= 1 and lidos(com_oito, "diag/conteudo.md") == lidos(com_quatro, "diag/conteudo.md") and lidos(com_oito, "diag/briefing.md") == lidos(com_quatro, "diag/briefing.md"),
+            f"4 regras: {lidos(com_quatro, 'diag/conteudo.md')} e {lidos(com_quatro, 'diag/briefing.md')}; 8 regras: {lidos(com_oito, 'diag/conteudo.md')} e {lidos(com_oito, 'diag/briefing.md')}" + com_oito.get("erro", ""))
+    (pasta / "conteudo.md").write_text(CONTEUDO.replace("plataformas contratadas", "sistemas em uso"), encoding="utf-8")
+    acusado = medir(aplicar)["resultado"].get("achados", [])
+    confere("as regras do domínio continuam acusando, uma vez cada", sum("D-003" in a for a in acusado) == 1 and sum("D-103" in a for a in acusado) == 1, str(acusado))
+    (pasta / "conteudo.md").write_text(CONTEUDO, encoding="utf-8")
+    (dominio / "checagens.tsv").write_text(REGRAS_DO_DOMINIO, encoding="utf-8")
+    rodar([PY, "entregaveis/_harness/scripts/preparar.py", "--entregavel", "outro", "--tipo", "documento"], projeto)
+    marcas = dominio / "execucoes.txt"
+    (dominio / "checagens_extra.py").write_text(
+        "from pathlib import Path\n\nwith (Path(__file__).parent / 'execucoes.txt').open('a') as f:\n    f.write('x')\n\n\n"
+        "def sem_sigla(texto):\n    return 'Escreva o nome por extenso.' if 'XPTO' in texto else None\n\n\nREGRAS = {'D-900': sem_sigla}\n", encoding="utf-8")
+    com_dois = validar(projeto, "--so", "dominio")
+    confere("validar dois entregáveis executa o código de regras do projeto uma vez", marcas.is_file() and marcas.read_text() == "x", (marcas.read_text() if marcas.is_file() else "sem execução") + com_dois.stdout[-300:] + com_dois.stderr)
+    marcas.unlink(missing_ok=True)
+    recarga = medir("import dominio\ndominio.regras()\np = dominio.PASTA / 'checagens_extra.py'\np.write_text(p.read_text() + '\\n# mudou\\n')\nresultado['ids'] = [r.ident for r in dominio.regras()[0]]")
+    confere("o código de regras do projeto é carregado de novo quando o arquivo muda", marcas.is_file() and marcas.read_text() == "xx" and "D-900" in medida_ids(recarga), (marcas.read_text() if marcas.is_file() else "sem execução") + recarga.get("erro", ""))
+    (dominio / "checagens_extra.py").write_text("REGRAS = {}\n", encoding="utf-8")
+
+    # A lista do dia: os prazos, as remarcações e as cadeias de dependência são lidos uma vez
+    hoje = dia_util(datetime.date.today(), 0) if datetime.date.today().weekday() < 5 else dia_util(datetime.date.today(), 1)
+    antes, bem_antes = dia_util(hoje, -3), dia_util(hoje, -20)
+    with (reg / "acoes.tsv").open("a", encoding="utf-8") as f:
+        for n in range(1, 7):
+            depende = f"T-90{n - 1}" if n > 1 else ""
+            f.write("\t".join([f"T-90{n}", "tarefa", f"Passo {n} da migração", "Consultora", "consultoria", str(bem_antes), str(antes), "nao", "aberta", "consultor", str(bem_antes), "", depende, ""]) + "\n")
+    with (reg / "prazos.tsv").open("a", encoding="utf-8") as f:
+        for n in (1, 2, 3):
+            f.write("\t".join([f"T-90{n}", str(bem_antes), str(bem_antes), str(antes), str(bem_antes), "consultor", "O cliente pediu"]) + "\n")
+    medida = medir(f"import datetime, afazeres, rotina\ncontar(rotina, 'itens_com_prazo')\ncontar(afazeres, 'dependentes')\nlista = afazeres.montar(datetime.date.fromisoformat('{hoje}'))\n"
+                   "resultado['destaques'] = [t for _, t in lista['destaques']]\nresultado['itens'] = len(afazeres.itens_abertos())")
+    itens = medida["resultado"].get("itens", 0)
+    confere("a lista do dia lê as remarcações uma vez, e não uma vez por item", 1 <= lidos(medida, "_projeto/prazos.tsv") <= 3, str(lidos(medida, "_projeto/prazos.tsv")) + medida.get("erro", ""))
+    confere("a lista do dia percorre a cadeia de cada item uma vez", itens >= 6 and medida["chamadas"].get("dependentes", 0) == itens and medida["chamadas"].get("itens_com_prazo", 0) <= 2, str(medida["chamadas"]) + f" para {itens} itens")
+    destaques = "\n".join(medida["resultado"].get("destaques", []))
+    confere("a lista do dia continua dizendo o que cada item trava", "T-901" in destaques and "Trava: T-902, T-903, T-904, T-905, T-906" in destaques, destaques)
+    resumo = rodar([PY, "entregaveis/_harness/scripts/rotina.py", "--hoje", hoje], projeto)
+    confere("o resumo continua dizendo quantas vezes o item foi remarcado", "T-901" in resumo.stdout and "Remarcado 1 vez(es)" in resumo.stdout, resumo.stdout + resumo.stderr)
+
+    # Segundo cérebro: conferir uma nota dá o mesmo resultado, sem passar as outras pelas checagens
+    with (reg / "evidencias.tsv").open("a", encoding="utf-8") as f:
+        f.write("E-002\tO contrato da plataforma de atendimento vence em março e a renovação custa o dobro do valor atual\t2\tContrato\t2026-10-01\tfato\talta\tdiag\n")
+    notas = base / "_cerebro/3-recursos"
+    modelo = "---\ntitulo: {t}\nresumo: Resumo de {t}.\nfontes: {f}\natualizada:\n---\n# {t}\n\n## Em resumo\n\n{r}\n\n## O que sabemos\n\n{s}\n\n## Ligações\n\n{l}\n"
+    (notas / "contratos.md").write_text(modelo.format(t="Contratos", f="E-002", r="O contrato vence em março.", s="O contrato da plataforma de atendimento vence em março e a renovação custa o dobro do valor atual (E-002). Ver também E-777.", l="- [Sumida](sumida.md)"), encoding="utf-8")
+    (notas / "plataformas.md").write_text(modelo.format(t="Plataformas", f="E-001", r="São 14 plataformas (E-001).", s="O inventário conta 14 (E-001).", l="- [Contratos](contratos.md)"), encoding="utf-8")
+    (notas / "solta.md").write_text(modelo.format(t="Solta", f="", r="", s="PREENCHER", l=""), encoding="utf-8")
+    medida = medir("import cerebro\ncontar(cerebro, '_resumo')\ntudo = [a.formatar() for a in cerebro.conferir()]\nresultado['tudo'] = tudo\nresultado['notas'] = len(cerebro.notas())\nantes = chamadas['_resumo']\n"
+                   "resultado['uma'] = {n.rel: [a.formatar() for a in cerebro.conferir(n.caminho)] for n in cerebro.notas()}\nresultado['por_nota'] = (chamadas['_resumo'] - antes) / max(len(cerebro.notas()), 1)")
+    tudo, uma = medida["resultado"].get("tudo", []), medida["resultado"].get("uma", {})
+    confere("a conferência do segundo cérebro acha a cópia, o id que não existe, a ligação quebrada e a nota solta",
+            all(any(trecho in a for a in tudo) for trecho in ("Repete o texto de E-002", "Cita E-777", "'sumida.md' não leva", "trechos por preencher", "Nenhuma outra nota aponta")), "\n".join(tudo) + medida.get("erro", ""))
+    confere("conferir uma nota só devolve o mesmo que a conferência inteira diz dela",
+            len(uma) == 3 and all(avisos == [a for a in tudo if f"_cerebro/{rel}:" in a or f"_cerebro/{rel} " in a or a.split(" ")[0].rstrip(":").endswith(rel)] for rel, avisos in uma.items()), json.dumps(uma, ensure_ascii=False)[:900])
+    confere("conferir uma nota só não passa as outras pelas checagens de conteúdo", medida["resultado"].get("por_nota") == 1, str(medida["resultado"].get("por_nota")) + str(medida["chamadas"]))
+
+    # As permissões de comando cobrem os scripts que as regras mandam rodar a cada ação
+    permitidos = "\n".join(json.loads((projeto / ".claude/settings.json").read_text(encoding="utf-8"))["permissions"]["allow"])
+    citados = set(re.findall(r"scripts/(\w+)\.py", (HARNESS / "REGRAS.md").read_text(encoding="utf-8"))) | {"cerebro", "governanca", "emitir"}
+    faltam = sorted(nome for nome in citados if f"scripts/{nome}.py" not in permitidos)
+    confere("todo script que as regras mandam rodar está na lista de comandos permitidos", not faltam, str(faltam))
+
+
+def medida_ids(medida: dict) -> list:
+    return medida["resultado"].get("ids", [])
 
 
 # --- Atas, prazos e rotina diária -----------------------------------------
@@ -2942,31 +3609,99 @@ def testar_exemplo(tmp: Path) -> None:
     confere("o arquivo guardado em exemplo/resultado tem os títulos do conteúdo atual", guardado == titulos, str(guardado))
 
 
-def main() -> int:
+GRUPOS = [
+    (testar_skills, False),
+    (testar_referencias, False),
+    (testar_texto_do_kit, False),
+    (testar_instalador, True),
+    (testar_checagens, True),
+    (testar_hooks, True),
+    (testar_registros, True),
+    (testar_interativos, True),
+    (testar_dominio, True),
+    (testar_repositorio, True),
+    (testar_gerador, True),
+    (testar_fases, True),
+    (testar_ambientes, True),
+    (testar_pacotes, True),
+    (testar_levantamento, True),
+    (testar_bordas, True),
+    (testar_desempenho, True),
+    (testar_rotina, True),
+    (testar_governanca, True),
+    (testar_emissao, True),
+    (testar_cerebro, True),
+    (testar_ambiente, True),
+    (testar_exemplo, True),
+]
+
+
+def _nome(funcao) -> str:
+    return funcao.__name__[len("testar_"):]
+
+
+RESULTADO = "##resultado## "
+
+
+def em_serie(escolhidos: list) -> None:
+    """Roda os grupos neste processo, um depois do outro."""
     tmp = Path(tempfile.mkdtemp(prefix="kit-"))
     try:
-        testar_skills()
-        testar_referencias()
-        testar_texto_do_kit()
-        testar_instalador(tmp)
-        testar_checagens(tmp)
-        testar_hooks(tmp)
-        testar_interativos(tmp)
-        testar_dominio(tmp)
-        testar_repositorio(tmp)
-        testar_gerador(tmp)
-        testar_fases(tmp)
-        testar_ambientes(tmp)
-        testar_pacotes(tmp)
-        testar_levantamento(tmp)
-        testar_rotina(tmp)
-        testar_governanca(tmp)
-        testar_emissao(tmp)
-        testar_cerebro(tmp)
-        testar_ambiente(tmp)
-        testar_exemplo(tmp)
+        for funcao, usa_tmp in escolhidos:
+            funcao(tmp) if usa_tmp else funcao()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def em_paralelo(escolhidos: list, vagas: int) -> None:
+    """Roda cada grupo em um processo próprio e mostra as saídas na ordem dos grupos.
+
+    Cada processo tem a sua pasta temporária e os seus módulos, e por isso
+    um grupo não enxerga o que o outro mudou.
+    """
+    global total
+    from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
+
+    def um(nome: str) -> subprocess.CompletedProcess:
+        return subprocess.run([PY, str(Path(__file__).resolve()), "--filho", nome], capture_output=True, text=True)
+
+    nomes = [_nome(f) for f, _ in escolhidos]
+    with ThreadPoolExecutor(max_workers=vagas) as fila:
+        for nome, saida in zip(nomes, fila.map(um, nomes)):
+            linhas = saida.stdout.splitlines()
+            final = next((l for l in reversed(linhas) if l.startswith(RESULTADO)), None)
+            print("\n".join(l for l in linhas if not l.startswith(RESULTADO)), flush=True)
+            if final is None:
+                total += 1
+                falhas.append(f"o grupo {nome} caiu antes de terminar\n      {(saida.stderr or saida.stdout).strip()[-600:]}")
+                print(f"  FALHOU  o grupo {nome} caiu antes de terminar")
+                continue
+            dados = json.loads(final[len(RESULTADO):])
+            total += dados["total"]
+            falhas.extend(dados["falhas"])
+
+
+def main() -> int:
+    analisador = argparse.ArgumentParser(description="Testes do kit de entregáveis.")
+    analisador.add_argument("grupos", nargs="*", help="grupos a rodar (padrão: todos)")
+    analisador.add_argument("--serie", action="store_true", help="roda os grupos um depois do outro, em um processo só")
+    analisador.add_argument("--vagas", type=int, default=min(4, os.cpu_count() or 1), help="quantos grupos rodam ao mesmo tempo (padrão: até 4)")
+    analisador.add_argument("--filho", action="store_true", help=argparse.SUPPRESS)
+    args = analisador.parse_args()
+    pedidos = args.grupos
+    escolhidos = [(f, usa_tmp) for f, usa_tmp in GRUPOS if not pedidos or _nome(f) in pedidos]
+    desconhecidos = set(pedidos) - {_nome(f) for f, _ in GRUPOS}
+    if desconhecidos:
+        print("Grupo desconhecido: " + ", ".join(sorted(desconhecidos)) + ". Os grupos são: " + ", ".join(_nome(f) for f, _ in GRUPOS) + ".")
+        return 2
+    if args.filho:
+        em_serie(escolhidos)
+        print(RESULTADO + json.dumps({"total": total, "falhas": falhas}))
+        return 0
+    if args.serie or args.vagas < 2 or len(escolhidos) < 2:
+        em_serie(escolhidos)
+    else:
+        em_paralelo(escolhidos, args.vagas)
     print()
     if falhas:
         print(f"{len(falhas)} de {total} conferências falharam:")

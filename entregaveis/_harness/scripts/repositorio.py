@@ -11,10 +11,15 @@ Uso:
                                            os remotos não verificados são privados
 
 A verificação é o pedido que o git faz ao clonar, sem credencial, ao
-endereço do próprio remoto. Quando não há rede, ou o servidor não
-responde, a situação fica "não verificado" e vale a confirmação do consultor, registrada em
+endereço do próprio remoto, seguindo os redirecionamentos do servidor.
+Quando não há rede, ou o servidor não responde, a situação fica "não
+verificado" e vale a confirmação do consultor, registrada em
 _projeto/repositorio.tsv. Um remoto verificado como público não aceita
 confirmação: torne-o privado ou remova-o.
+
+O endereço de envio de um remoto (pushurl) é conferido como um remoto à
+parte. Usuário e senha escritos no endereço nunca são mostrados nem
+gravados.
 
 Sai com 0 quando o projeto pode ficar onde está e com 1 quando não pode.
 """
@@ -24,10 +29,12 @@ import argparse
 import datetime
 import json
 import re
+import shlex
 import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -37,8 +44,11 @@ import comum  # noqa: E402
 
 REGISTRO = comum.PROJETO / "repositorio.tsv"
 MEMORIA = comum.HARNESS / ".estado" / "repositorio.json"
+ESTE = comum.relativo(Path(__file__).resolve()).replace("\\", "/")  # o caminho deste script no projeto, para as mensagens
 VALIDADE = {"privado": 24 * 3600, "publico": 120, "nao-verificado": 900}
 ESPERA = 4
+SALTOS = 5  # quantos redirecionamentos seguir antes de desistir
+REGRA = 2  # muda quando a classificação muda, para a memória antiga não valer
 
 LOCAL = "local"
 PRIVADO = "privado"
@@ -51,14 +61,15 @@ def remotos(raiz: Path | None = None) -> dict[str, str]:
     raiz = raiz or comum.RAIZ
     try:
         saida = subprocess.run(
-            ["git", "-C", str(raiz), "config", "--get-regexp", r"^remote\..*\.url$"],
+            ["git", "-C", str(raiz), "config", "--get-regexp", r"^remote\..*\.(url|pushurl)$"],
             capture_output=True, text=True, timeout=10,
         )
         if saida.returncode in (0, 1):
             achados = {}
             for linha in saida.stdout.splitlines():
                 chave, _, url = linha.partition(" ")
-                achados[chave[len("remote."):-len(".url")]] = url.strip()
+                nome, _, campo = chave[len("remote."):].rpartition(".")
+                _guardar(achados, nome, campo, url.strip())
             return achados
     except (OSError, subprocess.SubprocessError):
         pass
@@ -71,9 +82,37 @@ def remotos(raiz: Path | None = None) -> dict[str, str]:
             nome = m.group(1)
         elif linha.strip().startswith("["):
             nome = None
-        elif nome and re.match(r"\s*url\s*=", linha):
-            achados[nome] = linha.split("=", 1)[1].strip()
+        elif nome and (m := re.match(r"\s*(url|pushurl)\s*=", linha, flags=re.IGNORECASE)):
+            _guardar(achados, nome, m.group(1).lower(), linha.split("=", 1)[1].strip())
     return achados
+
+
+def _guardar(achados: dict[str, str], nome: str, campo: str, url: str) -> None:
+    """Guarda o endereço de um remoto. O de envio entra com nome próprio, e um remoto pode ter mais de um."""
+    if campo == "url":
+        achados.setdefault(nome, url)
+        return
+    chave, n = f"{nome} (envio)", 2
+    while chave in achados:
+        chave, n = f"{nome} (envio {n})", n + 1
+    achados[chave] = url
+
+
+def sem_credencial(url: str) -> str:
+    """O endereço sem o usuário e a senha, para mostrar e para gravar.
+
+    Em http e https, tudo o que vem antes do '@' sai, porque um token
+    costuma ser escrito no lugar do usuário. Em ssh, o usuário fica e só a
+    senha sai.
+    """
+    url = url.strip()
+    m = re.match(r"^(https?://)[^@/]*@(.*)$", url, flags=re.IGNORECASE)
+    if m:
+        return m.group(1) + m.group(2)
+    m = re.match(r"^([a-z][a-z0-9+.-]*://[^:@/]+):[^@/]*@(.*)$", url, flags=re.IGNORECASE)
+    if m:
+        return m.group(1) + "@" + m.group(2)
+    return url
 
 
 def endereco(url: str) -> tuple[str, str, str] | None:
@@ -95,25 +134,41 @@ def endereco(url: str) -> tuple[str, str, str] | None:
 
 
 def _pedir(url: str) -> tuple[int | None, str]:
-    """Código e tipo da resposta a um pedido anônimo, sem seguir redirecionamento."""
+    """Código e tipo da resposta final a um pedido anônimo, seguindo os redirecionamentos.
+
+    Um redirecionamento não diz se o repositório é aberto ou fechado: o
+    GitHub responde 301 a um endereço http e ao nome antigo de um
+    repositório público. Por isso vale a resposta do fim do caminho. Um
+    caminho com mais de SALTOS redirecionamentos, ou que não diz para
+    onde vai, fica sem resposta.
+    """
 
     class SemRedirecionar(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, *args, **kwargs):
             return None
 
-    servidor = url.split("/")[2].split(":")[0]
-    manipuladores = [SemRedirecionar()]
-    if servidor in ("127.0.0.1", "localhost"):
-        manipuladores.append(urllib.request.ProxyHandler({}))
-    abridor = urllib.request.build_opener(*manipuladores)
-    pedido = urllib.request.Request(url, headers={"User-Agent": "git/2.40 harness-de-entregaveis"})
-    try:
-        with abridor.open(pedido, timeout=ESPERA) as resposta:
-            return resposta.status, resposta.headers.get("Content-Type", "")
-    except urllib.error.HTTPError as erro:
-        return erro.code, ""
-    except (urllib.error.URLError, OSError, ValueError):
-        return None, ""
+    for _ in range(SALTOS + 1):
+        partes = urllib.parse.urlsplit(url)
+        if partes.scheme not in ("http", "https") or not partes.hostname:
+            return None, ""
+        manipuladores = [SemRedirecionar()]
+        if partes.hostname in ("127.0.0.1", "localhost"):
+            manipuladores.append(urllib.request.ProxyHandler({}))
+        abridor = urllib.request.build_opener(*manipuladores)
+        pedido = urllib.request.Request(url, headers={"User-Agent": "git/2.40 harness-de-entregaveis"})
+        try:
+            with abridor.open(pedido, timeout=ESPERA) as resposta:
+                return resposta.status, resposta.headers.get("Content-Type", "")
+        except urllib.error.HTTPError as erro:
+            destino = erro.headers.get("Location", "") if erro.headers else ""
+            if erro.code not in (301, 302, 303, 307, 308):
+                return erro.code, ""
+            if not destino:
+                return None, ""
+            url = urllib.parse.urljoin(url, destino)
+        except (urllib.error.URLError, OSError, ValueError):
+            return None, ""
+    return None, ""
 
 
 def verificar(url: str) -> str:
@@ -121,8 +176,9 @@ def verificar(url: str) -> str:
 
     É o mesmo pedido que o git faz ao clonar por HTTPS, sem credencial. Se o
     servidor entrega a lista de referências, o repositório é público. Se pede
-    identificação ou diz que não existe, é privado. Qualquer outra resposta
-    fica como não verificada.
+    identificação ou diz que não existe, é privado. Qualquer outra resposta,
+    como a página de entrada para onde alguns servidores redirecionam, fica
+    como não verificada.
     """
     partes = endereco(url)
     if partes is None:
@@ -131,7 +187,7 @@ def verificar(url: str) -> str:
     codigo, tipo = _pedir(f"{protocolo}://{servidor}/{caminho}.git/info/refs?service=git-upload-pack")
     if codigo == 200 and "git-upload-pack" in tipo:
         return PUBLICO
-    if codigo in (301, 302, 303, 307, 308, 401, 403, 404):
+    if codigo in (401, 403, 404):
         return PRIVADO
     return NAO_VERIFICADO
 
@@ -144,8 +200,8 @@ def _memoria() -> dict:
 
 
 def _lembrar(url: str, situacao: str) -> None:
-    dados = _memoria()
-    dados[url] = {"situacao": situacao, "quando": time.time()}
+    dados = {k: v for k, v in _memoria().items() if isinstance(v, dict) and v.get("regra") == REGRA}
+    dados[sem_credencial(url)] = {"situacao": situacao, "quando": time.time(), "regra": REGRA}
     try:
         MEMORIA.parent.mkdir(exist_ok=True)
         MEMORIA.write_text(json.dumps(dados), encoding="utf-8")
@@ -155,28 +211,108 @@ def _lembrar(url: str, situacao: str) -> None:
 
 def confirmados() -> dict[str, dict]:
     """Remotos que o consultor confirmou como privados, pelo endereço."""
-    return {l.get("remoto", ""): l for l in comum.ler_tsv(REGISTRO) if comum.normalizar(l.get("situacao", "")) == PRIVADO}
+    return {sem_credencial(l.get("remoto", "")): l for l in comum.ler_tsv(REGISTRO) if comum.normalizar(l.get("situacao", "")) == PRIVADO}
 
 
 def situacao_do_remoto(url: str, usar_memoria: bool = True) -> str:
-    guardado = _memoria().get(url) if usar_memoria else None
-    if guardado and time.time() - guardado.get("quando", 0) < VALIDADE.get(guardado.get("situacao"), 0):
+    guardado = _memoria().get(sem_credencial(url)) if usar_memoria else None
+    if isinstance(guardado, dict) and guardado.get("regra") == REGRA and time.time() - guardado.get("quando", 0) < VALIDADE.get(guardado.get("situacao"), 0):
         situacao = guardado["situacao"]
     else:
         situacao = verificar(url)
         _lembrar(url, situacao)
-    if situacao == NAO_VERIFICADO and url in confirmados():
+    if situacao == NAO_VERIFICADO and sem_credencial(url) in confirmados():
         return PRIVADO
     return situacao
 
 
-def situacao(usar_memoria: bool = True) -> tuple[str, list[tuple[str, str, str]]]:
-    """A pior situação entre os remotos, e a lista (nome, endereço, situação)."""
-    linhas = [(nome, url, situacao_do_remoto(url, usar_memoria)) for nome, url in sorted(remotos().items())]
+def situacao(usar_memoria: bool = True, outros: dict[str, str] | None = None) -> tuple[str, list[tuple[str, str, str]]]:
+    """A pior situação entre os remotos, e a lista (nome, endereço sem credencial, situação).
+
+    'outros' são destinos que não estão na configuração do git, como o
+    endereço escrito em um comando de envio.
+    """
+    todos = {**remotos(), **(outros or {})}
+    linhas = [(nome, sem_credencial(url), situacao_do_remoto(url, usar_memoria)) for nome, url in sorted(todos.items())]
     for pior in (PUBLICO, NAO_VERIFICADO, PRIVADO):
         if any(s == pior for _, _, s in linhas):
             return pior, linhas
     return LOCAL, linhas
+
+
+_OPCOES_COM_VALOR = {"-C", "-c", "-o", "--push-option", "--receive-pack", "--exec", "--repo", "--git-dir", "--work-tree", "--namespace"}
+
+
+def _segmentos(comando: str) -> list[list[str]]:
+    """As palavras do comando, separadas a cada '&&', ';', '|' ou quebra de linha."""
+    segmentos: list[list[str]] = []
+    for linha in comando.splitlines():
+        try:
+            leitor = shlex.shlex(linha, posix=True, punctuation_chars=True)
+            leitor.whitespace_split = True
+            palavras = list(leitor)
+        except ValueError:  # aspas sem par: fica com a divisão simples
+            palavras = re.split(r"\s+|(?<=[;&|])|(?=[;&|])", linha)
+        atual: list[str] = []
+        for palavra in palavras:
+            if palavra and set(palavra) <= set(";&|()<>"):
+                segmentos.append(atual)
+                atual = []
+            elif palavra:
+                atual.append(palavra)
+        segmentos.append(atual)
+    return [s for s in segmentos if s]
+
+
+def destinos_do_comando(comando: str) -> dict[str, str]:
+    """Os endereços de repositório que um comando de git escreve por extenso.
+
+    Olha o `git push ENDEREÇO`, o `--repo`, e o `git remote add` e o
+    `git remote set-url`, que mudam o destino do envio seguinte. Um
+    endereço em disco não entra, porque é local.
+    """
+    achados: dict[str, str] = {}
+
+    def guardar(candidato: str) -> None:
+        if endereco(candidato) is not None and candidato not in achados.values():
+            achados[f"comando ({len(achados) + 1})"] = candidato
+
+    for palavras in _segmentos(comando):
+        # Um comando entre aspas, como o de `bash -c "git push ..."`, é lido por dentro.
+        for palavra in palavras:
+            if re.search(r"\s", palavra) and re.search(r"\bgit\b", palavra) and palavra != comando:
+                for candidato in destinos_do_comando(palavra).values():
+                    guardar(candidato)
+        # O programa pode vir com o caminho, como /usr/bin/git.
+        onde = next((i for i, palavra in enumerate(palavras) if re.split(r"[\\/]", palavra)[-1] in ("git", "git.exe")), None)
+        if onde is None:
+            continue
+        depois = palavras[onde + 1:]
+        if "push" in depois:
+            candidatos = depois[depois.index("push") + 1:]
+            primeiro = _primeiro_argumento(candidatos)
+            candidatos = [c.split("=", 1)[1] for c in candidatos if c.startswith("--repo=")] + ([primeiro] if primeiro else [])
+            candidatos += [depois[i + 1] for i, c in enumerate(depois[:-1]) if c == "--repo"]
+        elif "remote" in depois and any(c in depois for c in ("add", "set-url")):
+            candidatos = [c for c in depois[depois.index("remote") + 1:] if not c.startswith("-")]
+        else:
+            continue
+        for candidato in candidatos:
+            guardar(candidato)
+    return achados
+
+
+def _primeiro_argumento(palavras: list[str]) -> str:
+    """O primeiro argumento de `git push` que não é opção: o nome do remoto ou o endereço."""
+    pular = False
+    for palavra in palavras:
+        if pular:
+            pular = False
+        elif palavra in _OPCOES_COM_VALOR:
+            pular = True
+        elif not palavra.startswith("-"):
+            return palavra
+    return ""
 
 
 def aceita(geral: str) -> bool:
@@ -208,14 +344,14 @@ def explicar(geral: str, linhas: list[tuple[str, str, str]]) -> str:
             f"O repositório remoto {publicos} é público: qualquer pessoa lê o que for enviado. "
             "Um projeto de cliente só fica em git local ou em repositório privado. "
             "Peça ao consultor para tornar o repositório privado, ou para remover o remoto e seguir só com o git local, "
-            "e rode de novo 'python3 entregaveis/_harness/scripts/repositorio.py'. Não contorne esta trava."
+            f"e rode de novo 'python3 {ESTE}'. Não contorne esta trava."
         )
     pendentes = ", ".join(f"{nome} ({url})" for nome, url, s in linhas if s == NAO_VERIFICADO)
     return (
-        f"Não foi possível verificar se o repositório remoto {pendentes} é privado (sem rede, ou o servidor não respondeu). "
+        f"Não foi possível verificar se o repositório remoto {pendentes} é privado (sem rede, o servidor não respondeu, ou respondeu com outra página). "
         "Um projeto de cliente só fica em git local ou em repositório privado. "
         "Pergunte ao consultor se o repositório é privado e, com o sim dele, registre com "
-        "'python3 entregaveis/_harness/scripts/repositorio.py --confirmar \"palavras do consultor\"'. "
+        f"'python3 {ESTE} --confirmar \"palavras do consultor\"'. "
         "Não registre a confirmação por conta própria."
     )
 
@@ -235,11 +371,10 @@ def confirmar(palavras: str) -> int:
         atual = "# Remotos que o consultor confirmou como privados. Uma linha por endereço.\n" + cabecalho
     hoje = datetime.date.today().isoformat()
     limpo = re.sub(r"[\t\r\n]+", " ", palavras).strip()
-    for _, url in pendentes:
+    for url in dict.fromkeys(url for _, url in pendentes):
         atual = atual.rstrip("\n") + f"\n{url}\t{PRIVADO}\t{hoje}\t{limpo}\n"
-    REGISTRO.parent.mkdir(parents=True, exist_ok=True)
-    REGISTRO.write_text(atual, encoding="utf-8")
-    print(f"Confirmação registrada em {comum.relativo(REGISTRO)} para: " + ", ".join(url for _, url in pendentes) + ".")
+    comum.gravar(REGISTRO, atual)
+    print(f"Confirmação registrada em {comum.relativo(REGISTRO)} para: " + ", ".join(dict.fromkeys(url for _, url in pendentes)) + ".")
     return 0
 
 

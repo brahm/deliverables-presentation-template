@@ -12,7 +12,10 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import os
 import re
+import sys
+import tempfile
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -63,12 +66,89 @@ class Pagina:
     notas: str = ""
 
 
-def ler(caminho: Path) -> str:
-    """Devolve o texto do arquivo, ou vazio quando ele não existe."""
+_FORA_DE_UTF8: set[str] = set()
+
+
+def _decodificar(dados: bytes) -> tuple[str, str] | None:
+    """Texto e codificação do conteúdo de um arquivo. None quando o conteúdo não é texto.
+
+    O Excel e o Bloco de Notas do Windows gravam em cp1252 ou em UTF-16.
+    Um registro salvo assim continua sendo o registro do projeto, então
+    ele é lido, e quem chamou é avisado.
+    """
+    if dados.startswith((b"\xff\xfe", b"\xfe\xff")):
+        try:
+            return dados.decode("utf-16"), "utf-16"
+        except UnicodeDecodeError:
+            return None
     try:
-        return Path(caminho).read_text(encoding="utf-8")
-    except (FileNotFoundError, IsADirectoryError, UnicodeDecodeError):
+        return dados.decode("utf-8-sig"), "utf-8"
+    except UnicodeDecodeError:
+        pass
+    if b"\x00" in dados:
+        return None
+    try:
+        return dados.decode("cp1252"), "cp1252"
+    except UnicodeDecodeError:
+        return None
+
+
+def ler(caminho: Path) -> str:
+    """Devolve o texto do arquivo, ou vazio quando ele não existe ou não é texto.
+
+    Um arquivo fora de UTF-8 é lido na codificação em que foi salvo, com
+    um aviso na saída de erro, uma vez por arquivo.
+    """
+    try:
+        dados = Path(caminho).read_bytes()
+    except OSError:
         return ""
+    lido = _decodificar(dados)
+    if lido is None:
+        return ""
+    texto, codificacao = lido
+    texto = texto.replace("\r\n", "\n").replace("\r", "\n")
+    if codificacao != "utf-8" and str(caminho) not in _FORA_DE_UTF8:
+        _FORA_DE_UTF8.add(str(caminho))
+        print(f"Aviso do harness: {relativo(caminho)} não está em UTF-8 e foi lido como {codificacao}. Salve o arquivo em UTF-8.", file=sys.stderr)
+    return texto
+
+
+def ilegivel(caminho: Path) -> bool:
+    """Diz se o arquivo existe, tem conteúdo e não pôde ser lido como texto."""
+    try:
+        dados = Path(caminho).read_bytes()
+    except OSError:
+        return False
+    return bool(dados.strip()) and _decodificar(dados) is None
+
+
+def gravar(caminho: Path, texto: str) -> None:
+    """Grava o arquivo inteiro de uma vez, em UTF-8.
+
+    O texto vai para um arquivo temporário na mesma pasta e só então toma
+    o lugar do original. Uma queda no meio da gravação deixa o original
+    como estava.
+    """
+    caminho = Path(caminho)
+    if caminho.is_symlink():
+        caminho = caminho.resolve()  # o atalho continua atalho: quem muda é o arquivo para onde ele aponta
+    caminho.parent.mkdir(parents=True, exist_ok=True)
+    descritor, temporario = tempfile.mkstemp(dir=caminho.parent, prefix=f".{caminho.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(descritor, "w", encoding="utf-8") as saida:
+            saida.write(texto)
+        if caminho.exists():
+            os.chmod(temporario, caminho.stat().st_mode & 0o777)
+        else:
+            os.chmod(temporario, 0o644)
+        os.replace(temporario, caminho)
+    except BaseException:
+        try:
+            os.unlink(temporario)
+        except OSError:
+            pass
+        raise
 
 
 def relativo(caminho: Path) -> str:
@@ -104,6 +184,34 @@ def cabecalho(texto: str) -> tuple[dict, str]:
             chave, valor = linha.split(":", 1)
             meta[chave.strip()] = valor.strip()
     return {}, texto
+
+
+def trocar_campo(texto: str, chave: str, valor, acrescentar: bool = False) -> str:
+    """Troca o valor de um campo 'chave: valor', de preferência no cabeçalho do arquivo.
+
+    O valor entra como foi escrito e em uma linha só: uma barra invertida
+    não é lida como comando de substituição, e uma quebra de linha não
+    cria outro campo. Com 'acrescentar', o campo que não existe é criado
+    no cabeçalho.
+    """
+    em_uma_linha = re.sub(r"\s+", " ", str(valor)).strip()
+    linha = f"{chave}: {em_uma_linha}"
+    padrao = re.compile(rf"^{re.escape(chave)}:.*$", flags=re.MULTILINE)
+    linhas = texto.splitlines(keepends=True)
+    fim = None
+    if linhas and linhas[0].strip() == "---":
+        fim = next((i for i, l in enumerate(linhas[1:], start=1) if l.strip() == "---"), None)
+    if fim is not None:
+        topo, resto = "".join(linhas[:fim]), "".join(linhas[fim:])
+        novo, quantos = padrao.subn(lambda _: linha, topo, count=1)
+        if quantos:
+            return novo + resto
+        if acrescentar:
+            return topo + linha + "\n" + resto
+    novo, quantos = padrao.subn(lambda _: linha, texto, count=1)
+    if quantos or not acrescentar:
+        return novo
+    return f"---\n{linha}\n---\n" + texto
 
 
 def secoes(texto: str) -> dict[str, str]:
@@ -154,8 +262,10 @@ def ler_tsv(caminho: Path) -> list[dict]:
     uteis = [l for l in texto.splitlines() if l.strip() and not l.startswith("#")]
     if not uteis:
         return []
-    leitor = csv.DictReader(uteis, delimiter="\t", quoting=csv.QUOTE_NONE)
-    return [{(k or "").strip(): (v or "").strip() for k, v in linha.items()} for linha in leitor]
+    leitor = csv.reader(uteis, delimiter="\t", quoting=csv.QUOTE_NONE)
+    colunas = [c.strip() for c in next(leitor)]
+    # Um campo a mais que o cabeçalho é ignorado, e um a menos fica vazio.
+    return [{c: (campos[i].strip() if i < len(campos) else "") for i, c in enumerate(colunas)} for campos in leitor if campos]
 
 
 def paginas(texto: str) -> list[Pagina]:

@@ -61,6 +61,14 @@ def arquivos(raiz: Path):
             yield Path(pasta, nome)
 
 
+def alterado_em(arquivo: Path) -> float:
+    """A data de alteração do arquivo. Um atalho quebrado ou um arquivo sem permissão fica por último."""
+    try:
+        return arquivo.stat().st_mtime
+    except OSError:
+        return 0.0
+
+
 def resumo() -> None:
     raiz = comum.RAIZ
     todos = list(arquivos(raiz))
@@ -78,7 +86,7 @@ def resumo() -> None:
 
     extensoes = Counter(a.suffix.lower() for a in todos)
     for grupo, exts in GRUPOS.items():
-        do_grupo = sorted((a for a in todos if a.suffix.lower() in exts), key=lambda a: a.stat().st_mtime, reverse=True)
+        do_grupo = sorted((a for a in todos if a.suffix.lower() in exts), key=alterado_em, reverse=True)
         if not do_grupo:
             continue
         print(f"\n{grupo}: {len(do_grupo)}")

@@ -91,10 +91,21 @@ Dados | 1
 
 `tipo` aceita `barras`, `colunas`, `linhas` e `pizza`. `destaque` é a
 categoria ou a série que o título cita: ela leva a cor de destaque e o
-resto fica em cinza. `arquivo: dados/NOME.csv` substitui a tabela do
-bloco. O título do gráfico é o título da página, e por isso o campo
-`titulo` é opcional. Em planilha, o bloco aponta para os dados de uma
-aba, com os campos `aba`, `categorias` e `valores`.
+resto fica em cinza. Uma pizza sem `destaque` sai com uma cor por
+fatia. `arquivo: dados/NOME.csv` substitui a tabela do bloco. O título
+do gráfico é o título da página, e por isso o campo `titulo` é
+opcional. Em planilha, o bloco aponta para os dados de uma aba, com os
+campos `aba`, `categorias` e `valores`.
+
+Os números são lidos como o idioma do entregável escreve. Em português
+e em espanhol, `1.234` é mil duzentos e trinta e quatro e `12,5` é doze
+e meio. Em inglês vale o contrário. Quando um valor da coluna não deixa
+dúvida, como `12,5`, ele decide a leitura da coluna inteira. `12%` e
+`R$ 1.200` entram como números e saem no rótulo com o percentual e a
+moeda. Uma célula vazia é um ponto sem valor. Qualquer outro texto em
+uma coluna de valores para a geração, com a linha e a coluna do
+problema. Em planilha, um código com zero à esquerda, como um CEP,
+fica como texto, e nenhum texto vira fórmula.
 
 O layout de cada tipo de página é escolhido pelo nome e pelos campos
 dos layouts do modelo, em todos os slides mestres. Quando a escolha não
@@ -107,6 +118,15 @@ do tamanho do modelo. Se nem assim couber, o script avisa: encurte o
 título ou troque o layout. As cores de
 destaque e de apoio dos gráficos vêm da linha "Cores de destaque em
 gráficos" da mesma página, em código hexadecimal.
+
+O gerador lê o fundo de cada layout: a cor ou a imagem de fundo do
+layout e do slide mestre, e a forma que cobre o slide inteiro. Em fundo
+escuro, o texto que ele mesmo cria sai claro: os rótulos, o eixo e a
+legenda do gráfico, a linha de fonte e as caixas de texto. A tabela
+ganha células escuras com letra clara. Quando a leitura não acerta,
+como em um fundo de fotografia, registre a cor na linha "Cor do texto
+sobre o fundo" de `_projeto/marca.md`, e ela passa a valer em todas as
+páginas.
 
 Antes de entregar um arquivo gerado, abra o resultado e olhe página por
 página. Texto que estoura a caixa, gráfico cortado e fonte trocada só

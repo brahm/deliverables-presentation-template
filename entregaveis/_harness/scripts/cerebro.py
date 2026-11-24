@@ -484,7 +484,26 @@ def conferir(so: Path | None = None) -> list[Achado]:
     def aviso(nota: Nota, texto: str, linha: int = 0) -> None:
         achados.append(Achado("aviso", "cerebro", comum.relativo(nota.caminho), linha, texto))
 
+    # O texto de cada fonte é normalizado uma vez, e não a cada nota.
+    copiaveis = [(f.ident, trecho) for f, trecho in ((f, comum.normalizar(f.texto)) for f in origens.values()) if len(trecho) >= TAMANHO_DE_COPIA]
+    alvo_unico = so.resolve() if so is not None else None
+
     for n in todas:
+        proprio = n.caminho.resolve()
+        visiveis = alvo_unico is None or proprio == alvo_unico
+        # As ligações de todas as notas são lidas sempre: é delas que sai quem aponta para quem.
+        for numero, linha in enumerate(n.texto.splitlines(), start=1):
+            for m in LIGACAO.finditer(linha):
+                if re.match(r"[a-z]+:", m.group(1)):
+                    continue
+                alvo = (n.caminho.parent / m.group(1)).resolve()
+                if alvo in apontadas:
+                    if alvo != proprio:
+                        apontadas[alvo] += 1
+                elif visiveis and not alvo.exists():
+                    aviso(n, f"A ligação para '{m.group(1)}' não leva a lugar nenhum.", numero)
+        if not visiveis:
+            continue  # com uma nota só a conferir, as outras não passam pelas checagens de conteúdo
         if comum.MARCA in n.texto:
             aviso(n, "A nota ainda tem trechos por preencher.")
         for campo in ("titulo", "resumo"):
@@ -499,25 +518,15 @@ def conferir(so: Path | None = None) -> list[Achado]:
             aviso(n, f"A seção 'Em resumo' tem {len(resumo)} linhas. O limite é {LIMITE_DO_RESUMO}: destile.")
         for ident in sorted(n.citados - conhecidos):
             aviso(n, f"Cita {ident}, que não existe em nenhum registro.")
-        for numero, linha in enumerate(n.texto.splitlines(), start=1):
-            for m in LIGACAO.finditer(linha):
-                if re.match(r"[a-z]+:", m.group(1)):
-                    continue
-                alvo = (n.caminho.parent / m.group(1)).resolve()
-                if not alvo.exists():
-                    aviso(n, f"A ligação para '{m.group(1)}' não leva a lugar nenhum.", numero)
-                elif alvo in apontadas and alvo != n.caminho.resolve():
-                    apontadas[alvo] += 1
         corpo = comum.normalizar(n.corpo)
-        for fonte in origens.values():
-            trecho = comum.normalizar(fonte.texto)
-            if len(trecho) >= TAMANHO_DE_COPIA and trecho in corpo:
-                aviso(n, f"Repete o texto de {fonte.ident}. Cite o id e diga o que o dado significa, sem copiar a linha do registro.")
+        for ident, trecho in copiaveis:
+            if trecho in corpo:
+                aviso(n, f"Repete o texto de {ident}. Cite o id e diga o que o dado significa, sem copiar a linha do registro.")
         if n.rel.startswith("1-projetos/") and n.caminho.stem in entregues:
             aviso(n, f"O entregável {n.caminho.stem} foi entregue. Leve a nota ao arquivo com --mover.")
     if len(todas) >= 3:
         for n in todas:
-            if apontadas[n.caminho.resolve()] == 0:
+            if apontadas[n.caminho.resolve()] == 0 and (alvo_unico is None or n.caminho.resolve() == alvo_unico):
                 aviso(n, "Nenhuma outra nota aponta para esta. Ligue a nota a pelo menos uma que trate de assunto vizinho.")
     if so is not None:
         return [a for a in achados if a.arquivo == comum.relativo(so)]

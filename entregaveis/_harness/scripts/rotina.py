@@ -100,6 +100,11 @@ def garantir(nome: str) -> Path:
 
 def abrir_tsv(caminho: Path) -> tuple[list[str], list[str], list[dict]]:
     """Comentários, colunas e linhas de um registro, para gravar de volta sem perder nada."""
+    if comum.ilegivel(caminho):
+        raise SystemExit(
+            f"{comum.relativo(caminho)} não pôde ser lido como texto. Nada foi gravado. "
+            "Salve o registro em UTF-8, com as colunas separadas por tabulação, e rode de novo."
+        )
     comentarios, colunas, linhas = [], [], []
     for linha in comum.ler(caminho).splitlines():
         if linha.startswith("#"):
@@ -116,8 +121,10 @@ def gravar_tsv(caminho: Path, comentarios: list[str], colunas: list[str], linhas
     def limpo(valor) -> str:
         return re.sub(r"\s+", " ", str(valor or "")).strip()
 
+    if not colunas:
+        raise SystemExit(f"{comum.relativo(caminho)} está sem a linha de colunas. Nada foi gravado. Restaure o cabeçalho do registro e rode de novo.")
     corpo = ["\t".join(limpo(l.get(c, "")) for c in colunas) for l in linhas]
-    caminho.write_text("\n".join(comentarios + ["\t".join(colunas)] + corpo) + "\n", encoding="utf-8")
+    comum.gravar(caminho, "\n".join(comentarios + ["\t".join(colunas)] + corpo) + "\n")
 
 
 def proximo_id(linhas: list[dict], prefixo: str) -> str:
@@ -225,8 +232,16 @@ def fase_do_item(item: Item, hoje: datetime.date, p: dict) -> tuple[str, str]:
     return "", ""
 
 
+def remarcacoes_por_item() -> dict[str, list[dict]]:
+    """As remarcações de cada item, na ordem do registro. O arquivo é lido uma vez."""
+    por_item: dict[str, list[dict]] = {}
+    for l in comum.ler_tsv(comum.PROJETO / "prazos.tsv"):
+        por_item.setdefault(l.get("item", ""), []).append(l)
+    return por_item
+
+
 def remarcacoes(ident: str) -> list[dict]:
-    return [l for l in comum.ler_tsv(comum.PROJETO / "prazos.tsv") if l.get("item", "") == ident]
+    return remarcacoes_por_item().get(ident, [])
 
 
 # --- Atas e entrada ---------------------------------------------------------
@@ -434,7 +449,8 @@ def remarcar(ident: str, nova: str, motivo: str, quem: str, hoje: datetime.date)
         texto = comum.ler(caminho)
         meta, _ = comum.cabecalho(texto)
         anterior = meta.get("prazo", "")
-        caminho.write_text(re.sub(r"^prazo:.*$", f"prazo: {dia}", texto, count=1, flags=re.MULTILINE), encoding="utf-8")
+        # Um briefing antigo pode não ter a linha do prazo. O campo é criado, para a remarcação não se perder.
+        comum.gravar(caminho, comum.trocar_campo(texto, "prazo", dia, acrescentar=True))
     else:
         antes = mudar_linha(caminho, ident, {"prazo": str(dia), "movida_em": str(hoje)})
         anterior = antes.get("prazo", "")
@@ -599,6 +615,7 @@ def resumo(hoje: datetime.date) -> dict:
         return secoes
     mostrados = {(l.get("item", ""), l.get("fase", "")): l for l in comum.ler_tsv(comum.PROJETO / "alertas.tsv")}
     itens = itens_com_prazo()
+    remarcados = remarcacoes_por_item()
     for item in itens:
         fase, detalhe = fase_do_item(item, hoje, p)
         if not fase:
@@ -607,7 +624,7 @@ def resumo(hoje: datetime.date) -> dict:
         if fase == "parado" and anterior and anterior.get("primeiro_aviso", "") != str(hoje):
             continue  # o aviso leve é dado uma única vez
         texto = f"{item.ident} ({item.tipo}): {item.texto}" + (f". Dono: {item.dono}" if item.dono else "") + f". {detalhe[0].upper()}{detalhe[1:]}"
-        mudancas = remarcacoes(item.ident)
+        mudancas = remarcados.get(item.ident, [])
         if mudancas:
             texto += f". Remarcado {len(mudancas)} vez(es), a partir de {mudancas[0].get('data_original', '?')}"
         if fase == "vencido" and anterior and int(anterior.get("vezes", "0") or 0) >= 2 and anterior.get("ultimo_aviso", "") != str(hoje):
