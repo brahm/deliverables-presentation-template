@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -84,6 +85,17 @@ def gravar_sessao(sessao: str, dados: dict) -> None:
     try:
         ESTADO.mkdir(exist_ok=True)
         (ESTADO / f"{sessao}.json").write_text(json.dumps(dados), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def limpar_sessoes(dias: int = 30) -> None:
+    """Apaga os arquivos de sessão que ninguém toca há mais de um mês. A memória do repositório fica."""
+    limite = time.time() - dias * 86400
+    try:
+        for arquivo in ESTADO.glob("*.json"):
+            if arquivo.name != "repositorio.json" and arquivo.stat().st_mtime < limite:
+                arquivo.unlink()
     except OSError:
         pass
 

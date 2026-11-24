@@ -184,6 +184,34 @@ def cabecalho(texto: str) -> tuple[dict, str]:
     return {}, texto
 
 
+def trocar_campo(texto: str, chave: str, valor, acrescentar: bool = False) -> str:
+    """Troca o valor de um campo 'chave: valor', de preferência no cabeçalho do arquivo.
+
+    O valor entra como foi escrito e em uma linha só: uma barra invertida
+    não é lida como comando de substituição, e uma quebra de linha não
+    cria outro campo. Com 'acrescentar', o campo que não existe é criado
+    no cabeçalho.
+    """
+    em_uma_linha = re.sub(r"\s+", " ", str(valor)).strip()
+    linha = f"{chave}: {em_uma_linha}"
+    padrao = re.compile(rf"^{re.escape(chave)}:.*$", flags=re.MULTILINE)
+    linhas = texto.splitlines(keepends=True)
+    fim = None
+    if linhas and linhas[0].strip() == "---":
+        fim = next((i for i, l in enumerate(linhas[1:], start=1) if l.strip() == "---"), None)
+    if fim is not None:
+        topo, resto = "".join(linhas[:fim]), "".join(linhas[fim:])
+        novo, quantos = padrao.subn(lambda _: linha, topo, count=1)
+        if quantos:
+            return novo + resto
+        if acrescentar:
+            return topo + linha + "\n" + resto
+    novo, quantos = padrao.subn(lambda _: linha, texto, count=1)
+    if quantos or not acrescentar:
+        return novo
+    return f"---\n{linha}\n---\n" + texto
+
+
 def secoes(texto: str) -> dict[str, str]:
     """Corpo de cada seção de nível 2, pela forma normalizada do título."""
     resultado: dict[str, str] = {}

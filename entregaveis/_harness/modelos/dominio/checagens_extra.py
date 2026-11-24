@@ -14,6 +14,10 @@ Só a biblioteca padrão. Nada de rede e nada de ler arquivo fora do
 projeto. O template traz este arquivo vazio: as regras são escritas no
 projeto e ficam nele.
 
+Este arquivo é código do projeto. Ele roda a cada gravação e na
+integração contínua, com o acesso de quem está trabalhando. Revise cada
+mudança como código, e não cole aqui um trecho que você não leu.
+
 Formato, com um exemplo fictício:
 
     import re

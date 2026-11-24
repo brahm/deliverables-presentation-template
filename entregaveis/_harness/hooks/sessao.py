@@ -8,6 +8,7 @@ import estado
 
 def principal() -> int:
     print("\n".join(estado.linhas_de_estado()))
+    _base.limpar_sessoes()
     return 0
 
 

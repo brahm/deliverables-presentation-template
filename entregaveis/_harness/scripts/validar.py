@@ -81,12 +81,12 @@ def carimbar(pasta: Path) -> int:
     if not texto or comum.MARCA in texto:
         print(f"Revisão não registrada: {comum.relativo(arquivo)} não existe ou ainda tem {comum.MARCA}. Preencha a rubrica primeiro.")
         return 1
-    meta, corpo = comum.cabecalho(texto)
-    meta["conteudo_revisado"] = comum.carimbo(pasta)
-    meta["revisado_em"] = datetime.date.today().isoformat()
-    linhas = ["---"] + [f"{k}: {v}" for k, v in meta.items()] + ["---"]
-    arquivo.write_text("\n".join(linhas) + "\n" + corpo.lstrip("\n") + ("" if corpo.endswith("\n") else "\n"), encoding="utf-8")
-    print(f"Revisão registrada para {pasta.name} (conteúdo {meta['conteudo_revisado']}).")
+    # Só os dois campos mudam. O resto do cabeçalho, com os comentários, fica como estava.
+    versao = comum.carimbo(pasta)
+    texto = comum.trocar_campo(texto, "conteudo_revisado", versao, acrescentar=True)
+    texto = comum.trocar_campo(texto, "revisado_em", datetime.date.today().isoformat(), acrescentar=True)
+    comum.gravar(arquivo, texto if texto.endswith("\n") else texto + "\n")
+    print(f"Revisão registrada para {pasta.name} (conteúdo {versao}).")
     return 0
 
 
@@ -107,7 +107,7 @@ def main() -> int:
 
     if args.carimbar:
         pasta = comum.BASE / args.carimbar
-        if not (pasta / "briefing.md").is_file():
+        if pasta.parent != comum.BASE or not (pasta / "briefing.md").is_file():
             print(f"Não existe o entregável '{args.carimbar}'.")
             return 2
         return carimbar(pasta)

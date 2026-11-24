@@ -110,7 +110,7 @@ def preparar_entregavel(ident: str, campos: dict) -> list[str]:
     if comum.relativo(briefing) in criados:
         campos["fase"] = str(comum.fase_atual())  # a fase em que o entregável nasce, e que não muda sozinha
     for chave, valor in campos.items():
-        texto = re.sub(rf"^{chave}:.*$", f"{chave}: {valor}", texto, count=1, flags=re.MULTILINE)
+        texto = comum.trocar_campo(texto, chave, valor)
     briefing.write_text(texto, encoding="utf-8")
     tipo = comum.normalizar(campos.get("tipo", ""))
     veiculo = comum.normalizar(campos.get("veiculo", ""))

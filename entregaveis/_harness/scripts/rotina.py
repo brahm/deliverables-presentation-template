@@ -441,7 +441,8 @@ def remarcar(ident: str, nova: str, motivo: str, quem: str, hoje: datetime.date)
         texto = comum.ler(caminho)
         meta, _ = comum.cabecalho(texto)
         anterior = meta.get("prazo", "")
-        caminho.write_text(re.sub(r"^prazo:.*$", f"prazo: {dia}", texto, count=1, flags=re.MULTILINE), encoding="utf-8")
+        # Um briefing antigo pode não ter a linha do prazo. O campo é criado, para a remarcação não se perder.
+        comum.gravar(caminho, comum.trocar_campo(texto, "prazo", dia, acrescentar=True))
     else:
         antes = mudar_linha(caminho, ident, {"prazo": str(dia), "movida_em": str(hoje)})
         anterior = antes.get("prazo", "")

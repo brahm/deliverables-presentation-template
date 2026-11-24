@@ -2035,6 +2035,78 @@ def testar_levantamento(tmp: Path) -> None:
     confere("levantar.py lista o que o projeto já tem", saida.returncode == 0 and "proposta.docx" in saida.stdout and "AGENTS.md" in saida.stdout, saida.stdout + saida.stderr)
 
 
+# --- Casos de borda ---------------------------------------------------------
+
+
+def testar_bordas(tmp: Path) -> None:
+    """Entradas incomuns que derrubavam um script ou perdiam um dado em silêncio."""
+    print("Casos de borda")
+    projeto = tmp / "bordas"
+    (projeto / "docs").mkdir(parents=True)
+    (projeto / ".git").mkdir()
+    (projeto / "docs/proposta.docx").write_text("x", encoding="utf-8")
+    instalar(projeto)
+    base = projeto / "entregaveis"
+    scripts = base / "_harness/scripts"
+    pasta = montar_exemplo(projeto)
+    import comum  # noqa: PLC0415
+
+    # Valor com barra invertida ou quebra de linha no cabeçalho de um arquivo
+    criado = rodar([PY, scripts / "preparar.py", "--entregavel", "custos", "--titulo", "Custos \\d e \\1 Receita", "--tipo", "documento"], projeto)
+    briefing = (base / "custos/briefing.md").read_text(encoding="utf-8") if (base / "custos/briefing.md").is_file() else ""
+    confere("título com barra invertida entra no briefing como foi escrito", criado.returncode == 0 and "titulo: Custos \\d e \\1 Receita\n" in briefing, criado.stdout + criado.stderr + briefing[:200])
+    criado = rodar([PY, scripts / "preparar.py", "--entregavel", "duas-linhas", "--titulo", "Plano\nestado: entregue", "--tipo", "documento"], projeto)
+    meta, _ = comum.cabecalho((base / "duas-linhas/briefing.md").read_text(encoding="utf-8")) if (base / "duas-linhas/briefing.md").is_file() else ({}, "")
+    confere("título com quebra de linha não cria outro campo no cabeçalho", criado.returncode == 0 and meta.get("titulo") == "Plano estado: entregue" and meta.get("estado") != "entregue", criado.stdout + criado.stderr + str(meta))
+    texto = "---\nid: x\nprazo: 2026-01-01\n# comentário do cabeçalho\n---\n# Corpo\n\nprazo: este é do corpo\n"
+    confere("troca de campo: muda o do cabeçalho e não toca no corpo", comum.trocar_campo(texto, "prazo", "2026-02-02") == texto.replace("prazo: 2026-01-01", "prazo: 2026-02-02"))
+    confere("troca de campo: campo que não existe só é criado quando pedido, e no cabeçalho",
+            comum.trocar_campo(texto, "dono", "Ana") == texto and comum.trocar_campo(texto, "dono", "Ana", acrescentar=True) == texto.replace("# comentário do cabeçalho\n---", "# comentário do cabeçalho\ndono: Ana\n---"))
+
+    # Remarcar o prazo de um entregável cujo briefing não tem a linha do prazo
+    do_briefing = pasta / "briefing.md"
+    do_briefing.write_text("".join(l for l in do_briefing.read_text(encoding="utf-8").splitlines(keepends=True) if not l.startswith("prazo:")), encoding="utf-8")
+    remarcado = rodar([PY, scripts / "rotina.py", "--remarcar", "diag", "2027-03-15", "--motivo", "o cliente pediu mais uma semana"], projeto)
+    meta, _ = comum.cabecalho(do_briefing.read_text(encoding="utf-8"))
+    confere("remarcar entregável sem a linha do prazo grava o prazo novo", remarcado.returncode == 0 and meta.get("prazo") == "2027-03-15", remarcado.stdout + remarcado.stderr + str(meta))
+
+    # Atalho quebrado na pasta do projeto
+    if hasattr(os, "symlink"):
+        try:
+            os.symlink(projeto / "docs/sumiu.pptx", projeto / "docs/atalho.pptx")
+            levantado = rodar([PY, scripts / "levantar.py"], projeto)
+            confere("levantamento não cai com atalho quebrado na pasta", levantado.returncode == 0 and "proposta.docx" in levantado.stdout and "Traceback" not in levantado.stderr, levantado.stdout + levantado.stderr)
+        except OSError:
+            print("  (esta máquina não cria atalhos: teste do atalho quebrado pulado)")
+
+    # O carimbo da revisão mantém o resto do cabeçalho
+    (pasta / "revisao.md").write_text(REVISAO.replace("---\n", "---\n# anotação de quem revisou\nrevisor: Ana\n", 1), encoding="utf-8")
+    carimbo = validar(projeto, "--carimbar", "diag")
+    revisao = (pasta / "revisao.md").read_text(encoding="utf-8")
+    meta, _ = comum.cabecalho(revisao)
+    confere("o carimbo da revisão mantém os comentários e os outros campos do cabeçalho", carimbo.returncode == 0 and "# anotação de quem revisou\n" in revisao and meta.get("revisor") == "Ana" and len(meta.get("conteudo_revisado", "")) == 16, carimbo.stdout + carimbo.stderr + revisao[:300])
+    confere("carimbar recusa nome de entregável com caminho", validar(projeto, "--carimbar", "../diag").returncode == 2)
+
+    # Arquivos de sessão antigos saem no início de uma sessão
+    estado = base / "_harness/.estado"
+    estado.mkdir(exist_ok=True)
+    for nome in ("antiga.json", "repositorio.json", "nova.json"):
+        (estado / nome).write_text("{}", encoding="utf-8")
+    velho = datetime.datetime.now().timestamp() - 40 * 86400
+    os.utime(estado / "antiga.json", (velho, velho))
+    os.utime(estado / "repositorio.json", (velho, velho))
+    rodar([PY, base / "_harness/hooks/sessao.py"], projeto, json.dumps({"cwd": str(projeto), "hook_event_name": "SessionStart"}))
+    confere("início de sessão apaga o arquivo de sessão antigo e mantém o resto", sorted(a.name for a in estado.glob("*.json")) == ["nova.json", "repositorio.json"], str(sorted(a.name for a in estado.iterdir())))
+
+    # Os workflows só leem o repositório e fixam o que usam
+    for nome in (".github/workflows/entregaveis.yml", ".github/workflows/kit.yml", "entregaveis/_harness/instalacao/entregaveis.yml"):
+        fluxo = (RAIZ / nome).read_text(encoding="utf-8")
+        confere(f"{nome}: declara permissão só de leitura", re.search(r"^permissions:\n  contents: read$", fluxo, flags=re.MULTILINE) is not None)
+        confere(f"{nome}: fixa cada ação pelo commit", all(re.fullmatch(r"[0-9a-f]{40}", versao) for versao in re.findall(r"uses: \S+@(\S+)", fluxo)), str(re.findall(r"uses: \S+", fluxo)))
+    instalados = re.findall(r"pip install (.+)", (RAIZ / ".github/workflows/kit.yml").read_text(encoding="utf-8"))
+    confere("kit.yml: instala os pacotes do gerador com a versão fixa", bool(instalados) and all("==" in pacote for linha in instalados for pacote in linha.split()), str(instalados))
+
+
 # --- Atas, prazos e rotina diária -----------------------------------------
 
 
@@ -3375,6 +3447,7 @@ GRUPOS = [
     (testar_ambientes, True),
     (testar_pacotes, True),
     (testar_levantamento, True),
+    (testar_bordas, True),
     (testar_rotina, True),
     (testar_governanca, True),
     (testar_emissao, True),
