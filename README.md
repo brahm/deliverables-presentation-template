@@ -6,6 +6,12 @@ propostas, documentos, planilhas, treinamentos e peças interativas em
 HTML do jeito que um bom time de consultoria produz: primeiro a
 audiência e a decisão, depois a história, e só então as páginas.
 
+**Guia visual de instalação e uso:**
+[docs/instalar-e-usar.html](docs/instalar-e-usar.html). É um arquivo
+só, que abre sem internet. O GitHub mostra o código da página, então
+baixe pelo botão de download do arquivo, ou abra a cópia que está na
+sua pasta do projeto, e veja no navegador.
+
 O template é público, sem marca e sem cliente. O método, as regras e os
 testes de cada trabalho são escritos dentro do projeto, que só vive em
 git local ou em repositório privado.
