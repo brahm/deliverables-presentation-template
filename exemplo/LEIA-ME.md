@@ -1,6 +1,6 @@
 # Exemplo: um projeto do brief à entrega
 
-Este é um projeto completo feito com o harness, para você ver como o
+Este é um projeto completo feito com o Deliverables Presentation Template, para você ver como o
 trabalho fica antes de começar o seu. Ele mostra o que o consultor diz,
 o que o agente registra e o arquivo que sai no fim.
 

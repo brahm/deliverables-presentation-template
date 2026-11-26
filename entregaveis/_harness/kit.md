@@ -1,4 +1,4 @@
-# O harness neste projeto
+# O Deliverables Presentation Template neste projeto
 
 | | |
 | --- | --- |
@@ -11,7 +11,8 @@
 | --- | --- | --- |
 | `REGRAS.md` | As regras e o momento de cada skill | Lida por todo agente no início da sessão |
 | `guia.md` | O guia de uso para o consultor, com todos os recursos | Lido pelo consultor, e pelo agente quando ele pergunta como usar |
-| `.claude/skills/` | Um procedimento curto por momento | Aberta pelo agente quando o momento chega |
+| `.claude/skills/` | Um procedimento curto por momento, e as skills de design de interface de terceiros | Aberta pelo agente quando o momento chega |
+| `terceiros/` | A origem, a licença e o hash de cada arquivo das skills de terceiros | Conferido pelo `tools/testar_kit.py` e lido quando uma versão nova chega |
 | `.claude/settings.json` | Liga os seis hooks | Pelo Claude Code |
 | `hooks/mensagem.py` | Lembra o agente do ponto em que cada entregável está e da skill do momento, quando a mensagem fala de uma mudança de fase, de uma ata, de uma dispensa ou de um follow-up com o cliente. Guarda o que o segundo cérebro já tinha por absorver no começo do turno | A cada mensagem, no Claude Code |
 | `scripts/estado.py` | O estado do projeto em poucas linhas | No início da sessão |
@@ -211,5 +212,10 @@ criado a partir do template, apague-os ao iniciar:
   de atualizações e a conferência mantidos pelo agente, da nota "LLM
   wiki", de Andrej Karpathy (2026). As práticas estão descritas com
   palavras próprias.
+- No acabamento dos HTML de entrega: as skills de design de interface de
+  Emil Kowalski (<https://github.com/emilkowalski/skills>, licença MIT,
+  copyright 2026 Emil Kowalski), copiadas sem mudança para
+  `.claude/skills/`. A origem e a licença estão em
+  [terceiros/LEIA-ME.md](terceiros/LEIA-ME.md).
 - Processo de trabalho com agentes adaptado de
   <https://github.com/brahm/project-template> (licença MIT).

@@ -16,6 +16,9 @@ metadata:
    independente, entregue a ele o material e o briefing, sem as suas
    conclusões, e use o que ele achar. Aplique também os critérios de
    revisão do projeto, na tabela do fim de `_dominio/dominio.md`.
+   Quando o entregável tem HTML, siga também `review-animations` e
+   `break-ui`, nos limites da seção "As skills de design de interface"
+   de `entregaveis/_harness/metodo/interativo.md`.
 4. Faça dois testes. Leia só os títulos, em ordem, e veja se contam a
    história. Depois percorra o caminho de cinco minutos e veja se ele
    leva ao pedido.

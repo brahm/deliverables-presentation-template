@@ -1,4 +1,4 @@
-# O harness fora do Claude Code
+# O Deliverables Presentation Template fora do Claude Code
 
 O Claude desktop, o ChatGPT desktop e o Microsoft Copilot não rodam os
 hooks nem os scripts do harness. Neles o método chega de outro jeito: um

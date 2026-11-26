@@ -41,7 +41,7 @@ def versao() -> str:
 
 
 def topo(titulo: str, nota: str = "") -> str:
-    linhas = [f"# {titulo}", "", f"Arquivo de conhecimento do harness de entregáveis, versão {versao()}. Gerado por empacotar.py: não edite à mão."]
+    linhas = [f"# {titulo}", "", f"Arquivo de conhecimento do Deliverables Presentation Template, versão {versao()}. Gerado por empacotar.py: não edite à mão."]
     if nota:
         linhas += ["", nota]
     return "\n".join(linhas) + "\n"
@@ -71,10 +71,11 @@ def ordem_das_skills() -> list[str]:
 def skills(do_projeto: bool) -> list[Path]:
     pasta = comum.RAIZ / ".claude" / "skills"
     achadas = {}
+    terceiros = comum.skills_de_terceiros()
     for arquivo in sorted(pasta.glob("*/SKILL.md")):
         nome = arquivo.parent.name
-        if nome in SO_COM_ARQUIVOS or nome.startswith("pacote-"):
-            continue
+        if nome in SO_COM_ARQUIVOS or nome.startswith("pacote-") or nome in terceiros:
+            continue  # as skills de terceiros são longas e em inglês, e o método resume o que elas cobram
         if not do_projeto and MARCA_DE_SKILL not in comum.ler(arquivo):
             continue  # o pacote do kit leva só as skills do kit
         achadas[nome] = arquivo

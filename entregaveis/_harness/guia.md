@@ -1,4 +1,4 @@
-# Guia de uso
+# Guia de uso do Deliverables Presentation Template
 
 Este guia mostra tudo o que o harness faz e como usar cada recurso em um
 projeto. Ele serve a quem está no primeiro projeto e a quem já conduziu
@@ -248,6 +248,16 @@ em HTML, em 2D ou 3D, a partir de três bases: fluxo, camadas e
 simulador. A peça é um arquivo só, abre sem internet e apoia uma página
 do entregável sem substituí-la. O método está em
 [interativo.md](metodo/interativo.md).
+
+Todo HTML de entrega passa pelas skills de design de interface de Emil
+Kowalski, que vêm com o kit. Ao construir, o agente segue
+`emil-design-eng` e, conforme a peça, as de animação, gesto e celular.
+Antes da revisão, `review-animations` e `break-ui`. Você não precisa
+pedir: a regra 9 e o hook de gravação lembram o agente a cada HTML. As
+regras do harness continuam valendo primeiro, então a peça segue em
+arquivo completo, com toda imagem em SVG embutido no código, sem
+biblioteca, com a sua marca e com movimento reduzido
+para quem pede.
 
 ### Idiomas
 

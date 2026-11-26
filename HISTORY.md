@@ -3,6 +3,39 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.15.0
+
+- O kit instala as skills de design de interface de Emil Kowalski
+  (<https://github.com/emilkowalski/skills>, licença MIT) em
+  `.claude/skills/`, sem mudar uma linha do original. A origem, a
+  licença e o hash de cada arquivo ficam em `_harness/terceiros/`, e o
+  `tools/testar_kit.py` confere a cópia.
+- Todo HTML de entrega usa essas skills. A regra 9, a tabela de
+  momentos, `metodo/interativo.md`, `construir-interativo` e
+  `revisar-entregavel` dizem quando cada uma entra e o que o harness
+  não deixa passar, como biblioteca externa ou cor fora da marca.
+- Regra nova para todo HTML que o harness gera: arquivo completo, com
+  estilo, script, dados e imagens no próprio documento, e toda imagem
+  em SVG embutido no código. A checagem `interativo` passa a reprovar
+  imagem PNG, JPG, GIF ou WebP, mesmo em base64. Antes, a imagem em
+  base64 era aceita.
+- O hook de gravação lembra as skills na primeira gravação de cada HTML
+  da sessão. A checagem `interativo` passa a avisar de
+  `transition: all`, de `scale(0)` e de `ease-in`.
+- O instalador reconhece uma skill do kit também pelo arquivo `.origem`
+  ao lado, e compara todos os arquivos da skill, não só o `SKILL.md`.
+  Antes, a mudança em um arquivo de apoio não chegava ao projeto.
+- O projeto passa a se chamar Deliverables Presentation Template no
+  README, no INSTALL, no guia, nas regras e nos blocos de instrução.
+- Nova página `docs/instalar-e-usar.html`, que explica a instalação e
+  o uso em um arquivo só.
+
+O que o projeto precisa fazer: atualize com `--atualizar`. Se o projeto
+já tem uma skill com o nome de uma das novas, como `animate`, ela é
+mantida e o instalador avisa. Uma peça interativa com imagem em base64
+passa a reprovar: redesenhe a imagem em SVG ou leve-a para a página do
+entregável.
+
 ## 0.14.0
 
 - Instalação em uma linha, para Linux, macOS e Windows com WSL:

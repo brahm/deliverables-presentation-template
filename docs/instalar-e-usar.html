@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Deliverables Presentation Template: instalar e usar</title>
+<style>
+  :root {
+    --fundo: #f7f7f5;
+    --superficie: #ffffff;
+    --superficie-2: #f0f0ed;
+    --texto: #1b1b1a;
+    --texto-2: #5b5b57;
+    --borda: rgba(20, 20, 18, 0.1);
+    --destaque: #2f5fd0;
+    --destaque-suave: rgba(47, 95, 208, 0.1);
+    --codigo-fundo: #1d1e22;
+    --codigo-texto: #e9e9ec;
+    --sombra: 0 1px 2px rgba(20, 20, 18, 0.06), 0 4px 16px rgba(20, 20, 18, 0.05);
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --raio: 12px;
+    --largura: 920px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fundo: #121213;
+      --superficie: #1a1a1c;
+      --superficie-2: #232326;
+      --texto: #ededee;
+      --texto-2: #a3a3a8;
+      --borda: rgba(255, 255, 255, 0.09);
+      --destaque: #7fa2ff;
+      --destaque-suave: rgba(127, 162, 255, 0.14);
+      --codigo-fundo: #0c0c0d;
+      --codigo-texto: #e9e9ec;
+      --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a { color: var(--destaque); text-underline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; border-radius: 6px; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.9em; }
+  p code, li code, td code { background: var(--superficie-2); padding: 0.1em 0.35em; border-radius: 5px; overflow-wrap: anywhere; }
+  pre code { background: none; padding: 0; border-radius: 0; color: inherit; overflow-wrap: normal; }
+
+  /* Navegação fixa */
+  .barra {
+    position: sticky; top: 0; z-index: 10;
+    background: color-mix(in srgb, var(--fundo) 85%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--borda);
+  }
+  .barra nav {
+    max-width: var(--largura); margin: 0 auto; padding: 0 16px;
+    display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  }
+  .barra nav::-webkit-scrollbar { display: none; }
+  .barra a {
+    flex: none; padding: 14px 10px; color: var(--texto-2); text-decoration: none;
+    font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent;
+    transition: color 150ms var(--ease-out), border-color 150ms var(--ease-out);
+  }
+  .barra a[aria-current="true"] { color: var(--texto); border-bottom-color: var(--destaque); }
+  @media (hover: hover) and (pointer: fine) { .barra a:hover { color: var(--texto); } }
+
+  main { max-width: var(--largura); margin: 0 auto; padding: 0 16px 64px; }
+  header.abertura { padding: 56px 0 24px; }
+  .rotulo { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--destaque); margin: 0 0 8px; }
+  h1 { font-size: clamp(30px, 5.5vw, 44px); line-height: 1.12; letter-spacing: -0.022em; margin: 0 0 16px; text-wrap: balance; }
+  .lide { font-size: clamp(17px, 2.3vw, 19px); color: var(--texto-2); max-width: 64ch; margin: 0; text-wrap: pretty; }
+  section { padding: 40px 0 8px; }
+  h2 { font-size: 26px; line-height: 1.2; letter-spacing: -0.015em; margin: 0 0 8px; }
+  h3 { font-size: 18px; line-height: 1.3; margin: 24px 0 8px; }
+  section > p, .largo { max-width: 68ch; }
+
+  .cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 20px 0 0; padding: 0; list-style: none; }
+  .cartao { background: var(--superficie); border-radius: var(--raio); box-shadow: var(--sombra); padding: 18px 18px 16px; }
+  .cartao strong { display: block; margin-bottom: 4px; }
+  .cartao p { margin: 0; color: var(--texto-2); font-size: 15px; }
+
+  /* Abas de instalação */
+  .abas { margin-top: 20px; background: var(--superficie); border-radius: var(--raio); box-shadow: var(--sombra); overflow: hidden; }
+  [role="tablist"] { position: relative; display: flex; gap: 2px; padding: 6px; background: var(--superficie-2); overflow-x: auto; scrollbar-width: none; }
+  [role="tablist"]::-webkit-scrollbar { display: none; }
+  .indicador {
+    position: absolute; top: 6px; bottom: 6px; left: 0; width: 0;
+    background: var(--superficie); border-radius: 8px; box-shadow: var(--sombra);
+    transition: transform 250ms var(--ease-in-out), width 250ms var(--ease-in-out);
+  }
+  [role="tab"] {
+    position: relative; z-index: 1; flex: none; border: 0; background: none; color: var(--texto-2);
+    font: inherit; font-size: 14px; font-weight: 500; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    transition: color 150ms var(--ease-out), transform 120ms var(--ease-out);
+    touch-action: manipulation; user-select: none;
+  }
+  [role="tab"][aria-selected="true"] { color: var(--texto); }
+  [role="tab"]:active { transform: scale(0.97); }
+  @media (hover: hover) and (pointer: fine) { [role="tab"]:hover { color: var(--texto); } }
+  [role="tabpanel"] { padding: 20px; }
+  [role="tabpanel"][hidden] { display: none; }
+  html:not(.js) [role="tablist"] { display: none; }
+  html:not(.js) [role="tabpanel"][hidden] { display: block; border-top: 1px solid var(--borda); }
+  .so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .js [role="tabpanel"].entrando { animation: entrar 200ms var(--ease-out); }
+  @keyframes entrar { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  [role="tabpanel"] h3 { margin-top: 0; }
+  ol.passos { margin: 0; padding-left: 22px; }
+  ol.passos li { margin: 0 0 10px; padding-left: 4px; }
+
+  /* Bloco de código com cópia */
+  .codigo { position: relative; margin: 12px 0 16px; }
+  .codigo pre {
+    margin: 0; background: var(--codigo-fundo); color: var(--codigo-texto); border-radius: 10px;
+    padding: 14px 92px 14px 16px; overflow-x: auto; line-height: 1.5; white-space: pre;
+  }
+  .copiar {
+    position: absolute; top: 8px; right: 8px; min-width: 76px; height: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 7px;
+    background: #2b2c31; color: #e9e9ec;
+    box-shadow: -16px 0 12px -2px var(--codigo-fundo); font: inherit; font-size: 13px; cursor: pointer;
+    display: inline-grid; place-items: center; overflow: hidden;
+    transition: background-color 150ms var(--ease-out), transform 120ms var(--ease-out);
+    touch-action: manipulation;
+  }
+  .copiar:active { transform: scale(0.97); }
+  @media (hover: hover) and (pointer: fine) { .copiar:hover { background: #3a3b41; } }
+  .copiar span { grid-area: 1 / 1; transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out); }
+  .copiar .feito { opacity: 0; transform: scale(0.95); }
+  .copiar.copiado .rotulo-copiar { opacity: 0; transform: scale(0.95); }
+  .copiar.copiado .feito { opacity: 1; transform: none; }
+
+  /* Caminho de um entregável */
+  .caminho { list-style: none; margin: 20px 0 0; padding: 0; counter-reset: etapa; display: grid; gap: 8px; }
+  .caminho li {
+    counter-increment: etapa; display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start;
+    background: var(--superficie); border-radius: var(--raio); padding: 14px 16px; box-shadow: var(--sombra);
+  }
+  .caminho li::before {
+    content: counter(etapa); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--superficie-2); color: var(--texto-2); font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums;
+  }
+  .caminho li.sua::before { background: var(--destaque-suave); color: var(--destaque); }
+  .caminho strong { display: block; }
+  .caminho span { color: var(--texto-2); font-size: 15px; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-size: 14px; color: var(--texto-2); }
+  .legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; background: var(--superficie-2); border: 1px solid var(--borda); }
+  .legenda i.sua { background: var(--destaque-suave); border-color: var(--destaque); }
+
+  /* Tabelas */
+  .tabela { overflow-x: auto; margin: 16px 0 0; background: var(--superficie); border-radius: var(--raio); box-shadow: var(--sombra); }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+  th { font-size: 13px; font-weight: 600; color: var(--texto-2); background: var(--superficie-2); }
+  tr:last-child td { border-bottom: 0; }
+  td:first-child { white-space: nowrap; font-weight: 500; }
+  @media (max-width: 560px) { td:first-child { white-space: normal; } }
+
+  .diagrama { margin: 20px 0 8px; }
+  .diagrama svg { display: block; width: 100%; height: auto; max-width: 640px; }
+  .nota { margin: 16px 0 0; padding: 14px 16px; border-radius: 10px; background: var(--destaque-suave); max-width: 68ch; }
+  .nota p { margin: 0; }
+  footer { max-width: var(--largura); margin: 0 auto; padding: 24px 16px 48px; color: var(--texto-2); font-size: 14px; border-top: 1px solid var(--borda); }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition-duration: 0ms !important; animation: none !important; }
+  }
+  @media print {
+    .barra, .copiar, [role="tablist"] { display: none; }
+    [role="tabpanel"][hidden] { display: block; }
+    [role="tabpanel"] { border-top: 1px solid #ccc; }
+    body { background: #fff; color: #000; }
+    .cartao, .abas, .caminho li, .tabela { box-shadow: none; border: 1px solid #ddd; }
+    .codigo pre { background: #f3f3f3; color: #000; white-space: pre-wrap; }
+    section { break-inside: avoid-page; }
+  }
+</style>
+</head>
+<body>
+<div class="barra">
+  <nav aria-label="Seções da página">
+    <a href="#o-que-e">O que é</a>
+    <a href="#instalar">Instalar</a>
+    <a href="#usar">Usar</a>
+    <a href="#o-que-dizer">O que dizer</a>
+    <a href="#html">HTML de entrega</a>
+    <a href="#comandos">Comandos</a>
+    <a href="#outros">Outros aplicativos</a>
+  </nav>
+</div>
+
+<main>
+  <header class="abertura">
+    <p class="rotulo">Guia rápido</p>
+    <h1>Deliverables Presentation Template</h1>
+    <p class="lide">Um harness que ensina um agente de IA a produzir apresentações, propostas, documentos, planilhas, treinamentos e peças em HTML do jeito que um bom time de consultoria produz: primeiro a audiência e a decisão, depois a história, e só então as páginas.</p>
+  </header>
+
+  <noscript>
+    <div class="nota"><p>Esta página funciona sem script. As formas de instalar aparecem uma abaixo da outra, e os botões de copiar não aparecem.</p></div>
+  </noscript>
+
+  <section id="o-que-e" aria-labelledby="t-o-que-e">
+    <h2 id="t-o-que-e">O que é</h2>
+    <p>Você conversa com o agente como conversa com alguém do time. Diz do que é o projeto, entrega os materiais, pede os entregáveis e aprova a história de cada um. O agente planeja, escreve, confere e mantém os registros. Você nunca precisa citar uma skill nem decorar um comando.</p>
+    <ul class="cartoes">
+      <li class="cartao"><strong>A decisão é sua</strong><p>O objetivo, o escopo, a audiência, a grande ideia e a aprovação da storyline.</p></li>
+      <li class="cartao"><strong>O envio é seu</strong><p>Nada sai do projeto sem o seu sim: envio ao cliente, exclusão de material, dado sensível.</p></li>
+      <li class="cartao"><strong>O resto o agente registra</strong><p>O que você deixa em aberto vira decisão assumida, à vista no relatório, para você confirmar ou trocar.</p></li>
+    </ul>
+  </section>
+
+  <section id="instalar" aria-labelledby="t-instalar">
+    <h2 id="t-instalar">Instalar</h2>
+    <p>Você precisa de um agente que leia a pasta do projeto, como o Claude Code, e do Python 3.9 ou mais novo. Só o gerador de arquivos pede <code>python-pptx</code>, <code>python-docx</code>, <code>openpyxl</code> e o LibreOffice. Não confira à mão: no início do projeto o agente confere a máquina e diz o que falta.</p>
+
+    <div class="abas">
+      <div role="tablist" aria-label="Formas de instalar">
+        <span class="indicador" aria-hidden="true"></span>
+        <button role="tab" id="aba-github" aria-controls="painel-github" aria-selected="true">Pelo GitHub</button>
+        <button role="tab" id="aba-linha" aria-controls="painel-linha" aria-selected="false" tabindex="-1">Uma linha no terminal</button>
+        <button role="tab" id="aba-gh" aria-controls="painel-gh" aria-selected="false" tabindex="-1">GitHub CLI</button>
+        <button role="tab" id="aba-andamento" aria-controls="painel-andamento" aria-selected="false" tabindex="-1">Projeto em andamento</button>
+      </div>
+
+      <div role="tabpanel" id="painel-github" aria-labelledby="aba-github" tabindex="0">
+        <h3>Projeto novo, pelo site do GitHub</h3>
+        <ol class="passos">
+          <li>Abra <a href="https://github.com/brahm/deliverables-presentation-template/generate">Criar um repositório a partir deste template</a>.</li>
+          <li>Em <strong>Repository name</strong>, escreva o nome do projeto. Se o cliente é sigiloso, use um codinome.</li>
+          <li>Marque <strong>Private</strong>. O harness não inicia projeto em repositório público.</li>
+          <li>Clique em <strong>Create repository from template</strong>.</li>
+          <li>No repositório novo, clique em <strong>Code</strong>, copie o endereço e traga a pasta para o computador:
+            <div class="codigo"><pre><code>git clone ENDEREÇO-COPIADO</code></pre></div>
+          </li>
+          <li>Abra o agente na pasta e diga do que é o projeto. No Claude Code, entre na pasta e rode <code>claude</code>.</li>
+        </ol>
+      </div>
+
+      <div role="tabpanel" id="painel-linha" aria-labelledby="aba-linha" tabindex="0" hidden>
+        <h3>Em uma linha, no Linux, no macOS ou no Windows com WSL</h3>
+        <p>Entre na pasta do projeto, nova ou em andamento, e rode:</p>
+        <div class="codigo"><pre><code>curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh</code></pre></div>
+        <p>O comando baixa o kit para uma pasta temporária, instala na pasta atual e apaga o que baixou. Ele não sobrescreve nenhum arquivo do projeto. Para ver o que mudaria sem gravar nada:</p>
+        <div class="codigo"><pre><code>curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh -s -- --simular</code></pre></div>
+      </div>
+
+      <div role="tabpanel" id="painel-gh" aria-labelledby="aba-gh" tabindex="0" hidden>
+        <h3>Projeto novo, com o GitHub CLI</h3>
+        <p>Um comando cria o repositório privado e baixa a pasta:</p>
+        <div class="codigo"><pre><code>gh repo create NOME-DO-PROJETO --template brahm/deliverables-presentation-template --private --clone
+cd NOME-DO-PROJETO</code></pre></div>
+        <p>Sem GitHub, crie uma pasta vazia, abra o agente nela e use a linha do terminal. O projeto fica só na sua máquina, o que o harness aceita.</p>
+      </div>
+
+      <div role="tabpanel" id="painel-andamento" aria-labelledby="aba-andamento" tabindex="0" hidden>
+        <h3>Projeto que já está em andamento</h3>
+        <p>Cole no agente, dentro da pasta do projeto:</p>
+        <div class="codigo"><pre><code>Instale neste projeto o Deliverables Presentation Template, o harness de entregáveis que está em
+https://github.com/brahm/deliverables-presentation-template
+seguindo a seção "Passos para o agente" do INSTALL.md desse repositório.
+Não mova, renomeie nem apague nada do que existe, e me mostre a
+simulação antes de instalar.</code></pre></div>
+        <p>O agente levanta o que existe, encaixa o harness nesse desenho e pergunta só o que os arquivos não respondem.</p>
+      </div>
+    </div>
+
+    <h3>Atualizar</h3>
+    <p>Quando o template tem versão nova, diga ao agente para atualizar. Ele traz regras, skills e checagens novas e mantém o que é do projeto. Pelo terminal, rode a mesma linha com a opção de atualizar:</p>
+    <div class="codigo"><pre><code>curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh -s -- --atualizar</code></pre></div>
+  </section>
+
+  <section id="usar" aria-labelledby="t-usar">
+    <h2 id="t-usar">Usar: o caminho de um entregável</h2>
+    <p>O harness bloqueia a gravação de páginas fora desta ordem. A história vem antes da página.</p>
+    <figure class="diagrama">
+      <svg viewBox="0 0 640 120" role="img" aria-labelledby="diag-titulo diag-desc">
+        <title id="diag-titulo">A trava da storyline</title>
+        <desc id="diag-desc">Briefing leva à storyline. A passagem da storyline para as páginas só abre com a sua aprovação. Depois vêm a revisão e a entrega.</desc>
+        <defs>
+          <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="var(--texto-2)"></path>
+          </marker>
+        </defs>
+        <g font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14" text-anchor="middle">
+          <rect x="4" y="34" width="112" height="52" rx="10" fill="var(--superficie)" stroke="var(--borda)"></rect>
+          <text x="60" y="65" fill="var(--texto)">Briefing</text>
+          <line x1="118" y1="60" x2="150" y2="60" stroke="var(--texto-2)" stroke-width="1.5" marker-end="url(#seta)"></line>
+          <rect x="154" y="34" width="112" height="52" rx="10" fill="var(--destaque-suave)" stroke="var(--destaque)"></rect>
+          <text x="210" y="65" fill="var(--texto)" font-weight="600">Storyline</text>
+          <line x1="268" y1="60" x2="370" y2="60" stroke="var(--texto-2)" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#seta)"></line>
+          <g transform="translate(306 34)">
+            <rect x="0" y="10" width="22" height="17" rx="3" fill="var(--destaque)"></rect>
+            <path d="M5 10 V6 a6 6 0 0 1 12 0 V10" fill="none" stroke="var(--destaque)" stroke-width="2.5"></path>
+          </g>
+          <text x="318" y="100" fill="var(--texto-2)" font-size="12">sua aprovação</text>
+          <rect x="374" y="34" width="112" height="52" rx="10" fill="var(--superficie)" stroke="var(--borda)"></rect>
+          <text x="430" y="65" fill="var(--texto)">Páginas</text>
+          <line x1="488" y1="60" x2="520" y2="60" stroke="var(--texto-2)" stroke-width="1.5" marker-end="url(#seta)"></line>
+          <rect x="524" y="34" width="112" height="52" rx="10" fill="var(--superficie)" stroke="var(--borda)"></rect>
+          <text x="580" y="65" fill="var(--texto)">Revisão</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="legenda"><span><i class="sua" aria-hidden="true"></i>Você age</span><span><i aria-hidden="true"></i>O agente faz sozinho</span></div>
+    <ol class="caminho">
+      <li class="sua"><div><strong>Projeto<span class="so-leitor">, você age</span></strong><span>Você diz do que é o projeto e que decisão ele precisa provocar. O agente fecha o brief e ativa os pacotes do tipo de trabalho.</span></div></li>
+      <li class="sua"><div><strong>Materiais<span class="so-leitor">, você age</span></strong><span>Você entrega modelo, guia de marca, escopo e dados. O agente registra cada um e pede o que falta.</span></div></li>
+      <li class="sua"><div><strong>Domínio<span class="so-leitor">, você age</span></strong><span>Você entrega referências e métodos. O agente escreve o método do projeto, as regras de checagem e os casos de teste.</span></div></li>
+      <li class="sua"><div><strong>Briefing<span class="so-leitor">, você age</span></strong><span>Você pede um entregável. O agente define audiência, grande ideia, pedido, resistências e veículo.</span></div></li>
+      <li class="sua"><div><strong>Storyline<span class="so-leitor">, você age</span></strong><span>Você lê a sequência de títulos e aprova. Sem essa aprovação, nenhuma página é escrita.</span></div></li>
+      <li><div><strong>Storyboard e redação</strong><span>O agente decide o que cada página mostra e escreve, com fonte para cada número.</span></div></li>
+      <li><div><strong>Revisão</strong><span>O agente roda as checagens, aplica a rubrica e registra a revisão da versão.</span></div></li>
+      <li class="sua"><div><strong>Arquivo final e entrega<span class="so-leitor">, você age</span></strong><span>O agente gera PowerPoint, Word, PDF ou Excel sobre o seu modelo. Você confere, apresenta e envia.</span></div></li>
+      <li class="sua"><div><strong>Fechamento<span class="so-leitor">, você age</span></strong><span>Você conta o que aconteceu. O agente registra decisões e lições e prepara o follow-up.</span></div></li>
+    </ol>
+  </section>
+
+  <section id="o-que-dizer" aria-labelledby="t-o-que-dizer">
+    <h2 id="t-o-que-dizer">O que dizer em cada momento</h2>
+    <p>São exemplos. Use as suas palavras.</p>
+    <div class="tabela">
+      <table>
+        <thead><tr><th scope="col">Momento</th><th scope="col">Uma frase que funciona</th></tr></thead>
+        <tbody>
+          <tr><td>Começar um projeto</td><td>"Este projeto é um assessment de martech para um varejista. A diretoria precisa decidir quais plataformas renova em março."</td></tr>
+          <tr><td>Pedir um entregável</td><td>"Preciso de uma leitura executiva de 30 minutos para a diretoria, no dia 5."</td></tr>
+          <tr><td>Aprovar a história</td><td>"Aprovada. Só ponha o custo antes da nota de maturidade."</td></tr>
+          <tr><td>Pedir uma peça em HTML</td><td>"A diretoria entende melhor mexendo. Faça um simulador do custo evitado."</td></tr>
+          <tr><td>Começar o dia</td><td>"O que temos para hoje?"</td></tr>
+          <tr><td>Entregar uma ata</td><td>"Salvei a ata da reunião de ontem na pasta de atas."</td></tr>
+          <tr><td>Corrigir o agente</td><td>"A diretoria diz plataforma, não ferramenta. Não repita."</td></tr>
+          <tr><td>Pedir o status</td><td>"Monte o status da semana."</td></tr>
+          <tr><td>Mudar a natureza do projeto</td><td>"A proposta foi vendida. Agora começa o diagnóstico."</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="html" aria-labelledby="t-html">
+    <h2 id="t-html">HTML de entrega</h2>
+    <p>Toda peça em HTML é um arquivo único que abre sem internet, apoia uma página do entregável e respeita quem pede menos movimento. O acabamento segue as skills de design de interface de Emil Kowalski, que vêm instaladas com o kit. Você não precisa pedir: a regra e o hook de gravação lembram o agente a cada HTML.</p>
+    <div class="tabela">
+      <table>
+        <thead><tr><th scope="col">Quando</th><th scope="col">Skill</th></tr></thead>
+        <tbody>
+          <tr><td>Qualquer HTML de entrega</td><td><code>emil-design-eng</code></td></tr>
+          <tr><td>A peça ganha uma animação</td><td><code>animate</code> e, com várias partes, <code>choreograph</code></td></tr>
+          <tr><td>A audiência arrasta ou gira</td><td><code>gestures</code></td></tr>
+          <tr><td>A peça abre no celular</td><td><code>mobile-native</code></td></tr>
+          <tr><td>Antes da revisão</td><td><code>review-animations</code> e <code>break-ui</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="nota"><p>As regras do harness valem primeiro: nada de biblioteca externa, cores e fontes da sua marca, e a peça precisa se sustentar impressa. A checagem avisa de <code>transition: all</code>, <code>scale(0)</code> e <code>ease-in</code>.</p></div>
+  </section>
+
+  <section id="comandos" aria-labelledby="t-comandos">
+    <h2 id="t-comandos">Comandos para acompanhar</h2>
+    <p>O agente roda tudo sozinho. Estes ajudam quando você quer olhar:</p>
+    <div class="codigo"><pre><code>python3 entregaveis/_harness/scripts/estado.py          # onde cada entregável está
+python3 entregaveis/_harness/scripts/rotina.py --lista  # a lista do dia
+python3 entregaveis/_harness/scripts/validar.py         # todas as checagens
+python3 entregaveis/_harness/scripts/gerar.py ID        # o arquivo final sobre o seu modelo
+python3 entregaveis/_harness/scripts/ambiente.py        # o que a máquina tem e o que falta</code></pre></div>
+  </section>
+
+  <section id="outros" aria-labelledby="t-outros">
+    <h2 id="t-outros">Outros aplicativos</h2>
+    <p>No Claude desktop, no ChatGPT desktop e no Microsoft Copilot, o método chega como um texto de instruções para colar e alguns arquivos de conhecimento para enviar. Diga ao agente "Vou continuar isto no Copilot. Monte o pacote." Nesses aplicativos não há checagem em script: o agente confere à mão e diz isso no relatório.</p>
+    <p>Para ler mais: o <a href="../README.md">README</a>, o <a href="../INSTALL.md">INSTALL</a> e o <a href="../entregaveis/_harness/guia.md">guia de uso</a>.</p>
+  </section>
+</main>
+
+<footer>Deliverables Presentation Template. Licença MIT. As skills de design de interface são de Emil Kowalski, também com licença MIT.</footer>
+
+<script>
+(function () {
+  "use strict";
+  document.documentElement.classList.add("js");
+  var poucoMovimento = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  // Abas: setas, Home e End movem entre as abas, como no padrão WAI-ARIA.
+  var lista = document.querySelector('[role="tablist"]');
+  var abas = Array.prototype.slice.call(lista.querySelectorAll('[role="tab"]'));
+  var indicador = lista.querySelector(".indicador");
+
+  function posicionar(aba) {
+    indicador.style.width = aba.offsetWidth + "px";
+    indicador.style.transform = "translateX(" + aba.offsetLeft + "px)";
+  }
+
+  function selecionar(aba, focar) {
+    abas.forEach(function (outra) {
+      var ativa = outra === aba;
+      outra.setAttribute("aria-selected", ativa ? "true" : "false");
+      outra.tabIndex = ativa ? 0 : -1;
+      var painel = document.getElementById(outra.getAttribute("aria-controls"));
+      painel.hidden = !ativa;
+      painel.classList.remove("entrando");
+      if (ativa && !poucoMovimento.matches) {
+        void painel.offsetWidth; // reinicia a animação de entrada
+        painel.classList.add("entrando");
+      }
+    });
+    posicionar(aba);
+    if (focar) aba.focus();
+  }
+
+  abas.forEach(function (aba, i) {
+    aba.addEventListener("click", function () { selecionar(aba, false); });
+    aba.addEventListener("keydown", function (e) {
+      var alvo = null;
+      if (e.key === "ArrowRight") alvo = abas[(i + 1) % abas.length];
+      else if (e.key === "ArrowLeft") alvo = abas[(i - 1 + abas.length) % abas.length];
+      else if (e.key === "Home") alvo = abas[0];
+      else if (e.key === "End") alvo = abas[abas.length - 1];
+      if (alvo) { e.preventDefault(); selecionar(alvo, true); }
+    });
+  });
+  // A primeira posição do indicador não anima.
+  indicador.style.transition = "none";
+  posicionar(abas[0]);
+  requestAnimationFrame(function () { indicador.style.transition = ""; });
+  window.addEventListener("resize", function () {
+    var ativa = lista.querySelector('[aria-selected="true"]');
+    if (ativa) posicionar(ativa);
+  });
+
+  // Copiar: funciona também com a página aberta direto do disco.
+  function copiarTexto(texto) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(texto).catch(function () { return copiarPelaSelecao(texto); });
+    }
+    return copiarPelaSelecao(texto);
+  }
+
+  function copiarPelaSelecao(texto) {
+    var antes = document.activeElement;
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement("textarea");
+      area.value = texto;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (erro) { ok = false; }
+      document.body.removeChild(area);
+      if (antes && antes.focus) antes.focus();
+      if (ok) { resolve(); } else { reject(new Error("cópia recusada")); }
+    });
+  }
+
+  var aviso = document.createElement("p");
+  aviso.className = "sr-only";
+  aviso.setAttribute("aria-live", "polite");
+  aviso.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap";
+  document.body.appendChild(aviso);
+
+  Array.prototype.forEach.call(document.querySelectorAll(".codigo"), function (bloco) {
+    var botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "copiar";
+    botao.setAttribute("aria-label", "Copiar o comando");
+    botao.innerHTML = '<span class="rotulo-copiar" aria-hidden="true">Copiar</span><span class="feito" aria-hidden="true">Copiado</span>';
+    var tempo = null;
+    botao.addEventListener("click", function () {
+      copiarTexto(bloco.querySelector("code").textContent).then(function () {
+        botao.classList.add("copiado");
+        aviso.textContent = "Comando copiado.";
+        clearTimeout(tempo);
+        tempo = setTimeout(function () { botao.classList.remove("copiado"); }, 1600);
+      }, function () {
+        aviso.textContent = "Não deu para copiar. Selecione o texto e copie.";
+      });
+    });
+    bloco.appendChild(botao);
+  });
+
+  // Marca na barra a seção que está na tela. No fim da página, a última.
+  var links = Array.prototype.slice.call(document.querySelectorAll(".barra a"));
+  function marcar(id) {
+    links.forEach(function (link) {
+      link.setAttribute("aria-current", link.getAttribute("href") === "#" + id ? "true" : "false");
+    });
+  }
+  function noFim() {
+    return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+  }
+  marcar(links[0].getAttribute("href").slice(1));
+  window.addEventListener("scroll", function () {
+    if (noFim()) marcar(links[links.length - 1].getAttribute("href").slice(1));
+  }, { passive: true });
+  if ("IntersectionObserver" in window) {
+    var observador = new IntersectionObserver(function (entradas) {
+      if (noFim()) return;
+      entradas.forEach(function (entrada) {
+        if (entrada.isIntersecting) marcar(entrada.target.id);
+      });
+    }, { rootMargin: "-30% 0px -60% 0px" });
+    links.forEach(function (link) {
+      var secao = document.querySelector(link.getAttribute("href"));
+      if (secao) observador.observe(secao);
+    });
+  }
+})();
+</script>
+</body>
+</html>

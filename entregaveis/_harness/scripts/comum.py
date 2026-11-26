@@ -27,6 +27,8 @@ PROJETO = BASE / "_projeto"
 INTAKE = BASE / "_intake"
 MODELOS = HARNESS / "modelos"
 LISTAS = HARNESS / "listas"
+# Skills de terceiros que o kit instala sem mudar uma linha: cada arquivo tem o seu hash.
+TERCEIROS = HARNESS / "terceiros" / "skills.tsv"
 
 # Marca deixada nos modelos onde o agente ou o consultor precisa escrever.
 MARCA = "PREENCHER"
@@ -266,6 +268,11 @@ def ler_tsv(caminho: Path) -> list[dict]:
     colunas = [c.strip() for c in next(leitor)]
     # Um campo a mais que o cabeçalho é ignorado, e um a menos fica vazio.
     return [{c: (campos[i].strip() if i < len(campos) else "") for i, c in enumerate(colunas)} for campos in leitor if campos]
+
+
+def skills_de_terceiros() -> set[str]:
+    """Nomes das skills de terceiros que vêm com o kit. Elas ficam fora da tabela de momentos e do pacote de outros ambientes."""
+    return {l["skill"] for l in ler_tsv(TERCEIROS) if l.get("skill")} if TERCEIROS.is_file() else set()
 
 
 def paginas(texto: str) -> list[Pagina]:

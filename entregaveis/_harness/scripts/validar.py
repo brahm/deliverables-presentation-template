@@ -102,7 +102,7 @@ def revisao_em_dia(pasta: Path) -> bool:
 
 
 def main() -> int:
-    analisador = argparse.ArgumentParser(description="Checagens do harness de entregáveis.")
+    analisador = argparse.ArgumentParser(description="Checagens do Deliverables Presentation Template.")
     analisador.add_argument("ids", nargs="*", help="entregáveis a validar (padrão: todos)")
     analisador.add_argument("--so", default="", help="checagens separadas por vírgula")
     analisador.add_argument("--arquivo", help="mostra só os achados deste arquivo")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Instala o harness de entregáveis em um projeto.
+"""Instala o Deliverables Presentation Template em um projeto.
 
 O projeto de destino pode ser qualquer um: vazio, um repositório de
 código, uma pasta só com apresentações, com ou sem git, com ou sem
@@ -35,7 +35,9 @@ INICIO = "harness-de-entregaveis: inicio"
 FIM = "harness-de-entregaveis: fim"
 IGNORAR = shutil.ignore_patterns("__pycache__", ".estado", "*.pyc")
 # Linha que toda skill do kit traz no cabeçalho. Skill sem ela é do projeto.
+# A skill de terceiros não muda uma linha do original e traz a marca no arquivo .origem ao lado.
 MARCA_DE_SKILL = "origem: harness-de-entregaveis"
+ARQUIVOS_DA_MARCA = ("SKILL.md", ".origem")
 # Skills do kit que mudaram de nome. A antiga sai na atualização.
 SKILLS_RENOMEADAS = {"relatar-ao-dono": "relatar-ao-consultor"}
 
@@ -64,16 +66,40 @@ class Instalador:
             return texto
         return texto.replace(f"{PADRAO}/", f"{self.pasta}/")
 
+    @staticmethod
+    def do_kit(pasta: Path) -> bool:
+        """A skill instalada veio do kit, e não do projeto."""
+        return any((pasta / n).is_file() and MARCA_DE_SKILL in (pasta / n).read_text(encoding="utf-8", errors="replace") for n in ARQUIVOS_DA_MARCA)
+
+    def igual_ao_kit(self, skill: Path, alvo: Path) -> bool:
+        """Todo arquivo da skill do kit já está no projeto com o mesmo texto. Arquivo a mais no projeto não conta."""
+        for arquivo in skill.rglob("*"):
+            if not arquivo.is_file() or "__pycache__" in arquivo.parts or arquivo.suffix == ".pyc":
+                continue
+            instalado = alvo / arquivo.relative_to(skill)
+            if not instalado.is_file():
+                return False
+            esperado = arquivo.read_bytes()
+            if self.ajustavel(arquivo):
+                esperado = self.ajustar(esperado.decode("utf-8")).encode("utf-8")
+            if instalado.read_bytes() != esperado:
+                return False
+        return True
+
     def gravar(self, arquivo: Path, texto: str) -> None:
         if not self.simular:
             arquivo.parent.mkdir(parents=True, exist_ok=True)
             arquivo.write_text(texto, encoding="utf-8")
 
+    @staticmethod
+    def ajustavel(arquivo: Path) -> bool:
+        return arquivo.suffix in {".md", ".json", ".yml", ".tsv", ".txt"} or arquivo.name == "gitignore"
+
     def ajustar_arvore(self, raiz: Path) -> None:
         if self.pasta == PADRAO or self.simular:
             return
         for arquivo in raiz.rglob("*"):
-            if arquivo.is_file() and (arquivo.suffix in {".md", ".json", ".yml", ".tsv", ".txt"} or arquivo.name == "gitignore"):
+            if arquivo.is_file() and self.ajustavel(arquivo):
                 texto = arquivo.read_text(encoding="utf-8")
                 novo = self.ajustar(texto)
                 if novo != texto:
@@ -115,8 +141,7 @@ class Instalador:
                 skills.append((nome, pacote))
         for antiga, nova in SKILLS_RENOMEADAS.items():
             alvo = self.destino / ".claude" / "skills" / antiga
-            arquivo = alvo / "SKILL.md"
-            if not arquivo.is_file() or MARCA_DE_SKILL not in arquivo.read_text(encoding="utf-8"):
+            if not self.do_kit(alvo):
                 continue  # não existe, ou é uma skill do projeto com o mesmo nome
             if not self.atualizar:
                 self.mantido.append(f".claude/skills/{antiga} é de outra versão do kit, em que ela passou a se chamar {nova}. Use --atualizar para trocar.")
@@ -127,11 +152,9 @@ class Instalador:
         for nome_da_skill, skill in skills:
             alvo = self.destino / ".claude" / "skills" / nome_da_skill
             if alvo.exists():
-                texto_kit = self.ajustar((skill / "SKILL.md").read_text(encoding="utf-8"))
-                atual = (alvo / "SKILL.md").read_text(encoding="utf-8") if (alvo / "SKILL.md").is_file() else ""
-                if atual == texto_kit:
+                if self.igual_ao_kit(skill, alvo):
                     continue
-                if MARCA_DE_SKILL not in atual:
+                if not self.do_kit(alvo):
                     # A skill é do projeto e só coincide no nome. Nunca é trocada.
                     self.mantido.append(
                         f".claude/skills/{nome_da_skill} já existia no projeto e não veio do kit. Ela foi mantida e a do kit "
@@ -281,7 +304,7 @@ class Instalador:
 
 
 def main() -> int:
-    analisador = argparse.ArgumentParser(description="Instala o harness de entregáveis em um projeto.")
+    analisador = argparse.ArgumentParser(description="Instala o Deliverables Presentation Template em um projeto.")
     analisador.add_argument("--destino", default=".", help="raiz do projeto de destino")
     analisador.add_argument("--pasta", default=PADRAO, help="nome da pasta de entregáveis no destino")
     analisador.add_argument("--simular", action="store_true")

@@ -1,4 +1,4 @@
-# Instalar o harness em um projeto que já existe
+# Instalar o Deliverables Presentation Template em um projeto que já existe
 
 O harness entra em qualquer projeto: vazio, repositório de código, pasta
 só com apresentações, com ou sem git, com ou sem regras de agente
@@ -73,7 +73,7 @@ O que saber antes de rodar:
 Cole no agente, dentro do projeto:
 
 ```text
-Instale neste projeto o harness de entregáveis que está em
+Instale neste projeto o Deliverables Presentation Template, o harness de entregáveis que está em
 https://github.com/brahm/deliverables-presentation-template
 
 Siga a seção "Passos para o agente" do INSTALL.md desse repositório.

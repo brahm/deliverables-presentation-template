@@ -135,7 +135,8 @@ aparecem no arquivo renderizado.
 ## HTML interativo
 
 Uma peça interativa apoia a leitura de um entregável e não o
-substitui. É um arquivo só, sem biblioteca nem recurso externo, e fica
+substitui. É um arquivo completo, sem biblioteca, estilo ou imagem de
+fora, com toda imagem em SVG embutido no código, e fica
 em `interativos/` dentro da pasta do entregável. Qualquer entregável
 pode ter uma, depois da storyline aprovada. Quando fazer, como desenhar
 e o que a checagem cobra estão em [interativo.md](interativo.md).

@@ -1,6 +1,6 @@
 # Procedimentos
 
-Arquivo de conhecimento do harness de entregáveis, versão 0.14.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do Deliverables Presentation Template, versão 0.15.0. Gerado por empacotar.py: não edite à mão.
 
 Estes procedimentos foram escritos para um agente que lê e grava arquivos e roda comandos. Neste ambiente, onde o texto manda rodar um script, faça a conferência à mão pelas regras de 2-metodo-e-texto. Onde manda gravar em um arquivo de `entregaveis/_projeto/` ou na pasta de um entregável, atualize a seção correspondente do registro do projeto. As skills citadas pelo nome são os procedimentos deste arquivo.
 
@@ -383,10 +383,13 @@ página antes da primeira peça do projeto.
 7. Adapte o desenho. Aplique as cores e as fontes de
    `_projeto/marca.md` nas variáveis do início do estilo, nos dois
    temas. Mantenha um destaque por tela e as barras em escala.
-8. Tudo fica dentro do arquivo: estilo, script, dados, SVG e imagens em
-   base64. Nenhuma biblioteca, fonte, imagem ou chamada de rede de fora.
+8. Tudo fica dentro do arquivo: estilo, script e dados. Toda imagem é
+   um SVG embutido no código, nunca PNG, JPG ou base64. Nenhuma
+   biblioteca, fonte, imagem ou chamada de rede de fora.
    Quando o modelo não basta, suba a escada de técnicas da página de
    método, um degrau por vez.
+   Aplique as skills de design de interface da página de método, a
+   começar por `emil-design-eng`, sempre dentro das regras do harness.
 9. Mantenha o que os modelos já trazem: página completa ao abrir,
    teclado e foco visível, leitura em 2D ao lado de qualquer cena em 3D,
    pausa na animação contínua, movimento reduzido, versão de impressão,
@@ -455,6 +458,9 @@ Quando: antes de dizer que um entregável está pronto, antes de mostrá-lo ao c
    independente, entregue a ele o material e o briefing, sem as suas
    conclusões, e use o que ele achar. Aplique também os critérios de
    revisão do projeto, na tabela do fim de `_dominio/dominio.md`.
+   Quando o entregável tem HTML, siga também `review-animations` e
+   `break-ui`, nos limites da seção "As skills de design de interface"
+   de `entregaveis/_harness/metodo/interativo.md`.
 4. Faça dois testes. Leia só os títulos, em ordem, e veja se contam a
    história. Depois percorra o caminho de cinco minutos e veja se ele
    leva ao pedido.

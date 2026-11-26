@@ -37,6 +37,17 @@ falhas: list[str] = []
 total = 0
 
 
+def skills_de_terceiros() -> set[str]:
+    """As skills de terceiros que o kit instala sem mudar. Ficam fora das conferências de skill do kit."""
+    linhas = (HARNESS / "terceiros" / "skills.tsv").read_text(encoding="utf-8").splitlines()[1:]
+    return {l.split("\t")[0] for l in linhas if l.strip()}
+
+
+def arquivos_das_skills_do_kit() -> list[Path]:
+    terceiros = skills_de_terceiros()
+    return [a for a in sorted((RAIZ / ".claude" / "skills").rglob("*.md")) if a.relative_to(RAIZ / ".claude" / "skills").parts[0] not in terceiros]
+
+
 def confere(nome: str, condicao: bool, detalhe: str = "") -> None:
     global total
     total += 1
@@ -130,7 +141,7 @@ def testar_uma_linha(tmp: Path) -> None:
     with tarfile.open(alheio, "w:gz") as tar:
         tar.add(RAIZ / "LICENSE", arcname="outro-projeto-main/LICENSE")
     outro_repo = pipe(limpo, HARNESS_ARQUIVO=str(alheio))
-    confere("pacote que não é o harness é recusado", outro_repo.returncode == 1 and "não traz o harness" in outro_repo.stderr and conteudo(limpo) == [], outro_repo.stdout + outro_repo.stderr)
+    confere("pacote que não é o harness é recusado", outro_repo.returncode == 1 and "não traz o Deliverables Presentation Template" in outro_repo.stderr and conteudo(limpo) == [], outro_repo.stdout + outro_repo.stderr)
     confere("nenhuma recusa deixa pasta temporária para trás", not list((tmp / "temporarios").iterdir()), str(list((tmp / "temporarios").iterdir())))
 
     # Download cortado no meio: o shell não pode rodar um pedaço do instalador.
@@ -174,8 +185,10 @@ def testar_skills() -> None:
     print("Skills e regras")
     regras = (HARNESS / "REGRAS.md").read_text(encoding="utf-8")
     citadas = set(re.findall(r"\|\s*`([a-z-]+)`\s*\|", regras))
-    pastas = {p.name for p in (RAIZ / ".claude" / "skills").iterdir() if p.is_dir()}
-    confere("toda skill da tabela de momentos existe", citadas <= pastas, str(citadas - pastas))
+    terceiros = skills_de_terceiros()
+    todas = {p.name for p in (RAIZ / ".claude" / "skills").iterdir() if p.is_dir()}
+    pastas = todas - terceiros
+    confere("toda skill da tabela de momentos existe", citadas <= todas, str(citadas - todas))
     confere("toda skill do kit está na tabela de momentos", pastas <= citadas, str(pastas - citadas))
     for nome in sorted(pastas):
         texto = (RAIZ / ".claude" / "skills" / nome / "SKILL.md").read_text(encoding="utf-8")
@@ -188,12 +201,37 @@ def testar_skills() -> None:
         confere(f"{nome}: a descrição é um valor YAML simples", ": " not in descricao and " #" not in descricao and len(descricao) <= 1024, descricao)
         confere(f"{nome}: traz a marca de origem do kit", "origem: harness-de-entregaveis" in cabecalho)
         confere(f"{nome}: cabe em uma tela", len(texto.splitlines()) <= 90, f"{len(texto.splitlines())} linhas")
+    testar_skills_de_terceiros(terceiros)
+
+
+def testar_skills_de_terceiros(terceiros: set[str]) -> None:
+    """As skills de terceiros são cópias fiéis do original, com a marca e a licença ao lado."""
+    import hashlib  # noqa: PLC0415
+
+    linhas = [l.split("\t") for l in (HARNESS / "terceiros" / "skills.tsv").read_text(encoding="utf-8").splitlines()[1:] if l.strip()]
+    confere("há skills de terceiros registradas", len(terceiros) >= 1 and all(len(l) == 3 for l in linhas))
+    confere("a licença das skills de terceiros acompanha o harness", "MIT License" in (HARNESS / "terceiros" / "LICENCA-emilkowalski-skills.txt").read_text(encoding="utf-8"))
+    for nome, arquivo, hash_esperado in linhas:
+        caminho = RAIZ / ".claude" / "skills" / nome / arquivo
+        confere(f"{nome}/{arquivo}: igual ao original registrado", caminho.is_file() and hashlib.sha256(caminho.read_bytes()).hexdigest() == hash_esperado)
+    registrados = {(l[0], l[1]) for l in linhas}
+    for nome in sorted(terceiros):
+        pasta = RAIZ / ".claude" / "skills" / nome
+        presentes = {(nome, a.name) for a in pasta.iterdir() if a.is_file() and a.name != ".origem"}
+        confere(f"{nome}: nenhum arquivo fora do registro", presentes == {r for r in registrados if r[0] == nome}, str(presentes ^ {r for r in registrados if r[0] == nome}))
+        confere(f"{nome}: traz a marca de origem do kit ao lado", "origem: harness-de-entregaveis" in (pasta / ".origem").read_text(encoding="utf-8"))
+        cabecalho = (pasta / "SKILL.md").read_text(encoding="utf-8").split("---\n")[1]
+        confere(f"{nome}: o nome do cabeçalho é o da pasta", f"\nname: {nome}\n" in "\n" + cabecalho)
+    metodo = (HARNESS / "metodo" / "interativo.md").read_text(encoding="utf-8")
+    for nome in re.findall(r"`([a-z-]+)`", metodo.split("## As skills de design de interface")[1].split("\n## ")[0]):
+        if "-" in nome and nome not in ("pick-ui-library", "learn-taste", "registrar-licao", "ease-out", "ease-in-out", "ease-in"):
+            confere(f"o método cita a skill instalada '{nome}'", nome in terceiros, nome)
 
 
 def testar_referencias() -> None:
     print("Referências entre arquivos")
     arquivos = [RAIZ / n for n in ("README.md", "INSTALL.md", "HISTORY.md", "AGENTS.md", "CLAUDE.md", "exemplo/LEIA-ME.md")]
-    arquivos += sorted(HARNESS.rglob("*.md")) + sorted((RAIZ / ".claude" / "skills").rglob("*.md"))
+    arquivos += sorted(HARNESS.rglob("*.md")) + arquivos_das_skills_do_kit()
     for arquivo in arquivos:
         if not arquivo.is_file():
             confere(f"{arquivo.relative_to(RAIZ)} existe", False)
@@ -205,6 +243,29 @@ def testar_referencias() -> None:
             confere(f"{arquivo.relative_to(RAIZ)}: o caminho '{alvo}' existe", (RAIZ / alvo.rstrip("/")).exists())
 
 
+def testar_pagina_de_uso() -> None:
+    """A página de instalação e uso abre sozinha: estilo, script e imagens dentro do próprio arquivo."""
+    print("Página de instalação e uso")
+    pagina = RAIZ / "docs" / "instalar-e-usar.html"
+    html = pagina.read_text(encoding="utf-8")
+    sem_links = re.sub(r"<a\b[^>]*>", "<a>", html)  # link de navegação não carrega nada
+    confere("a página de uso não carrega script, estilo, imagem ou fonte de fora", not re.search(
+        r"<(?:script|img|iframe|video|audio|source|embed|object)\b[^>]*\b(?:src|data)\s*=|<link\b|@import|url\(\s*[\"']?(?!#|data:)|https?://(?![^\s\"'<]*github)|fetch\s*\(|XMLHttpRequest|xlink:href|<image\b",
+        sem_links, flags=re.IGNORECASE), "")
+    confere("a página de uso tem doctype, idioma, viewport, movimento reduzido e impressão", all(
+        trecho in html for trecho in ("<!doctype html>", '<html lang="pt-BR">', 'name="viewport"', "prefers-reduced-motion", "@media print", "<noscript>")))
+    confere("a imagem da página de uso é SVG embutido", "<svg" in html and not re.search(r"\.(?:png|jpe?g|gif|webp|svg)[\"')]|data:image/", html, flags=re.IGNORECASE))
+    confere("o README aponta a página de uso", "docs/instalar-e-usar.html" in (RAIZ / "README.md").read_text(encoding="utf-8"))
+    sys.path.insert(0, str(HARNESS / "scripts"))
+    import comum  # noqa: PLC0415
+    import checagens  # noqa: PLC0415
+
+    prosa = re.sub(r"<pre\b.*?</pre>", lambda m: "\n" * m.group(0).count("\n"), html, flags=re.DOTALL)  # comando não é prosa
+    linhas = [(n, comum.limpar_linha(l)) for n, l in comum.texto_visivel(prosa)]
+    erros = [a for a in checagens._texto_das_linhas("docs/instalar-e-usar.html", linhas, ["pt"]) if a.nivel == "erro"]
+    confere("o texto visível da página de uso não tem vício de texto", not erros, "\n".join(a.formatar() for a in erros[:5]))
+
+
 def testar_texto_do_kit() -> None:
     """O kit segue as práticas de texto que cobra dos entregáveis."""
     print("Texto do próprio kit")
@@ -212,7 +273,7 @@ def testar_texto_do_kit() -> None:
     import checagens  # noqa: PLC0415
 
     arquivos = [RAIZ / n for n in ("README.md", "INSTALL.md", "HISTORY.md")]
-    arquivos += sorted(HARNESS.rglob("*.md")) + sorted((RAIZ / ".claude" / "skills").rglob("*.md"))
+    arquivos += sorted(HARNESS.rglob("*.md")) + arquivos_das_skills_do_kit()
     for arquivo in arquivos:
         erros = [a for a in checagens.texto(arquivo, ["pt"]) if a.nivel == "erro"]
         confere(f"{arquivo.relative_to(RAIZ)}: sem vício de texto", not erros, "\n".join(a.formatar() for a in erros[:5]))
@@ -253,6 +314,8 @@ def testar_instalador(tmp: Path) -> None:
     (andamento / ".github/copilot-instructions.md").write_text("Instruções do Copilot.\n", encoding="utf-8")
     (andamento / ".gitignore").write_text("node_modules/\n", encoding="utf-8")
     (andamento / ".claude/skills/humanizar-texto/SKILL.md").write_text("minha skill\n", encoding="utf-8")
+    (andamento / ".claude/skills/animate").mkdir()
+    (andamento / ".claude/skills/animate/SKILL.md").write_text("minha animação\n", encoding="utf-8")
     (andamento / "entregaveis/final/deck.pptx").write_text("x", encoding="utf-8")
     (andamento / ".claude/settings.json").write_text(json.dumps({
         "permissions": {"allow": ["Bash(npm test)"], "deny": ["Read(.env)"]},
@@ -271,6 +334,7 @@ def testar_instalador(tmp: Path) -> None:
     confere("mantém os hooks e os ajustes do projeto", "npm run lint" in comandos and ajustes["model"] == "opus" and ajustes["permissions"]["deny"] == ["Read(.env)"] and "Bash(npm test)" in ajustes["permissions"]["allow"])
     confere("acrescenta os seis hooks", all(e in ajustes["hooks"] for e in ("SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop")) and sum(len(g["hooks"]) for grupos in ajustes["hooks"].values() for g in grupos if "_harness/hooks/" in g["hooks"][0]["command"]) == 6)
     confere("mantém a skill do projeto que tem o mesmo nome", (andamento / ".claude/skills/humanizar-texto/SKILL.md").read_text(encoding="utf-8") == "minha skill\n" and "não veio do kit" in saida.stdout, saida.stdout)
+    confere("mantém a skill do projeto que tem o nome de uma skill de terceiros", (andamento / ".claude/skills/animate/SKILL.md").read_text(encoding="utf-8") == "minha animação\n" and not (andamento / ".claude/skills/animate/.origem").exists() and ".claude/skills/animate já existia" in saida.stdout, saida.stdout)
     confere("não toca na pasta de entregáveis que já existia", (andamento / "entregaveis/final/deck.pptx").read_text(encoding="utf-8") == "x" and "já existia" in saida.stdout)
     de_novo = instalar(andamento)
     confere("segunda instalação em projeto em andamento não muda nada", "Nada a fazer" in de_novo.stdout and (andamento / "AGENTS.md").read_text(encoding="utf-8").count("harness-de-entregaveis: inicio") == 1, de_novo.stdout)
@@ -278,13 +342,16 @@ def testar_instalador(tmp: Path) -> None:
     (andamento / ".claude/skills/relatar-ao-dono/SKILL.md").write_text("skill do projeto\n", encoding="utf-8")
     forcada = instalar(andamento, "--atualizar")
     confere("--atualizar não retira a skill do projeto que tem o nome antigo de uma do kit", (andamento / ".claude/skills/relatar-ao-dono/SKILL.md").is_file(), forcada.stdout)
-    confere("--atualizar não troca a skill do projeto", (andamento / ".claude/skills/humanizar-texto/SKILL.md").read_text(encoding="utf-8") == "minha skill\n", forcada.stdout)
+    confere("--atualizar não troca a skill do projeto", (andamento / ".claude/skills/humanizar-texto/SKILL.md").read_text(encoding="utf-8") == "minha skill\n" and (andamento / ".claude/skills/animate/SKILL.md").read_text(encoding="utf-8") == "minha animação\n", forcada.stdout)
 
     # Atualização: troca o que é do kit e preserva o que é do projeto.
     (vazio / "entregaveis/_harness/VERSAO").write_text("0.0.1\n", encoding="utf-8")
     (vazio / "entregaveis/_harness/REGRAS.md").write_text("regra velha\n", encoding="utf-8")
     skill = vazio / ".claude/skills/adiar-trabalho/SKILL.md"
     skill.write_text(skill.read_text(encoding="utf-8") + "\nlinha de versão antiga\n", encoding="utf-8")
+    confere("instala as skills de terceiros com a marca ao lado", (vazio / ".claude/skills/emil-design-eng/SKILL.md").read_bytes() == (RAIZ / ".claude/skills/emil-design-eng/SKILL.md").read_bytes() and (vazio / ".claude/skills/emil-design-eng/.origem").is_file())
+    receita = vazio / ".claude/skills/animate/RECIPES.md"
+    receita.write_text("receita de versão antiga\n", encoding="utf-8")
     brief = vazio / "entregaveis/_projeto/brief.md"
     brief.write_text(brief.read_text(encoding="utf-8").replace("projeto: PREENCHER", "projeto: Meu projeto"), encoding="utf-8")
     antiga = vazio / ".claude/skills/relatar-ao-dono"
@@ -294,6 +361,7 @@ def testar_instalador(tmp: Path) -> None:
     confere("sem --atualizar, avisa da versão diferente e não troca", "Use --atualizar" in sem_opcao.stdout and (vazio / "entregaveis/_harness/REGRAS.md").read_text(encoding="utf-8") == "regra velha\n", sem_opcao.stdout)
     atualizada = instalar(vazio, "--atualizar")
     confere("--atualizar troca o que é do kit", (vazio / "entregaveis/_harness/REGRAS.md").read_text(encoding="utf-8") == (HARNESS / "REGRAS.md").read_text(encoding="utf-8") and "linha de versão antiga" not in skill.read_text(encoding="utf-8"), atualizada.stdout + atualizada.stderr)
+    confere("--atualizar troca o arquivo de apoio de uma skill de terceiros", receita.read_bytes() == (RAIZ / ".claude/skills/animate/RECIPES.md").read_bytes(), atualizada.stdout)
     confere("--atualizar retira a skill do kit que mudou de nome", not antiga.exists() and (vazio / ".claude/skills/relatar-ao-consultor/SKILL.md").is_file() and "relatar-ao-consultor" in atualizada.stdout, atualizada.stdout)
     confere("--atualizar preserva os registros do projeto", "projeto: Meu projeto" in brief.read_text(encoding="utf-8"))
 
@@ -827,7 +895,9 @@ def testar_interativos(tmp: Path) -> None:
     com("<style>@font-face { font-family: Marca; src: url(fontes/marca.woff2); }</style>", "reprova fonte em arquivo ao lado", antes="</head>")
     com('<style>@import "tema.css";</style>', "reprova importação de estilo", antes="</head>")
     com('<script>fetch("https://api.exemplo.com/dados").then(function () {});</script>', "reprova chamada de rede")
-    com('<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="Ponto">', "aceita imagem embutida no arquivo", deve_reprovar=False)
+    com('<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="Ponto">', "reprova imagem que não é SVG, mesmo em base64", espera="não é SVG")
+    com("<style>.capa { background: url(data:image/png;base64,iVBORw0KGgo=); }</style>", "reprova imagem de fundo que não é SVG", espera="não é SVG", antes="</head>")
+    com("<p>Uma imagem em base64 começa por data:image/png.</p>", "aceita texto que só cita uma imagem em base64", deve_reprovar=False)
     com('<svg viewBox="0 0 10 10" role="img" aria-label="Marca"><defs><linearGradient id="g"></linearGradient></defs><rect width="10" height="10" fill="url(#g)"></rect></svg>', "aceita SVG desenhado no arquivo", deve_reprovar=False)
 
     # Estrutura e movimento
@@ -839,6 +909,16 @@ def testar_interativos(tmp: Path) -> None:
     alvo.write_text(bom.replace("fontes: E-001", "fontes: E-777"), encoding="utf-8")
     perdida = validar(projeto, "--so", "interativo")
     confere("reprova evidência que não está no registro", perdida.returncode != 0 and "E-777" in perdida.stdout, perdida.stdout[-400:])
+    for trecho, espera, nome in (
+        ("<style>.passo { transition: all 300ms; }</style>", "usa 'all'", "avisa da transição em 'all'"),
+        ("<style>.passo { transform: scale(0); }</style>", "scale(0)", "avisa da entrada de 'scale(0)'"),
+        ("<style>.passo { animation: surgir 200ms ease-in; }</style>", "ease-in", "avisa do 'ease-in'"),
+    ):
+        alvo.write_text(bom.replace("</head>", trecho + "</head>", 1), encoding="utf-8")
+        saida = validar(projeto, "--so", "interativo")
+        confere(nome, saida.returncode == 0 and espera in saida.stdout and "(skill " in saida.stdout, saida.stdout[-500:])
+    alvo.write_text(bom.replace("</head>", "<style>.passo { transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1); transform: scale(0.95); }</style></head>", 1), encoding="utf-8")
+    confere("não avisa do movimento bem acabado", "(skill " not in validar(projeto, "--so", "interativo").stdout)
     alvo.write_text(bom.replace("</main>", "<p>A equipe aprova — e segue.</p></main>"), encoding="utf-8")
     vicio = validar(projeto, "--so", "interativo")
     confere("o texto visível da peça passa pelas checagens de texto", vicio.returncode != 0 and "[interativo]" in vicio.stdout, vicio.stdout[-400:])
@@ -855,7 +935,10 @@ def testar_interativos(tmp: Path) -> None:
     (pasta / "storyline.md").write_text(STORYLINE.replace("aprovada: sim", "aprovada: nao"), encoding="utf-8")
     confere("antes de gravar: bloqueia a peça sem storyline aprovada", hook("antes_de_gravar.py", "entregaveis/diag/interativos/peca-fluxo.html").returncode == 2)
     (pasta / "storyline.md").write_text(STORYLINE, encoding="utf-8")
-    confere("depois de gravar: peça limpa passa", hook("depois_de_gravar.py", "entregaveis/diag/interativos/peca-fluxo.html").returncode == 0)
+    primeira = hook("depois_de_gravar.py", "entregaveis/diag/interativos/peca-fluxo.html")
+    confere("depois de gravar: peça limpa passa", primeira.returncode == 0)
+    confere("depois de gravar: lembra as skills de design de interface na primeira gravação do HTML", "emil-design-eng" in primeira.stdout and "review-animations" in primeira.stdout, primeira.stdout)
+    confere("depois de gravar: não repete o lembrete na mesma sessão", "emil-design-eng" not in hook("depois_de_gravar.py", "entregaveis/diag/interativos/peca-fluxo.html").stdout)
     alvo.write_text(bom.replace("</body>", '<script src="https://cdn.exemplo.com/grafico.js"></script></body>'), encoding="utf-8")
     devolvido = hook("depois_de_gravar.py", "entregaveis/diag/interativos/peca-fluxo.html")
     confere("depois de gravar: devolve o recurso de fora ao agente", devolvido.returncode == 2 and "arquivo único" in devolvido.stderr, devolvido.stdout + devolvido.stderr)
@@ -1803,8 +1886,11 @@ def testar_ambientes(tmp: Path) -> None:
     confere("há um arquivo de conhecimento por pacote", [n for n in conhecimento if n.startswith("pacote-")] == [f"pacote-{p}.txt" for p in pacotes])
     procedimentos = (ambientes / "conhecimento/1-procedimentos.txt").read_text(encoding="utf-8")
     so_com_arquivos = {"adotar-projeto", "atualizar-harness", "usar-outro-ambiente"}
+    terceiros = skills_de_terceiros()
     for skill in sorted(p.name for p in (RAIZ / ".claude/skills").iterdir() if p.is_dir()):
-        if skill in so_com_arquivos:
+        if skill in terceiros:
+            confere(f"{skill}: skill de terceiros fica fora dos procedimentos de outros ambientes", f"## {skill}\n" not in procedimentos)
+        elif skill in so_com_arquivos:
             confere(f"{skill}: fica fora dos procedimentos de outros ambientes", f"## {skill}\n" not in procedimentos)
         else:
             confere(f"{skill}: está nos procedimentos e nas instruções", f"## {skill}\n" in procedimentos and f"`{skill}`" in instrucoes)
@@ -3729,6 +3815,7 @@ GRUPOS = [
     (testar_skills, False),
     (testar_referencias, False),
     (testar_texto_do_kit, False),
+    (testar_pagina_de_uso, False),
     (testar_instalador, True),
     (testar_uma_linha, True),
     (testar_checagens, True),
@@ -3799,7 +3886,7 @@ def em_paralelo(escolhidos: list, vagas: int) -> None:
 
 
 def main() -> int:
-    analisador = argparse.ArgumentParser(description="Testes do kit de entregáveis.")
+    analisador = argparse.ArgumentParser(description="Testes do kit Deliverables Presentation Template.")
     analisador.add_argument("grupos", nargs="*", help="grupos a rodar (padrão: todos)")
     analisador.add_argument("--serie", action="store_true", help="roda os grupos um depois do outro, em um processo só")
     analisador.add_argument("--vagas", type=int, default=min(4, os.cpu_count() or 1), help="quantos grupos rodam ao mesmo tempo (padrão: até 4)")

@@ -1,4 +1,4 @@
-# Roda as checagens do harness de entregáveis em cada pull request.
+# Roda as checagens do Deliverables Presentation Template em cada pull request.
 name: Entregáveis
 
 on:
