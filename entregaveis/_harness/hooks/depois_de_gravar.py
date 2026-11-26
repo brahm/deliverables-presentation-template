@@ -49,6 +49,30 @@ def do_cerebro(dados: dict, arquivo) -> list[str]:
     return [f"Segundo cérebro: {len(novos)} item(ns) a absorver ({nomes}). Antes de encerrar o turno, aplique a skill manter-cerebro (scripts/cerebro.py --pendentes)."]
 
 
+LEMBRETE_DE_DESIGN = (
+    "HTML de entrega: aplique as skills de design de interface como diz metodo/interativo.md, na seção 'As skills de design "
+    "de interface'. Ao construir, emil-design-eng e, conforme a peça, animate, choreograph, gestures, mobile-native, "
+    "apple-design e animation-performance. Antes da revisão, review-animations e break-ui. As regras do harness valem "
+    "primeiro: arquivo completo, sem estilo, script ou imagem de fora, toda imagem em SVG embutido no código, cores e "
+    "fontes de _projeto/marca.md e movimento reduzido."
+)
+
+
+def do_design(dados: dict, arquivo) -> list[str]:
+    """Na primeira gravação de cada HTML na sessão, lembra as skills de design de interface."""
+    if arquivo.suffix != ".html":
+        return []
+    if dados.get("session_id"):
+        sessao = _base.ler_sessao(dados["session_id"])
+        vistos = sessao.setdefault("design_avisados", [])
+        chave = comum.relativo(arquivo)
+        if chave in vistos:
+            return []
+        vistos.append(chave)
+        _base.gravar_sessao(dados["session_id"], sessao)
+    return [LEMBRETE_DE_DESIGN]
+
+
 def principal() -> int:
     dados = _base.entrada()
     arquivo = _base.arquivo_da_ferramenta(dados)
@@ -81,6 +105,7 @@ def principal() -> int:
             linhas.append(f"... e mais {len(erros) - 15} erro(s).")
         print("Checagens do harness neste arquivo. Corrija antes de seguir:\n" + "\n".join(linhas), file=sys.stderr)
         return 2
+    lembrete = do_design(dados, arquivo) + lembrete
     if avisos:
         lembrete = ["Avisos do harness neste arquivo (corrija os que fizerem sentido):"] + [a.formatar() for a in avisos[:10]] + lembrete
     contexto(lembrete)

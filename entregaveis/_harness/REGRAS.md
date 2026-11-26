@@ -1,4 +1,4 @@
-# Regras do harness de entregáveis
+# Regras do Deliverables Presentation Template
 
 Este projeto produz entregáveis de consultoria: apresentações, propostas,
 documentos, planilhas e materiais de treinamento. O consultor decide
@@ -30,6 +30,7 @@ que você abre quando a tarefa pede.
    | O storyboard está pronto | `redigir-conteudo` |
    | Uma página mostra dados, relação entre itens ou imagem | `desenhar-visual` |
    | A audiência entende melhor mexendo, ou o consultor pede uma peça interativa | `construir-interativo` |
+   | Um HTML de entrega é criado, alterado ou revisado | `emil-design-eng` |
    | Um texto de entregável foi escrito ou alterado | `humanizar-texto` |
    | Antes de dizer que um entregável está pronto | `revisar-entregavel` |
    | A revisão passou | `preparar-entrega` |
@@ -99,7 +100,12 @@ que você abre quando a tarefa pede.
    relatório e uma planilha têm limites diferentes, descritos em
    [metodo/formatos.md](metodo/formatos.md). Um HTML interativo é uma
    peça de apoio em arquivo único, sem recurso externo, e segue
-   [metodo/interativo.md](metodo/interativo.md).
+   [metodo/interativo.md](metodo/interativo.md). Todo HTML que o
+   harness gera, de qualquer tipo, é um arquivo completo: estilo,
+   script, dados e imagens ficam no próprio documento, sem nada de fora,
+   e toda imagem é um SVG embutido no código. Ele usa também as skills
+   de design de interface que a mesma página lista, sempre dentro das
+   regras do harness.
 10. Todo texto segue [metodo/texto.md](metodo/texto.md). As checagens
     rodam sozinhas a cada gravação e devolvem o que corrigir. Um recurso
     retórico só fica no texto quando foi planejado na storyline.

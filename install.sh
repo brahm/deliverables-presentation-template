@@ -1,5 +1,5 @@
 #!/bin/sh
-# Instala o harness de entregáveis em um projeto. Veja INSTALL.md.
+# Instala o Deliverables Presentation Template em um projeto. Veja INSTALL.md.
 #
 # Em uma linha, dentro da pasta do projeto (Linux, macOS e Windows com WSL):
 #   curl -fsSL https://raw.githubusercontent.com/brahm/deliverables-presentation-template/main/install.sh | sh
@@ -125,7 +125,7 @@ instalar_da_internet() {
     fi
   done
   if [ -z "$raiz" ]; then
-    erro "O pacote baixado não traz o harness de entregáveis. Confira HARNESS_REPO e HARNESS_REF."
+    erro "O pacote baixado não traz o Deliverables Presentation Template. Confira HARNESS_REPO e HARNESS_REF."
     exit 1
   fi
   printf 'Versão do kit: %s\n\n' "$(cat "$raiz/entregaveis/_harness/VERSAO" 2>/dev/null || printf '?')"

@@ -1,4 +1,4 @@
-# Harness de entregáveis de consultoria
+# Deliverables Presentation Template
 
 Você trabalha com um consultor na produção de entregáveis de consultoria:
 apresentações, propostas, documentos, planilhas, materiais de treinamento

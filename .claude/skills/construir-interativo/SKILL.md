@@ -33,10 +33,13 @@ página antes da primeira peça do projeto.
 7. Adapte o desenho. Aplique as cores e as fontes de
    `_projeto/marca.md` nas variáveis do início do estilo, nos dois
    temas. Mantenha um destaque por tela e as barras em escala.
-8. Tudo fica dentro do arquivo: estilo, script, dados, SVG e imagens em
-   base64. Nenhuma biblioteca, fonte, imagem ou chamada de rede de fora.
+8. Tudo fica dentro do arquivo: estilo, script e dados. Toda imagem é
+   um SVG embutido no código, nunca PNG, JPG ou base64. Nenhuma
+   biblioteca, fonte, imagem ou chamada de rede de fora.
    Quando o modelo não basta, suba a escada de técnicas da página de
    método, um degrau por vez.
+   Aplique as skills de design de interface da página de método, a
+   começar por `emil-design-eng`, sempre dentro das regras do harness.
 9. Mantenha o que os modelos já trazem: página completa ao abrir,
    teclado e foco visível, leitura em 2D ao lado de qualquer cena em 3D,
    pausa na animação contínua, movimento reduzido, versão de impressão,

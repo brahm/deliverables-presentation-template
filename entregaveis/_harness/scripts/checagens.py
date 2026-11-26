@@ -675,6 +675,19 @@ def _linha_de(texto: str, posicao: int) -> int:
     return texto.count("\n", 0, posicao) + 1
 
 
+# Imagem embutida que não é SVG: mapa de bits em base64, na tag ou no CSS.
+_IMAGEM_QUE_NAO_E_SVG = re.compile(r"data:(image/(?!svg\+xml)[\w.+-]+)", flags=re.IGNORECASE)
+# Na marcação, só conta o que está em um atributo: texto ou comentário que cita 'data:image/png' não é imagem.
+_IMAGEM_EM_ATRIBUTO = re.compile(r"\b(?:src|srcset|href|poster|data)\s*=\s*[\"']?\s*data:(image/(?!svg\+xml)[\w.+-]+)", flags=re.IGNORECASE)
+
+# Erros de acabamento que as skills emil-design-eng e animate apontam e uma busca no código encontra.
+_ACABAMENTO_DO_MOVIMENTO = (
+    (r"transition(?:-property)?\s*:\s*all\b", "A transição usa 'all'. Diga as propriedades que mudam, como 'transition: transform 200ms, opacity 200ms' (skill emil-design-eng)."),
+    (r"scale\(\s*0(?:\.0+)?\s*\)", "Um elemento entra ou sai de 'scale(0)'. Comece de 'scale(0.95)' com 'opacity: 0' (skill emil-design-eng)."),
+    (r"(?<![-\w])ease-in(?![-\w])", "A animação usa 'ease-in', que faz a interface parecer lenta. Use 'ease-out' para entrar e 'ease-in-out' para o que já está na tela (skill animate)."),
+)
+
+
 def interativo(pasta: Path, rigoroso: bool = False) -> list[Achado]:
     """HTML interativo: arquivo único, com mensagem, fonte e movimento com respeito a quem lê."""
     achados: list[Achado] = []
@@ -710,6 +723,13 @@ def interativo(pasta: Path, rigoroso: bool = False) -> list[Achado]:
                     alvo = (m.group(1) if m.groups() else "")[:60]
                     achados.append(Achado("erro", "interativo", nome, _linha_de(html, inicio + m.start()), f"O HTML precisa ser um arquivo único: {mensagem.format(alvo)}. Ponha o conteúdo dentro do arquivo (script, estilo, SVG ou data:)."))
 
+        # Toda imagem é SVG escrito no próprio HTML. Imagem de mapa de bits não entra, nem embutida em base64.
+        candidatos = [(m.start(), m.group(1)) for m in _IMAGEM_EM_ATRIBUTO.finditer(so_tags)]
+        candidatos += [(inicio + m.start(), m.group(1)) for inicio, trecho in partes["css"] + partes["js"] for m in _IMAGEM_QUE_NAO_E_SVG.finditer(trecho)]
+        if candidatos:
+            posicao, tipo = min(candidatos)
+            achados.append(Achado("erro", "interativo", nome, _linha_de(html, posicao), f"A imagem '{tipo}' não é SVG. Toda imagem do HTML é um SVG escrito no próprio arquivo: redesenhe em <svg> ou leve a imagem para a página do entregável."))
+
         # 2. Estrutura mínima de um documento que abre sozinho.
         for expressao, texto in (
             (r"<!doctype html", "Falta '<!doctype html>' na primeira linha."),
@@ -743,6 +763,13 @@ def interativo(pasta: Path, rigoroso: bool = False) -> list[Achado]:
         for m in re.finditer(r"<canvas\b([^>]*)>(.*?)</canvas>", html, flags=re.DOTALL | re.IGNORECASE):
             if not re.search(r"aria-label|aria-labelledby|aria-hidden", m.group(1)) and not m.group(2).strip():
                 achados.append(Achado("aviso", "interativo", nome, _linha_de(html, m.start()), "O canvas não tem descrição. Ponha 'role=\"img\"' com 'aria-label', ou um texto dentro da tag."))
+        # O acabamento do movimento, pelas skills de design de interface (metodo/interativo.md).
+        for expressao, texto in _ACABAMENTO_DO_MOVIMENTO:
+            for inicio, trecho in partes["css"] + partes["js"]:
+                m = re.search(expressao, trecho, flags=re.IGNORECASE)
+                if m:
+                    achados.append(Achado("aviso", "interativo", nome, _linha_de(html, inicio + m.start()), texto))
+                    break
         if "<noscript" not in html.lower():
             achados.append(Achado("aviso", "interativo", nome, 0, "Falta '<noscript>' com a mensagem e os números principais, para quem abre sem script."))
         if "@media print" not in html:

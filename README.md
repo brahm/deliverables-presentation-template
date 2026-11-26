@@ -1,6 +1,7 @@
-# Harness de entregáveis de consultoria
+# Deliverables Presentation Template
 
-Um template que ensina um agente de IA a produzir apresentações,
+O Deliverables Presentation Template é um harness de entregáveis de
+consultoria. Ele ensina um agente de IA a produzir apresentações,
 propostas, documentos, planilhas, treinamentos e peças interativas em
 HTML do jeito que um bom time de consultoria produz: primeiro a
 audiência e a decisão, depois a história, e só então as páginas.
@@ -99,7 +100,7 @@ agente na pasta e diga do que é o projeto.
 Cole no agente, dentro da pasta do projeto:
 
 ```text
-Instale neste projeto o harness de entregáveis que está em
+Instale neste projeto o Deliverables Presentation Template, o harness de entregáveis que está em
 https://github.com/brahm/deliverables-presentation-template
 seguindo a seção "Passos para o agente" do INSTALL.md desse repositório.
 Não mova, renomeie nem apague nada do que existe, e me mostre a
@@ -171,6 +172,12 @@ python3 entregaveis/_harness/scripts/cerebro.py --buscar TERMO  # o que o projet
 python3 entregaveis/_harness/scripts/ambiente.py      # o que a máquina tem e como instalar o que falta
 ```
 
+## Página de instalação e uso
+
+A página [docs/instalar-e-usar.html](docs/instalar-e-usar.html) resume
+a instalação e o uso em um arquivo só. Abra com dois cliques, sem
+internet.
+
 ## Ver um exemplo
 
 A pasta [exemplo/](exemplo/LEIA-ME.md) traz um projeto fictício inteiro,
@@ -196,7 +203,7 @@ O resto são checagens que rodam a cada gravação e devolvem o que
 corrigir: título que é rótulo, texto acima do limite do veículo, número
 sem fonte, vício de texto gerado por IA em português, espanhol e inglês,
 termo fora do glossário, material confidencial, HTML que depende de
-arquivo externo, ação sem dono ou com prazo vencido sem resposta e as
+arquivo externo ou traz imagem que não é SVG embutido, ação sem dono ou com prazo vencido sem resposta e as
 regras do domínio do projeto.
 
 Em outros agentes que leem `AGENTS.md` e rodam comandos, valem as
@@ -206,6 +213,12 @@ No Claude desktop, no ChatGPT desktop e no Microsoft Copilot, o método
 chega como um texto de instruções para colar e arquivos de conhecimento
 para enviar, sem travas nem checagens automáticas. O passo a passo está
 em [ambientes/LEIA-ME.md](entregaveis/_harness/ambientes/LEIA-ME.md).
+
+Todo HTML de entrega passa também pelas skills de design de interface
+de Emil Kowalski, que vêm com o kit em `.claude/skills/`. Elas cuidam
+da curva e do tempo do movimento, do toque, do foco e do celular,
+dentro das regras do harness. A origem e a licença estão em
+[terceiros/LEIA-ME.md](entregaveis/_harness/terceiros/LEIA-ME.md).
 
 ## Onde ler mais
 
