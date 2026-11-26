@@ -379,6 +379,18 @@ aparece na lista e no status. Enquanto a confirmação não chega, o agente
 recusa marcar como concluído ou em andamento o trabalho que depende
 dela.
 
+### Como a governança funciona
+
+A governança do projeto sai dos registros, e você não preenche
+formulário. Um evento, como uma ata, uma conversa, um envio ou um
+pedido novo do cliente, vira linhas nos registros. Os registros
+alimentam a lista do dia, com os prazos e as cobranças. Deles saem
+também os materiais, como rascunho. Você revisa e envia, e o aceite vem
+do cliente. As seções a seguir descrevem cada peça: o nível, as
+mudanças e a linha de base, os materiais, os prazos e as dispensas. A
+página `docs/instalar-e-usar.html` do repositório do template mostra um
+dia inteiro de um projeto, hora a hora.
+
 ### Nível de governança
 
 Depois do brief, o agente lê o porte do projeto e sugere um de três

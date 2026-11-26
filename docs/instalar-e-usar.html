@@ -167,8 +167,59 @@
   td:first-child { white-space: nowrap; font-weight: 500; }
   @media (max-width: 560px) { td:first-child { white-space: normal; } }
 
-  .diagrama { margin: 20px 0 8px; }
-  .diagrama svg { display: block; width: 100%; height: auto; max-width: 640px; }
+  .diagrama { margin: 20px 0 8px; overflow-x: auto; }
+  .diagrama svg { display: block; width: 100%; height: auto; max-width: 640px; min-width: 520px; }
+  /* Governança */
+  .fluxo { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+  .fluxo li {
+    flex: 1 1 150px; position: relative; background: var(--superficie); border-radius: var(--raio);
+    box-shadow: var(--sombra); padding: 12px 14px; font-size: 15px;
+  }
+  .fluxo li strong { display: block; font-size: 14px; }
+  .fluxo li span { color: var(--texto-2); font-size: 14px; }
+  .fluxo li.sua { background: var(--destaque-suave); box-shadow: inset 0 0 0 1px var(--destaque); }
+  .fluxo .passo-n { display: block; font-size: 12px; font-weight: 600; color: var(--texto-2); font-variant-numeric: tabular-nums; margin-bottom: 2px; }
+  .niveis-painel ul { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+  .niveis-painel li { font-size: 14px; background: var(--superficie-2); border-radius: 999px; padding: 4px 10px; }
+  .niveis-painel li.novo { background: var(--destaque-suave); }
+  .niveis-painel li small { color: var(--texto-2); }
+  .niveis-painel p { margin: 0 0 8px; max-width: 68ch; }
+  .dois { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 16px; }
+  .dois .cartao ol { margin: 8px 0 0; padding-left: 20px; font-size: 15px; color: var(--texto-2); }
+  .dois .cartao ol li { margin-bottom: 4px; }
+  .semaforo { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+  .semaforo li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; background: var(--superficie); border-radius: var(--raio); box-shadow: var(--sombra); padding: 12px 14px; font-size: 15px; }
+  .semaforo svg { width: 22px; height: 22px; margin-top: 1px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+  .chips li { font: 13px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; background: var(--superficie-2); border-radius: 6px; padding: 3px 8px; }
+
+  /* Um dia no projeto */
+  .dia { margin-top: 20px; background: var(--superficie); border-radius: var(--raio); box-shadow: var(--sombra); overflow: hidden; }
+  .dia [role="tab"] { font-variant-numeric: tabular-nums; }
+  .dia [role="tab"] b { display: block; font-size: 15px; }
+  .dia [role="tab"] small { display: block; font-size: 12px; font-weight: 400; color: var(--texto-2); }
+  .dia [role="tab"][aria-selected="true"] { background: var(--superficie); box-shadow: var(--sombra); }
+  .momento { display: grid; gap: 14px; }
+  .fala { margin: 0; padding: 12px 14px; border-radius: 12px 12px 12px 4px; background: var(--destaque-suave); max-width: 60ch; }
+  .fala::before { content: "Você diz"; display: block; font-size: 12px; font-weight: 600; color: var(--destaque); margin-bottom: 2px; }
+  .fala.sem::before { content: "Sem pedido seu"; }
+  .agente h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--texto-2); }
+  .agente ul { margin: 0; padding-left: 20px; }
+  .agente li { margin-bottom: 4px; }
+  .tela { margin: 0; background: var(--codigo-fundo); color: var(--codigo-texto); border-radius: 10px; padding: 12px 14px; font: 13px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .tela b { color: #ffd479; font-weight: 600; }
+  .dia-controles { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--borda); }
+  .dia-controles span { font-size: 14px; color: var(--texto-2); font-variant-numeric: tabular-nums; }
+  .botao {
+    border: 1px solid var(--borda); background: var(--superficie-2); color: var(--texto); font: inherit; font-size: 14px; font-weight: 500;
+    border-radius: 8px; padding: 8px 14px; cursor: pointer; touch-action: manipulation;
+    transition: transform 120ms var(--ease-out), background-color 150ms var(--ease-out), opacity 150ms var(--ease-out);
+  }
+  .botao:active { transform: scale(0.97); }
+  .botao:disabled { opacity: 0.45; cursor: default; transform: none; }
+  @media (hover: hover) and (pointer: fine) { .botao:not(:disabled):hover { background: var(--borda); } }
+  html:not(.js) .dia-controles { display: none; }
+
   .nota { margin: 16px 0 0; padding: 14px 16px; border-radius: 10px; background: var(--destaque-suave); max-width: 68ch; }
   .nota p { margin: 0; }
   footer { max-width: var(--largura); margin: 0 auto; padding: 24px 16px 48px; color: var(--texto-2); font-size: 14px; border-top: 1px solid var(--borda); }
@@ -183,7 +234,9 @@
     [role="tabpanel"] { border-top: 1px solid #ccc; }
     body { background: #fff; color: #000; }
     .cartao, .abas, .caminho li, .tabela { box-shadow: none; border: 1px solid #ddd; }
-    .codigo pre { background: #f3f3f3; color: #000; white-space: pre-wrap; }
+    .codigo pre, .tela { background: #f3f3f3; color: #000; white-space: pre-wrap; }
+    .tela b { color: #000; }
+    .dia-controles { display: none; }
     section { break-inside: avoid-page; }
   }
 </style>
@@ -195,6 +248,8 @@
     <a href="#instalar">Instalar</a>
     <a href="#usar">Usar</a>
     <a href="#o-que-dizer">O que dizer</a>
+    <a href="#governanca">Governança</a>
+    <a href="#um-dia">Um dia no projeto</a>
     <a href="#html">HTML de entrega</a>
     <a href="#comandos">Comandos</a>
     <a href="#outros">Outros aplicativos</a>
@@ -349,6 +404,255 @@ simulação antes de instalar.</code></pre></div>
     </div>
   </section>
 
+
+  <section id="governanca" aria-labelledby="t-governanca">
+    <h2 id="t-governanca">Governança</h2>
+    <p>A governança do projeto sai dos registros que o agente mantém a cada evento. Você não preenche formulário: conta o que aconteceu, e o agente registra, avisa, monta o rascunho do material e espera o seu sim para qualquer coisa que saia do projeto.</p>
+
+    <h3>Como um evento vira material</h3>
+    <ol class="fluxo">
+      <li class="sua"><span class="passo-n">1</span><strong>Evento</strong><span>Uma ata, uma conversa, um envio, um pedido novo do cliente.</span></li>
+      <li><span class="passo-n">2</span><strong>Registros</strong><span>Ações, riscos, issues, premissas, decisões, mudanças, versões e linha de base.</span></li>
+      <li><span class="passo-n">3</span><strong>Lista do dia</strong><span>Prazos pelo cronograma, cobranças ao cliente e até três itens no topo.</span></li>
+      <li><span class="passo-n">4</span><strong>Material</strong><span>Status, pauta, aceite ou mudança, montados dos registros como rascunho.</span></li>
+      <li class="sua"><span class="passo-n">5</span><strong>Você envia</strong><span>Revisa e manda. O aceite vem do cliente, e o silêncio não vale.</span></li>
+    </ol>
+    <p class="legenda"><span><i class="sua" aria-hidden="true"></i>Você age</span><span><i aria-hidden="true"></i>O agente faz sozinho</span></p>
+
+    <h3>O nível escolhe o que é emitido</h3>
+    <p>Depois do brief, o agente lê o porte do projeto e sugere um nível. Você escolhe e pode tirar, incluir ou pedir um material sob medida. Os registros existem em qualquer nível: o nível só decide o que vira material para o cliente.</p>
+    <div class="abas">
+      <div role="tablist" id="niveis" aria-label="Níveis de governança">
+        <span class="indicador" aria-hidden="true"></span>
+        <button role="tab" id="aba-enxuto" aria-controls="painel-enxuto" aria-selected="true">Enxuto</button>
+        <button role="tab" id="aba-padrao" aria-controls="painel-padrao" aria-selected="false" tabindex="-1">Padrão</button>
+        <button role="tab" id="aba-completo" aria-controls="painel-completo" aria-selected="false" tabindex="-1">Completo</button>
+        <button role="tab" id="aba-proposta" aria-controls="painel-proposta" aria-selected="false" tabindex="-1">Proposta</button>
+      </div>
+      <div role="tabpanel" id="painel-enxuto" class="niveis-painel" aria-labelledby="aba-enxuto" tabindex="0">
+        <h3>Enxuto: 7 materiais</h3>
+        <p>Até oito semanas, uma frente, equipe de até três pessoas e sem comitê formal. É o nível do projeto do exemplo.</p>
+        <ul>
+          <li>Página de abertura e plano <small>início</small></li>
+          <li>Status semanal de uma página <small>toda semana</small></li>
+          <li>Nota de decisões e ações <small>depois de reunião</small></li>
+          <li>Lista de pedidos ao cliente <small>controle</small></li>
+          <li>Confirmação de aceite <small>a cada entregável</small></li>
+          <li>Solicitação de mudança <small>quando surge</small></li>
+          <li>Página de encerramento <small>no fim</small></li>
+        </ul>
+      </div>
+      <div role="tabpanel" id="painel-padrao" class="niveis-painel" aria-labelledby="aba-padrao" tabindex="0" hidden>
+        <h3>Padrão: 26 materiais</h3>
+        <p>Mais de oito semanas, duas a quatro frentes, comitê formal ou pagamento por marco. Entram 23 materiais novos, e quatro do enxuto dão lugar à versão formal: a abertura vira termo de abertura, a nota vira ata formal, a confirmação vira termo de aceite e a página de encerramento vira relatório. Os outros três do enxuto continuam.</p>
+        <ul>
+          <li class="novo">Termo de abertura</li><li class="novo">Plano integrado</li><li class="novo">Matriz de papéis (RACI)</li><li class="novo">Plano de comunicação</li><li class="novo">Kickoff</li><li class="novo">Descrição do entregável</li><li class="novo">Status executivo</li><li class="novo">Pauta e pré-leitura</li><li class="novo">Ata formal</li><li class="novo">Relatório de exceção</li><li class="novo">Revisão de fase</li><li class="novo">Pulso de satisfação</li><li class="novo">Nota de entrega</li><li class="novo">Termo de aceite</li><li class="novo">Ciclo de aprovação com prazos</li><li class="novo">Riscos, issues e decisões abertos ao cliente</li><li class="novo">Aviso de pronto para faturar</li><li class="novo">Registro de aditivos</li><li class="novo">Relatório de encerramento</li><li class="novo">Aceite final</li><li class="novo">Transferência de conhecimento</li><li class="novo">Lições aprendidas</li><li class="novo">Pesquisa de satisfação final</li>
+        </ul>
+      </div>
+      <div role="tabpanel" id="painel-completo" class="niveis-painel" aria-labelledby="aba-completo" tabindex="0" hidden>
+        <h3>Completo: 44 materiais</h3>
+        <p>Mais de seis meses, mais de quatro frentes, comitê em mais de um nível ou benefício comprometido em contrato. Os 26 do padrão, mais estes 18:</p>
+        <ul>
+          <li class="novo">Governança em níveis</li><li class="novo">Plano de engajamento</li><li class="novo">Acordo de trabalho da equipe</li><li class="novo">Mobilização e acessos</li><li class="novo">Status diário</li><li class="novo">Nota semanal ao patrocinador</li><li class="novo">Painel executivo</li><li class="novo">Relatório de fase ou de marco</li><li class="novo">Matriz de riscos</li><li class="novo">Revisão interna do engajamento</li><li class="novo">Revisão independente de entregável</li><li class="novo">Ensaio de apresentação</li><li class="novo">Realização de benefícios</li><li class="novo">Obrigações contratuais</li><li class="novo">Gestão de terceiros</li><li class="novo">Comunicados do projeto</li><li class="novo">Caso e credencial</li><li class="novo">Revisão de benefícios depois do projeto</li>
+        </ul>
+      </div>
+      <div role="tabpanel" id="painel-proposta" class="niveis-painel" aria-labelledby="aba-proposta" tabindex="0" hidden>
+        <h3>Proposta: nenhum material emitido</h3>
+        <p>Uma proposta não é um projeto. Ela fica abaixo do nível enxuto, com dois controles antes do envio: a aprovação do preço, do escopo e dos termos, e a autorização para citar casos, clientes e pessoas. O agente pede a você o objetivo, o ponto de vista, a abordagem, as tarefas, o cronograma, a equipe e o preço, e não escreve no seu lugar.</p>
+      </div>
+    </div>
+
+    <div class="dois">
+      <div class="cartao">
+        <strong>Ciclo de aprovação</strong>
+        <ol>
+          <li>Você conta o envio, e o agente registra a versão e quem recebeu.</li>
+          <li>Abre o prazo de resposta de quem aprova aquele entregável.</li>
+          <li>Sem resposta, o item sobe na lista do dia e é cobrado no follow-up.</li>
+          <li>O aceite entra com o nome de quem aceitou, e esse nome vem do cliente.</li>
+        </ol>
+      </div>
+      <div class="cartao">
+        <strong>Ciclo de mudança</strong>
+        <ol>
+          <li>Um pedido fora do combinado entra em <code>mudancas.tsv</code>.</li>
+          <li>O agente mede o impacto em prazo, esforço e escopo.</li>
+          <li>Nenhum trabalho começa antes da sua decisão e da do cliente.</li>
+          <li>A aprovada gera uma versão nova da linha de base. A rejeitada fica nos adiados.</li>
+        </ol>
+      </div>
+    </div>
+
+    <h3>O semáforo segue uma regra</h3>
+    <ul class="semaforo">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#2e9e5b"></circle><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg><span><strong>Verde.</strong> Sem desvio da linha de base, sem item vencido e sem risco de exposição alta.</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l10 18H2z" fill="#d99a1e"></path><path d="M12 9v5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"></path><circle cx="12" cy="17.2" r="1.3" fill="#fff"></circle></svg><span><strong>Amarelo.</strong> Desvio dentro da tolerância, item vencido sem data nova ou risco de exposição alta.</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" fill="#d1453b"></rect><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff" stroke-width="2.4" stroke-linecap="round"></path></svg><span><strong>Vermelho.</strong> Desvio acima da tolerância ou issue escalada. Você pode trocar a cor com uma justificativa, e o material mostra as duas.</span></li>
+    </ul>
+
+    <h3>Os controles do tipo de projeto</h3>
+    <p>Cada pacote ativo traz os controles do seu tipo de trabalho. Um controle não descreve atividade: diz o que precisa ficar registrado e aprovado, antes de que etapa, e que evidência o fecha. No pacote de martech e adtech, o do exemplo:</p>
+    <div class="tabela">
+      <table>
+        <thead><tr><th scope="col">Controle</th><th scope="col">Antes de</th><th scope="col">Fecha com</th></tr></thead>
+        <tbody>
+          <tr><td>Critérios, pesos e escala aprovados</td><td>storyline</td><td>Decisão registrada com o nome de quem aprovou</td></tr>
+          <tr><td>Achados com evidência e severidade</td><td>redação</td><td>Cada achado citado tem linha em <code>evidencias.tsv</code></td></tr>
+          <tr><td>Do caso de uso à recomendação</td><td>revisão</td><td>Toda recomendação aponta para uma lacuna</td></tr>
+          <tr><td>Validação com os donos das plataformas</td><td>envio</td><td>Resposta de cada dono, em ata ou mensagem</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Os registros que existem em qualquer nível</h3>
+    <ul class="chips" aria-label="Registros do projeto">
+      <li>acoes.tsv</li><li>riscos.tsv</li><li>issues.tsv</li><li>premissas.tsv</li><li>dependencias.tsv</li><li>decisoes.md</li><li>mudancas.tsv</li><li>papeis.tsv</li><li>linha-de-base.tsv</li><li>versoes.tsv</li><li>prazos.tsv</li><li>cobrancas.tsv</li><li>controles.tsv</li>
+    </ul>
+  </section>
+
+  <section id="um-dia" aria-labelledby="t-um-dia">
+    <h2 id="t-um-dia">Um dia no projeto</h2>
+    <p>Uma quinta-feira no projeto do exemplo: o diagnóstico das plataformas de marketing da Lojas Exemplo, uma rede de varejo fictícia, com o pacote de martech e adtech e o nível enxuto. A leitura executiva já foi apresentada, e o projeto acompanha as decisões da diretoria. Percorra o dia pelos horários.</p>
+
+    <div class="dia">
+      <div role="tablist" id="dia-horas" aria-label="Momentos do dia">
+        <button role="tab" id="aba-h1" aria-controls="h1" aria-selected="true"><b>8h30</b><small>Lista do dia</small></button>
+        <button role="tab" id="aba-h2" aria-controls="h2" aria-selected="false" tabindex="-1"><b>9h00</b><small>Follow-up</small></button>
+        <button role="tab" id="aba-h3" aria-controls="h3" aria-selected="false" tabindex="-1"><b>10h30</b><small>Ata</small></button>
+        <button role="tab" id="aba-h4" aria-controls="h4" aria-selected="false" tabindex="-1"><b>11h30</b><small>Pedido novo</small></button>
+        <button role="tab" id="aba-h5" aria-controls="h5" aria-selected="false" tabindex="-1"><b>14h00</b><small>Aceite</small></button>
+        <button role="tab" id="aba-h6" aria-controls="h6" aria-selected="false" tabindex="-1"><b>16h00</b><small>Status</small></button>
+        <button role="tab" id="aba-h7" aria-controls="h7" aria-selected="false" tabindex="-1"><b>18h00</b><small>Fim do dia</small></button>
+      </div>
+
+      <div role="tabpanel" id="h1" aria-labelledby="aba-h1" tabindex="0">
+        <div class="momento">
+          <p class="fala">O que temos para hoje?</p>
+          <div class="agente"><h4>O agente faz</h4><ul>
+            <li>Procura atas novas e arquivos na pasta de entrada, e compara a data de hoje com os prazos do cronograma.</li>
+            <li>Monta a lista do dia com <code>rotina.py --lista</code>. No topo sobem no máximo três itens, cada um com o motivo.</li>
+          </ul></div>
+          <pre class="tela">Lista do dia, 2026-11-26 (quinta-feira)
+
+Atenção primeiro:
+1. <b>T-002</b>: Avisar que os dois contratos de março não renovam.
+   Dono: Diretora financeira. Prazo: 2027-01-15.
+   Sobe porque é ameaçado por um risco de exposição alta (RS-001)
+2. <b>T-003</b>: Pedir os relatórios de uso aos donos das plataformas.
+   Vence em 2026-11-30, em 2 dias úteis.
+   Sobe porque o prazo está próximo
+3. <b>M-007</b>: Relatórios de uso das plataformas.
+   Sobe porque espera o cliente há 48 dias úteis sem cobrança
+
+Confirmar: T-003, você já fez o follow-up com o cliente?</pre>
+          <ul class="chips" aria-label="Registros lidos"><li>acoes.tsv</li><li>riscos.tsv</li><li>cobrancas.tsv</li><li>afazeres.md</li></ul>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="h2" aria-labelledby="aba-h2" tabindex="0" hidden>
+        <div class="momento">
+          <p class="fala">Cobrei a diretora de marketing hoje. Ela responde até sexta.</p>
+          <div class="agente"><h4>O agente faz</h4><ul>
+            <li>Grava a cobrança com <code>rotina.py --cobrado T-003 --resposta cobrei</code>.</li>
+            <li>O item sai do topo e aparece no status como pendência do cliente, com a cobrança feita.</li>
+            <li>A análise de subuso, que depende desses relatórios, continua adiada, sem sumir.</li>
+          </ul></div>
+          <pre class="tela">cobrancas.tsv
+T-003  2026-11-26  consultor  cobrado  Responde até sexta</pre>
+          <ul class="chips" aria-label="Registros alterados"><li>cobrancas.tsv</li></ul>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="h3" aria-labelledby="aba-h3" tabindex="0" hidden>
+        <div class="momento">
+          <p class="fala">Salvei a ata da conversa com a tecnologia na pasta de atas.</p>
+          <div class="agente"><h4>O agente faz</h4><ul>
+            <li>Lê a ata e leva cada trecho ao registro certo, com a reunião de origem.</li>
+            <li>O diretor de tecnologia indica quem conduz a migração até 10 de dezembro: a ação T-001 anda.</li>
+            <li>Ele acha que a migração leva quatro meses, e não três: a premissa PR-001 fica em dúvida, e o agente propõe um risco novo.</li>
+            <li>O que toca o contrato espera o seu sim. Os itens propostos aparecem para você confirmar.</li>
+          </ul></div>
+          <pre class="tela">Da ata A-002:
+  T-001  andou: indicação prometida para 2026-12-10
+  PR-001 em dúvida: migração em quatro meses?
+  <b>Proposto</b> RS-002: a migração passa do prazo da premissa
+Confirme os itens propostos.</pre>
+          <ul class="chips" aria-label="Registros alterados"><li>reunioes.tsv</li><li>acoes.tsv</li><li>premissas.tsv</li><li>riscos.tsv</li></ul>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="h4" aria-labelledby="aba-h4" tabindex="0" hidden>
+        <div class="momento">
+          <p class="fala">A diretora financeira pediu o custo evitado por loja, que não estava no escopo.</p>
+          <div class="agente"><h4>O agente faz</h4><ul>
+            <li>Registra o pedido como mudança, com <code>governanca.py --mudanca</code>, sem começar o trabalho.</li>
+            <li>Mede o impacto em prazo, esforço e escopo e monta a solicitação de mudança com <code>emitir.py mudanca MU-001</code>.</li>
+            <li>Espera a sua decisão e a do cliente. Aprovada, a linha de base ganha versão nova.</li>
+          </ul></div>
+          <pre class="tela">MU-001  Custo evitado por loja
+  Impacto: +5 dias úteis, +3 dias de esforço, escopo ampliado
+  Decisão: <b>pendente</b>, nenhum trabalho antes dela</pre>
+          <ul class="chips" aria-label="Registros alterados"><li>mudancas.tsv</li><li>emitidos/</li></ul>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="h5" aria-labelledby="aba-h5" tabindex="0" hidden>
+        <div class="momento">
+          <p class="fala">A diretoria aceitou a leitura executiva, com uma ressalva sobre o anexo.</p>
+          <div class="agente"><h4>O agente faz</h4><ul>
+            <li>Registra o aceite da versão enviada com <code>governanca.py --aceite</code>, com o nome de quem aceitou e a ressalva.</li>
+            <li>Fecha o ciclo de aprovação aberto no envio de 5 de novembro.</li>
+            <li>Monta a confirmação de aceite, o material do nível enxuto, para você enviar.</li>
+          </ul></div>
+          <pre class="tela">versoes.tsv
+leitura-executiva  v1  aceita por Diretoria da Lojas Exemplo
+  Ressalva: rever o anexo de contratos</pre>
+          <ul class="chips" aria-label="Registros alterados"><li>versoes.tsv</li><li>emitidos/</li></ul>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="h6" aria-labelledby="aba-h6" tabindex="0" hidden>
+        <div class="momento">
+          <p class="fala">O risco do aviso continua igual. Monte o status da semana.</p>
+          <div class="agente"><h4>O agente faz</h4><ul>
+            <li>Responde à pergunta semanal sobre os riscos e mantém RS-001 com exposição alta.</li>
+            <li>Monta o status com <code>emitir.py status-semanal</code>, sem digitar de novo o que já está nos registros.</li>
+            <li>O semáforo fica amarelo pela regra, com o motivo escrito. Você revisa e envia.</li>
+          </ul></div>
+          <pre class="tela">Status semanal: <b>amarelo</b>
+  RS-001, risco de exposição alta
+Feito: aceite da leitura executiva
+Pendências do cliente: T-003 (1 cobrança), M-007, T-001
+Mudança pendente: MU-001</pre>
+          <ul class="chips" aria-label="Registros lidos"><li>acoes.tsv</li><li>riscos.tsv</li><li>versoes.tsv</li><li>mudancas.tsv</li><li>emitidos/</li></ul>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="h7" aria-labelledby="aba-h7" tabindex="0" hidden>
+        <div class="momento">
+          <p class="fala">Por hoje é isso.</p>
+          <div class="agente"><h4>O agente faz</h4><ul>
+            <li>Grava no diário o que foi feito e o que fica para amanhã.</li>
+            <li>Leva ao segundo cérebro o que o projeto aprendeu hoje, com o id de cada registro.</li>
+            <li>Amanhã, a lista do dia começa pela resposta da diretora de marketing e pela decisão da mudança.</li>
+          </ul></div>
+          <pre class="tela">diario.md, 2026-11-26
+Feito: cobrança de T-003, ata A-002, MU-001 aberta,
+       aceite da leitura executiva, status montado
+Amanhã: resposta sobre T-003, decisão de MU-001</pre>
+          <ul class="chips" aria-label="Registros alterados"><li>diario.md</li><li>_cerebro/</li></ul>
+        </div>
+      </div>
+
+      <div class="dia-controles">
+        <button type="button" class="botao" id="dia-anterior">Anterior</button>
+        <span id="dia-contador" aria-live="polite">1 de 7</span>
+        <button type="button" class="botao" id="dia-proximo">Próximo</button>
+      </div>
+    </div>
+    <div class="nota"><p>A lista das 8h30 é a saída do <code>rotina.py --lista</code> no projeto do exemplo, nesse dia. O resto do dia é uma simulação sobre o mesmo projeto, para mostrar cada ciclo. Para abrir o exemplo com o harness rodando: <code>python3 tools/abrir_exemplo.py ../exemplo-aberto</code>.</p></div>
+  </section>
+
   <section id="html" aria-labelledby="t-html">
     <h2 id="t-html">HTML de entrega</h2>
     <p>Toda peça em HTML é um arquivo único que abre sem internet, apoia uma página do entregável e respeita quem pede menos movimento. O acabamento segue as skills de design de interface de Emil Kowalski, que vêm instaladas com o kit. Você não precisa pedir: a regra e o hook de gravação lembram o agente a cada HTML.</p>
@@ -393,51 +697,89 @@ python3 entregaveis/_harness/scripts/ambiente.py        # o que a máquina tem e
   var poucoMovimento = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   // Abas: setas, Home e End movem entre as abas, como no padrão WAI-ARIA.
-  var lista = document.querySelector('[role="tablist"]');
-  var abas = Array.prototype.slice.call(lista.querySelectorAll('[role="tab"]'));
-  var indicador = lista.querySelector(".indicador");
+  // Cada grupo de abas cuida de si. O indicador deslizante só existe nas abas de instalação.
+  function montarAbas(lista) {
+    var abas = Array.prototype.slice.call(lista.querySelectorAll('[role="tab"]'));
+    var indicador = lista.querySelector(".indicador");
+    var vertical = lista.getAttribute("aria-orientation") === "vertical";
 
-  function posicionar(aba) {
-    indicador.style.width = aba.offsetWidth + "px";
-    indicador.style.transform = "translateX(" + aba.offsetLeft + "px)";
+    function posicionar(aba) {
+      if (!indicador) return;
+      indicador.style.width = aba.offsetWidth + "px";
+      indicador.style.transform = "translateX(" + aba.offsetLeft + "px)";
+    }
+
+    function selecionar(aba, focar) {
+      abas.forEach(function (outra) {
+        var ativa = outra === aba;
+        outra.setAttribute("aria-selected", ativa ? "true" : "false");
+        outra.tabIndex = ativa ? 0 : -1;
+        var painel = document.getElementById(outra.getAttribute("aria-controls"));
+        painel.hidden = !ativa;
+        painel.classList.remove("entrando");
+        if (ativa && !poucoMovimento.matches) {
+          void painel.offsetWidth; // reinicia a animação de entrada
+          painel.classList.add("entrando");
+        }
+      });
+      posicionar(aba);
+      if (focar) aba.focus();
+      lista.dispatchEvent(new CustomEvent("trocou", { detail: abas.indexOf(aba) }));
+    }
+
+    abas.forEach(function (aba, i) {
+      aba.addEventListener("click", function () { selecionar(aba, false); });
+      aba.addEventListener("keydown", function (e) {
+        var proxima = vertical ? "ArrowDown" : "ArrowRight";
+        var anterior = vertical ? "ArrowUp" : "ArrowLeft";
+        var alvo = null;
+        if (e.key === proxima) alvo = abas[(i + 1) % abas.length];
+        else if (e.key === anterior) alvo = abas[(i - 1 + abas.length) % abas.length];
+        else if (e.key === "Home") alvo = abas[0];
+        else if (e.key === "End") alvo = abas[abas.length - 1];
+        if (alvo) { e.preventDefault(); selecionar(alvo, true); }
+      });
+    });
+
+    if (indicador) {
+      // A primeira posição do indicador não anima.
+      indicador.style.transition = "none";
+      posicionar(abas[0]);
+      requestAnimationFrame(function () { indicador.style.transition = ""; });
+      window.addEventListener("resize", function () {
+        var ativa = lista.querySelector('[aria-selected="true"]');
+        if (ativa) posicionar(ativa);
+      });
+    }
+    return { abas: abas, selecionar: selecionar };
   }
 
-  function selecionar(aba, focar) {
-    abas.forEach(function (outra) {
-      var ativa = outra === aba;
-      outra.setAttribute("aria-selected", ativa ? "true" : "false");
-      outra.tabIndex = ativa ? 0 : -1;
-      var painel = document.getElementById(outra.getAttribute("aria-controls"));
-      painel.hidden = !ativa;
-      painel.classList.remove("entrando");
-      if (ativa && !poucoMovimento.matches) {
-        void painel.offsetWidth; // reinicia a animação de entrada
-        painel.classList.add("entrando");
-      }
-    });
-    posicionar(aba);
-    if (focar) aba.focus();
-  }
+  var grupos = {};
+  Array.prototype.forEach.call(document.querySelectorAll('[role="tablist"]'), function (lista) {
+    grupos[lista.id || ""] = montarAbas(lista);
+  });
 
-  abas.forEach(function (aba, i) {
-    aba.addEventListener("click", function () { selecionar(aba, false); });
-    aba.addEventListener("keydown", function (e) {
-      var alvo = null;
-      if (e.key === "ArrowRight") alvo = abas[(i + 1) % abas.length];
-      else if (e.key === "ArrowLeft") alvo = abas[(i - 1 + abas.length) % abas.length];
-      else if (e.key === "Home") alvo = abas[0];
-      else if (e.key === "End") alvo = abas[abas.length - 1];
-      if (alvo) { e.preventDefault(); selecionar(alvo, true); }
-    });
-  });
-  // A primeira posição do indicador não anima.
-  indicador.style.transition = "none";
-  posicionar(abas[0]);
-  requestAnimationFrame(function () { indicador.style.transition = ""; });
-  window.addEventListener("resize", function () {
-    var ativa = lista.querySelector('[aria-selected="true"]');
-    if (ativa) posicionar(ativa);
-  });
+  // Um dia no projeto: anterior e próximo percorrem os momentos.
+  var dia = grupos["dia-horas"];
+  if (dia) {
+    var voltar = document.getElementById("dia-anterior");
+    var seguir = document.getElementById("dia-proximo");
+    var contador = document.getElementById("dia-contador");
+    var atual = 0;
+    function atualizar(i) {
+      atual = i;
+      voltar.disabled = i === 0;
+      seguir.disabled = i === dia.abas.length - 1;
+      contador.textContent = (i + 1) + " de " + dia.abas.length;
+      // Rola só a faixa de horários, nunca a página.
+      var faixa = dia.abas[i].parentNode;
+      faixa.scrollTo({ left: Math.max(0, dia.abas[i].offsetLeft - 16), behavior: poucoMovimento.matches ? "auto" : "smooth" });
+    }
+    document.getElementById("dia-horas").addEventListener("trocou", function (e) { atualizar(e.detail); });
+    voltar.addEventListener("click", function () { if (atual > 0) dia.selecionar(dia.abas[atual - 1], false); });
+    seguir.addEventListener("click", function () { if (atual < dia.abas.length - 1) dia.selecionar(dia.abas[atual + 1], false); });
+    atualizar(0);
+  }
 
   // Copiar: funciona também com a página aberta direto do disco.
   function copiarTexto(texto) {
