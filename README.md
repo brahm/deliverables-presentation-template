@@ -6,6 +6,12 @@ propostas, documentos, planilhas, treinamentos e peças interativas em
 HTML do jeito que um bom time de consultoria produz: primeiro a
 audiência e a decisão, depois a história, e só então as páginas.
 
+**Guia visual de instalação e uso:**
+[docs/instalar-e-usar.html](docs/instalar-e-usar.html). É um arquivo
+só, que abre sem internet. O GitHub mostra o código da página, então
+baixe pelo botão de download do arquivo, ou abra a cópia que está na
+sua pasta do projeto, e veja no navegador.
+
 O template é público, sem marca e sem cliente. O método, as regras e os
 testes de cada trabalho são escritos dentro do projeto, que só vive em
 git local ou em repositório privado.
@@ -172,10 +178,31 @@ python3 entregaveis/_harness/scripts/cerebro.py --buscar TERMO  # o que o projet
 python3 entregaveis/_harness/scripts/ambiente.py      # o que a máquina tem e como instalar o que falta
 ```
 
+## Governança
+
+A governança sai dos registros que o agente mantém a cada evento. Você
+conta o que aconteceu, e o agente registra, avisa e monta o rascunho do
+material. Quem envia é você.
+
+| Peça | Como funciona |
+| --- | --- |
+| Registros | Ações, riscos, issues, premissas, dependências, decisões, mudanças, papéis, linha de base, versões, prazos e cobranças existem em qualquer projeto, mantidos pelo agente |
+| Nível | Depois do brief, o agente sugere enxuto, padrão ou completo pelo porte. O nível só escolhe o que vira material: 7 no enxuto, 26 no padrão e 44 no completo. Uma proposta não emite material |
+| Materiais | Status semanal, status executivo, pauta, nota de entrega, aceite, ciclo de aprovação e solicitação de mudança saem dos registros com `emitir.py`, sem digitar nada de novo |
+| Aprovação | Cada envio abre o prazo de resposta de quem aprova. O silêncio não vale como aceite, e o aceite leva o nome de quem aceitou |
+| Mudança | Um pedido fora do combinado passa por pedido, impacto e decisão antes de qualquer trabalho. A aprovada gera uma linha de base nova |
+| Semáforo | Segue uma regra: amarelo com desvio dentro da tolerância, item vencido ou risco de exposição alta, e vermelho com desvio acima da tolerância ou issue escalada |
+| Controles | Cada pacote traz os controles do tipo de projeto, com a etapa antes da qual valem e a evidência que os fecha |
+| Rotina diária | A lista do dia sobe até três itens, pergunta pelos follow-ups com o cliente e guarda o diário no fim do dia |
+
+O [guia de uso](entregaveis/_harness/guia.md) descreve cada peça, e a
+página de instalação e uso mostra um dia inteiro de um projeto.
+
 ## Página de instalação e uso
 
 A página [docs/instalar-e-usar.html](docs/instalar-e-usar.html) resume
-a instalação e o uso em um arquivo só. Abra com dois cliques, sem
+a instalação, o uso e a governança em um arquivo só, e percorre um dia
+do projeto do exemplo, hora a hora. Abra com dois cliques, sem
 internet.
 
 ## Ver um exemplo

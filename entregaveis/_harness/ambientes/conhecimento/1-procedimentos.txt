@@ -1,6 +1,6 @@
 # Procedimentos
 
-Arquivo de conhecimento do Deliverables Presentation Template, versão 0.15.0. Gerado por empacotar.py: não edite à mão.
+Arquivo de conhecimento do Deliverables Presentation Template, versão 0.15.1. Gerado por empacotar.py: não edite à mão.
 
 Estes procedimentos foram escritos para um agente que lê e grava arquivos e roda comandos. Neste ambiente, onde o texto manda rodar um script, faça a conferência à mão pelas regras de 2-metodo-e-texto. Onde manda gravar em um arquivo de `entregaveis/_projeto/` ou na pasta de um entregável, atualize a seção correspondente do registro do projeto. As skills citadas pelo nome são os procedimentos deste arquivo.
 

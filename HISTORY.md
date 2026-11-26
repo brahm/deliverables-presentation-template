@@ -3,6 +3,18 @@
 A skill `atualizar-harness` lê este arquivo a partir da versão instalada
 no projeto. Cada versão diz o que mudou e o que o projeto precisa fazer.
 
+## 0.15.1
+
+- O README ganha a seção de governança, com os registros, o nível, os
+  materiais, os ciclos de aprovação e de mudança, o semáforo, os
+  controles e a rotina diária. O guia ganha uma visão de conjunto da
+  governança.
+- A página `docs/instalar-e-usar.html` mostra como a governança
+  funciona, com os níveis lado a lado, e percorre um dia do projeto do
+  exemplo, hora a hora. O README traz o link para ela logo no topo.
+
+O que o projeto precisa fazer: nada.
+
 ## 0.15.0
 
 - O kit instala as skills de design de interface de Emil Kowalski
